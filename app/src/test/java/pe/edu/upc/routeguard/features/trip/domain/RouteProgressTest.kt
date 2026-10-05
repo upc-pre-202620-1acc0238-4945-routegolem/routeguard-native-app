@@ -1,4 +1,4 @@
-package pe.edu.upc.routeguard.features.trip.domain
+package pe.edu.upc.routeguard.trip.domain
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
