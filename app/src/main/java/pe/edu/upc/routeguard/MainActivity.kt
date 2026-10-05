@@ -14,7 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pe.edu.upc.routeguard.core.designsystem.theme.RouteGuardTheme
 import pe.edu.upc.routeguard.core.session.SessionManager
-import pe.edu.upc.routeguard.features.iam.presentation.navigation.IamNavGraphRoute
+import pe.edu.upc.routeguard.iam.presentation.navigation.IamNavGraphRoute
 import pe.edu.upc.routeguard.navigation.AppNavHost
 import pe.edu.upc.routeguard.navigation.MainShellRoute
 import javax.inject.Inject

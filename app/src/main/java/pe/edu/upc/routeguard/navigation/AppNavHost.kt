@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import pe.edu.upc.routeguard.features.iam.presentation.navigation.IamNavGraphRoute
-import pe.edu.upc.routeguard.features.iam.presentation.navigation.iamNavGraph
+import pe.edu.upc.routeguard.iam.presentation.navigation.IamNavGraphRoute
+import pe.edu.upc.routeguard.iam.presentation.navigation.iamNavGraph
 
 /**
  * Root graph: IAM (sign in / register) and the role based [MainShell].
