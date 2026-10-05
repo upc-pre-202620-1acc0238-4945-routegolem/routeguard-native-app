@@ -1,0 +1,59 @@
+package pe.edu.upc.routeguard.fleet.infrastructure.repositories
+
+import pe.edu.upc.routeguard.fleet.domain.Route
+import pe.edu.upc.routeguard.fleet.domain.RouteStatus
+import pe.edu.upc.routeguard.fleet.domain.ServiceDay
+import pe.edu.upc.routeguard.fleet.domain.Vehicle
+import pe.edu.upc.routeguard.fleet.domain.Waypoint
+import pe.edu.upc.routeguard.fleet.domain.valueobject.DriverId
+import pe.edu.upc.routeguard.fleet.domain.valueobject.Plate
+import pe.edu.upc.routeguard.fleet.domain.valueobject.RouteId
+import pe.edu.upc.routeguard.fleet.domain.valueobject.StudentId
+import pe.edu.upc.routeguard.fleet.domain.valueobject.VehicleId
+import pe.edu.upc.routeguard.fleet.domain.valueobject.WaypointId
+import pe.edu.upc.routeguard.fleet.infrastructure.remote.CatalogVehicleDto
+import pe.edu.upc.routeguard.fleet.infrastructure.remote.RouteDto
+import pe.edu.upc.routeguard.fleet.infrastructure.remote.RouteVehicleDto
+import pe.edu.upc.routeguard.fleet.infrastructure.remote.StopDto
+import pe.edu.upc.routeguard.shared.domain.Coordinates
+
+fun StopDto.toDomain() = Waypoint(
+    id = WaypointId(id),
+    name = name,
+    coordinates = Coordinates(latitude, longitude),
+    orderIndex = order
+)
+
+fun RouteVehicleDto.toDomain() = Vehicle(
+    id = VehicleId(id),
+    plate = Plate(plate),
+    model = model.orEmpty(),
+    brand = brand.orEmpty(),
+    capacity = capacity
+)
+
+/** The catalog only has the full model name, so the brand is its first word. */
+fun CatalogVehicleDto.toDomain(): Vehicle {
+    val fullModel = model.orEmpty()
+    return Vehicle(
+        id = VehicleId(id),
+        plate = Plate(plate),
+        model = fullModel,
+        brand = fullModel.substringBefore(' ').ifBlank { "N/A" },
+        capacity = capacity
+    )
+}
+
+fun RouteDto.toDomain() = Route(
+    id = RouteId(id),
+    name = name,
+    status = RouteStatus.from(state),
+    waypoints = stops.orEmpty().map { it.toDomain() }.sortedBy { it.orderIndex },
+    studentIds = assignment?.childIds.orEmpty().map { StudentId(it) },
+    vehicle = vehicle?.toDomain(),
+    driverId = assignment?.driverId?.let { DriverId(it) },
+    serviceDays = serviceDays.orEmpty()
+        .mapNotNull { name -> ServiceDay.entries.firstOrNull { it.name.equals(name, ignoreCase = true) } }
+        .toSet(),
+    departureTime = departureTime
+)
