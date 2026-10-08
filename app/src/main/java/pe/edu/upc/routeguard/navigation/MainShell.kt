@@ -32,21 +32,21 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
-import pe.edu.upc.routeguard.fleet.presentation.navigation.FleetNavGraphRoute
-import pe.edu.upc.routeguard.fleet.presentation.navigation.fleetNavGraph
-import pe.edu.upc.routeguard.iam.domain.Role
-import pe.edu.upc.routeguard.notifications.presentation.navigation.NotificationsNavGraphRoute
-import pe.edu.upc.routeguard.notifications.presentation.navigation.notificationsNavGraph
-import pe.edu.upc.routeguard.stakeholder.presentation.navigation.StakeholderNavGraphRoute
-import pe.edu.upc.routeguard.stakeholder.presentation.navigation.stakeholderNavGraph
-import pe.edu.upc.routeguard.subscription.presentation.navigation.SubscriptionNavGraphRoute
-import pe.edu.upc.routeguard.subscription.presentation.navigation.subscriptionNavGraph
-import pe.edu.upc.routeguard.trip.presentation.navigation.FollowTripNavGraphRoute
-import pe.edu.upc.routeguard.trip.presentation.navigation.LiveMonitorNavGraphRoute
-import pe.edu.upc.routeguard.trip.presentation.navigation.TripNavGraphRoute
-import pe.edu.upc.routeguard.trip.presentation.navigation.followTripNavGraph
-import pe.edu.upc.routeguard.trip.presentation.navigation.liveMonitorNavGraph
-import pe.edu.upc.routeguard.trip.presentation.navigation.tripNavGraph
+import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.FleetNavGraphRoute
+import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.fleetNavGraph
+import pe.edu.upc.routeguard.identityaccessmanagement.domain.Role
+import pe.edu.upc.routeguard.notificationscommunication.presentation.navigation.NotificationsNavGraphRoute
+import pe.edu.upc.routeguard.notificationscommunication.presentation.navigation.notificationsNavGraph
+import pe.edu.upc.routeguard.stakeholderassetmanagement.presentation.navigation.StakeholderNavGraphRoute
+import pe.edu.upc.routeguard.stakeholderassetmanagement.presentation.navigation.stakeholderNavGraph
+import pe.edu.upc.routeguard.subscriptionplanmanagement.presentation.navigation.SubscriptionNavGraphRoute
+import pe.edu.upc.routeguard.subscriptionplanmanagement.presentation.navigation.subscriptionNavGraph
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.navigation.FollowTripNavGraphRoute
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.navigation.LiveMonitorNavGraphRoute
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.navigation.TripNavGraphRoute
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.navigation.followTripNavGraph
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.navigation.liveMonitorNavGraph
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.navigation.tripNavGraph
 
 @Serializable
 data object MainShellRoute

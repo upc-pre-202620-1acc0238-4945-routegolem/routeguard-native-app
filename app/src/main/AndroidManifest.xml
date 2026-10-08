@@ -40,7 +40,7 @@
         </activity>
 
         <service
-            android:name=".trip.infrastructure.service.TrackingForegroundService"
+            android:name=".tripexecutionmonitoring.infrastructure.service.TrackingForegroundService"
             android:exported="false"
             android:foregroundServiceType="location" />
     </application>
