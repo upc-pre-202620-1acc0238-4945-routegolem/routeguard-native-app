@@ -1,5 +1,6 @@
 package pe.edu.upc.routeguard.core.designsystem.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -80,7 +82,8 @@ fun ScreenHeader(title: String, modifier: Modifier = Modifier, onBack: (() -> Un
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -91,7 +94,8 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
-        modifier = modifier.padding(top = 8.dp)
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = modifier.padding(top = 12.dp)
     )
 }
 
@@ -110,9 +114,11 @@ fun BigButton(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 56.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = containerColor)
+        shape = MaterialTheme.shapes.small,
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp, pressedElevation = 0.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.titleMedium)
+        Text(text = text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -128,9 +134,11 @@ fun SecondaryButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
+            .defaultMinSize(minHeight = 52.dp),
+        shape = MaterialTheme.shapes.small,
+        border = BorderStroke(1.5.dp, if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Text(text = text)
+        Text(text = text, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -151,6 +159,7 @@ fun FormField(
         singleLine = singleLine,
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = MaterialTheme.shapes.small,
         modifier = modifier.fillMaxWidth()
     )
 }
@@ -167,7 +176,15 @@ fun SelectableRow(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            if (selected) 1.5.dp else 1.dp,
+            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+        )
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -203,9 +220,11 @@ fun InfoCard(
             content()
         }
     }
+    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     if (onClick != null) {
-        Card(onClick = onClick, modifier = cardModifier) { body() }
+        Card(onClick = onClick, modifier = cardModifier, shape = MaterialTheme.shapes.medium, colors = colors, border = border) { body() }
     } else {
-        Card(modifier = cardModifier) { body() }
+        Card(modifier = cardModifier, shape = MaterialTheme.shapes.medium, colors = colors, border = border) { body() }
     }
 }
