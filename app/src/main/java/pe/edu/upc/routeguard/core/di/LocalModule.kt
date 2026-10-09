@@ -1,7 +1,7 @@
 package pe.edu.upc.routeguard.core.di
 
 import android.content.Context
-import androidx.room3.Room
+import androidx.room.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import dagger.Module
 import dagger.Provides
