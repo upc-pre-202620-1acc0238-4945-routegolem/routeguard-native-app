@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -126,7 +127,7 @@ fun MainShell(
             }
         }
 
-        NavigationBar {
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
             tabs.forEachIndexed { index, tab ->
                 NavigationBarItem(
                     selected = selectedTab == index,

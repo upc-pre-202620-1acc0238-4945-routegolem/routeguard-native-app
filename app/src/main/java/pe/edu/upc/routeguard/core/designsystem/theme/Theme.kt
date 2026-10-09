@@ -90,8 +90,8 @@ private val darkScheme = darkColorScheme(
 @Composable
 fun RouteGuardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Off by default: the app keeps the RouteGuard brand palette instead of the wallpaper colors (Android 12+)
+    dynamicColor: Boolean = false,
     content: @Composable() () -> Unit
 ) {
   val colorScheme = when {
@@ -107,6 +107,7 @@ fun RouteGuardTheme(
   MaterialTheme(
     colorScheme = colorScheme,
     typography = AppTypography,
+    shapes = AppShapes,
     content = content
   )
 }

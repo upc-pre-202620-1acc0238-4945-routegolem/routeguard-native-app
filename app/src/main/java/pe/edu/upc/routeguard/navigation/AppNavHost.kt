@@ -18,11 +18,9 @@ import pe.edu.upc.routeguard.iam.presentation.navigation.iamNavGraph
 @Composable
 fun AppNavHost(navController: NavHostController, startDestination: Any) {
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding()
-    ) {
+    // No root-level inset padding: the sign in / register screens draw their brand header behind the
+    // status bar, and the main shell applies the safe drawing insets itself.
+    Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = startDestination
@@ -34,11 +32,14 @@ fun AppNavHost(navController: NavHostController, startDestination: Any) {
             }
 
             composable<MainShellRoute> {
-                MainShell(onSignedOut = {
-                    navController.navigate(IamNavGraphRoute) {
-                        popUpTo(MainShellRoute) { inclusive = true }
+                MainShell(
+                    modifier = Modifier.safeDrawingPadding(),
+                    onSignedOut = {
+                        navController.navigate(IamNavGraphRoute) {
+                            popUpTo(MainShellRoute) { inclusive = true }
+                        }
                     }
-                })
+                )
             }
         }
     }
