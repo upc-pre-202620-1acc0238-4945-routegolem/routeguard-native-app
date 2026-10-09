@@ -52,8 +52,18 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
 
     fun profileId(): String? = prefs.getString(KEY_PROFILE_ID, null)
 
+    /** Signing out keeps [cacheOwner]: it is how the next sign-in knows whether the local cache is someone else's. */
     fun clear() {
+        val owner = cacheOwner()
         prefs.edit().clear().apply()
+        if (owner != null) prefs.edit().putString(KEY_CACHE_OWNER, owner).apply()
+    }
+
+    /** Id of the user whose data is cached on this device (notifications, ...). */
+    fun cacheOwner(): String? = prefs.getString(KEY_CACHE_OWNER, null)
+
+    fun setCacheOwner(userId: String) {
+        prefs.edit().putString(KEY_CACHE_OWNER, userId).apply()
     }
 
     /** The server answered 401 to a request that carried the token: drop the session and notify the UI. */
@@ -71,5 +81,6 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
         const val KEY_TOKEN = "token"
         const val KEY_ORGANIZATION_ID = "organization_id"
         const val KEY_PROFILE_ID = "profile_id"
+        const val KEY_CACHE_OWNER = "cache_owner"
     }
 }

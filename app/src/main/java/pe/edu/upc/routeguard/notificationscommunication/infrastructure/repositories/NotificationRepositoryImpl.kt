@@ -16,16 +16,27 @@ class NotificationRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager
 ) : NotificationRepository {
 
-    /** Parents only see their own notifications; drivers see the ones of their organization. */
+    /**
+     * Parents only see their own notifications; drivers see the ones of their organization.
+     * The local copy is a cache of the signed-in user's list: it is dropped when another user signs in
+     * and replaced by the server's list whenever the server answers, so stale rows never linger.
+     */
     override suspend fun getNotifications(): List<Notification> {
         val session = sessionManager.current()
         val parentId = if (session?.role == "PARENT") session.profileId else null
 
-        safeApiCall { service.getNotifications(parentId) }
-            .onSuccess { dtos -> dao.upsertNotifications(dtos.map { it.toEntity() }) }
+        if (session != null && sessionManager.cacheOwner() != session.userId) {
+            dao.deleteAll()
+            sessionManager.setCacheOwner(session.userId)
+        }
 
-        val local = dao.fetchAllNotifications().map { it.toDomain() }
-        return local
+        safeApiCall { service.getNotifications(parentId) }
+            .onSuccess { dtos ->
+                dao.deleteAll()
+                dao.upsertNotifications(dtos.map { it.toEntity() })
+            }
+
+        return dao.fetchAllNotifications().map { it.toDomain() }
     }
 
     override suspend fun save(notification: Notification) {

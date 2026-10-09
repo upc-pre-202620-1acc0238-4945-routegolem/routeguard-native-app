@@ -10,6 +10,9 @@ interface NotificationDao {
     @Query("SELECT * FROM notifications ORDER BY created_at DESC")
     suspend fun fetchAllNotifications(): List<NotificationEntity>
 
+    @Query("DELETE FROM notifications")
+    suspend fun deleteAll()
+
     @Upsert
     suspend fun upsertNotifications(entities: List<NotificationEntity>)
 
