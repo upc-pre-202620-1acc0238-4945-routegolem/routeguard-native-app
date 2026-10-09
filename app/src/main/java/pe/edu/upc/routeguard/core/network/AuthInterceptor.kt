@@ -9,8 +9,12 @@ import javax.inject.Inject
 class AuthInterceptor @Inject constructor(private val sessionManager: SessionManager) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        val token = sessionManager.token()
         val builder = chain.request().newBuilder()
-        sessionManager.token()?.let { builder.addHeader("Authorization", "Bearer $it") }
-        return chain.proceed(builder.build())
+        token?.let { builder.addHeader("Authorization", "Bearer $it") }
+        val response = chain.proceed(builder.build())
+        // The API requires a valid JWT: a 401 to a request that carried it means the session is over.
+        if (response.code == 401 && token != null) sessionManager.onTokenRejected()
+        return response
     }
 }

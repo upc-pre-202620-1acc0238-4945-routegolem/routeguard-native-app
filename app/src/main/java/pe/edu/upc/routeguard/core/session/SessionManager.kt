@@ -3,6 +3,9 @@ package pe.edu.upc.routeguard.core.session
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Singleton
 
 /** Keeps the active session (JWT + role + tenant) in private shared preferences. */
@@ -10,6 +13,11 @@ import javax.inject.Singleton
 class SessionManager @Inject constructor(@ApplicationContext context: Context) {
 
     private val prefs = context.getSharedPreferences("routeguard_session", Context.MODE_PRIVATE)
+
+    private val _sessionRejected = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits when the server rejects the JWT of the active session (expired or no longer valid). */
+    val sessionRejected: SharedFlow<Unit> = _sessionRejected.asSharedFlow()
 
     fun save(session: UserSession) {
         prefs.edit()
@@ -46,6 +54,13 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
 
     fun clear() {
         prefs.edit().clear().apply()
+    }
+
+    /** The server answered 401 to a request that carried the token: drop the session and notify the UI. */
+    fun onTokenRejected() {
+        if (token() == null) return
+        clear()
+        _sessionRejected.tryEmit(Unit)
     }
 
     private companion object {
