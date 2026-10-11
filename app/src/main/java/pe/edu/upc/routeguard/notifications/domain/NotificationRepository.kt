@@ -13,4 +13,6 @@ interface NotificationRepository {
 
     /** Announcement of the driver to the parents of the trip. */
     suspend fun postBroadcastMessage(tripId: String, message: String): Result<Int>
+
+    suspend fun registerDeviceToken(userId: String, token: String): Result<Unit>
 }

@@ -2,6 +2,7 @@ package pe.edu.upc.routeguard.iam.presentation.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,10 +10,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.edu.upc.routeguard.iam.application.SignInUseCase
+import pe.edu.upc.routeguard.notifications.application.RegisterDeviceTokenUseCase
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(private val signIn: SignInUseCase) : ViewModel() {
+class LoginViewModel @Inject constructor(
+    private val signIn: SignInUseCase,
+    private val registerDeviceToken: RegisterDeviceTokenUseCase
+) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginUiState())
     val state: StateFlow<LoginUiState> = _state.asStateFlow()
@@ -30,6 +35,13 @@ class LoginViewModel @Inject constructor(private val signIn: SignInUseCase) : Vi
             signIn(current.email, current.password)
                 .onSuccess { account ->
                     _state.update { it.copy(isLoading = false, account = account) }
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (task.isSuccessful && !task.result.isNullOrBlank()) {
+                            viewModelScope.launch {
+                                registerDeviceToken(account.id.value, task.result)
+                            }
+                        }
+                    }
                 }
                 .onFailure { e ->
                     _state.update {

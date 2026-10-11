@@ -18,6 +18,11 @@ data class NotificationDto(
     val alerts: List<AlertDto>?
 )
 
+data class RegisterDeviceTokenRequest(
+    @com.google.gson.annotations.SerializedName("token") val token: String,
+    @com.google.gson.annotations.SerializedName("platform") val platform: String = "ANDROID"
+)
+
 data class BroadcastRequestDto(val message: String)
 
 data class FanOutResponseDto(val notified: Int)

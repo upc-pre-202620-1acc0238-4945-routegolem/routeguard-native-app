@@ -1,4 +1,6 @@
 [versions]
+googleServices = "4.4.2"
+firebaseMessaging = "24.0.2"
 agp = "9.3.3"
 coilCompose = "3.6.3"
 coreKtx = "1.19.1"
@@ -14,10 +16,11 @@ ksp = "2.3.6"
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 kotlinSerialization = "2.4.20"
-room = "3.0.3"
+room = "2.6.1"
 mapbox = "11.31.1"
 
 [libraries]
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
@@ -43,10 +46,12 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 mapbox-maps = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
 mapbox-maps-compose = { module = "com.mapbox.extension:maps-compose-ndk27", version.ref = "mapbox" }
-room-runtime = { group = "androidx.room3", name = "room3-runtime", version.ref = "room" }
-room-compiler = { group = "androidx.room3", name = "room3-compiler", version.ref = "room" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 
 [plugins]
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

@@ -2,7 +2,6 @@ package pe.edu.upc.routeguard.core.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,9 +17,7 @@ object LocalModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder<AppDatabase>(context, "routeguard.db")
-            .setDriver(AndroidSQLiteDriver())
+        return Room.databaseBuilder(context, AppDatabase::class.java, "routeguard.db")
             .build()
     }
-
 }

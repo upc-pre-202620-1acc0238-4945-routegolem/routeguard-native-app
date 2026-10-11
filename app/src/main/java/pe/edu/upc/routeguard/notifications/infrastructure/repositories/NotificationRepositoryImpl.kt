@@ -8,6 +8,7 @@ import pe.edu.upc.routeguard.notifications.domain.NotificationStatus
 import pe.edu.upc.routeguard.notifications.infrastructure.local.NotificationDao
 import pe.edu.upc.routeguard.notifications.infrastructure.remote.BroadcastRequestDto
 import pe.edu.upc.routeguard.notifications.infrastructure.remote.NotificationApiService
+import pe.edu.upc.routeguard.notifications.infrastructure.remote.RegisterDeviceTokenRequest
 import javax.inject.Inject
 
 class NotificationRepositoryImpl @Inject constructor(
@@ -41,4 +42,7 @@ class NotificationRepositoryImpl @Inject constructor(
 
     override suspend fun postBroadcastMessage(tripId: String, message: String): Result<Int> =
         safeApiCall { service.postBroadcastMessage(tripId, BroadcastRequestDto(message)) }.map { it.notified }
+
+    override suspend fun registerDeviceToken(userId: String, token: String): Result<Unit> =
+        safeApiCall { service.registerDeviceToken(userId, RegisterDeviceTokenRequest(token)) }.map { }
 }
