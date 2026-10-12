@@ -9,10 +9,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.PaymentSheetResult
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
@@ -27,8 +34,40 @@ fun SubscriptionScreen(
     viewModel: SubscriptionViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    var activePayment by remember { mutableStateOf<PendingStripePayment?>(null) }
+
+    val paymentSheet = rememberPaymentSheet { paymentResult ->
+        val pending = activePayment
+        activePayment = null
+        when (paymentResult) {
+            is PaymentSheetResult.Completed -> {
+                if (pending != null) {
+                    viewModel.onPaymentCompleted(pending)
+                }
+            }
+            is PaymentSheetResult.Canceled -> {
+                viewModel.onPaymentCanceled()
+            }
+            is PaymentSheetResult.Failed -> {
+                viewModel.onPaymentFailed(paymentResult.error.localizedMessage)
+            }
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
+
+    LaunchedEffect(state.pendingStripePayment) {
+        val pending = state.pendingStripePayment
+        if (pending != null && activePayment != pending) {
+            activePayment = pending
+            paymentSheet.presentWithPaymentIntent(
+                paymentIntentClientSecret = pending.clientSecret,
+                configuration = PaymentSheet.Configuration(
+                    merchantDisplayName = "RouteGuard Platform"
+                )
+            )
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         ScreenHeader(title = "Planes y suscripción")
@@ -75,7 +114,7 @@ fun SubscriptionScreen(
 
             item {
                 Text(
-                    text = "El cobro es simulado en modo local: aún no hay pasarela de pago conectada.",
+                    text = "Pagos procesados de forma segura con Stripe Checkout (Modo Sandbox).",
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
@@ -100,9 +139,9 @@ private fun PlanCard(
         Text("Hasta ${plan.quota.maxRoutes} rutas y ${plan.quota.maxDrivers} conductores")
         when {
             isCurrent -> Text("Tu plan actual")
-            hasSubscription && isUpgrade -> BigButton(text = "Mejorar a este plan", onClick = onUpgrade, enabled = enabled)
+            hasSubscription && isUpgrade -> BigButton(text = "Mejorar con Stripe", onClick = onUpgrade, enabled = enabled)
             hasSubscription -> Unit
-            else -> BigButton(text = "Elegir y pagar", onClick = onSubscribe, enabled = enabled)
+            else -> BigButton(text = "Elegir y pagar con Stripe", onClick = onSubscribe, enabled = enabled)
         }
     }
 }

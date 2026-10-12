@@ -13,9 +13,12 @@ class GetCurrentSubscriptionUseCase @Inject constructor(private val repository: 
     suspend operator fun invoke() = repository.getCurrentSubscription()
 }
 
+class CreatePaymentIntentUseCase @Inject constructor(private val repository: SubscriptionRepository) {
+    suspend operator fun invoke(plan: Plan): Result<String> = repository.createPaymentIntent(plan.id)
+}
+
 /**
- * Select Plan + Initiate Payment Process. The payment gateway is simulated for now: the
- * subscription is created active for a month (Plan Selected, Payment Confirmed, Subscription Activated).
+ * Select Plan + Confirm Subscription after Stripe PaymentSheet succeeds.
  */
 class SelectPlanUseCase @Inject constructor(private val repository: SubscriptionRepository) {
     suspend operator fun invoke(plan: Plan): Result<AccountSubscription> =

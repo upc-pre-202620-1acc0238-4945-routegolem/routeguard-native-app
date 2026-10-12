@@ -24,4 +24,7 @@ interface SubscriptionApiService {
         @Path("subscriptionId") subscriptionId: String,
         @Body request: UpgradeSubscriptionRequestDto
     ): Response<SubscriptionDto>
+
+    @POST("subscriptions/payment-intent")
+    suspend fun createPaymentIntent(@Body request: CreatePaymentIntentRequestDto): Response<PaymentIntentResponseDto>
 }

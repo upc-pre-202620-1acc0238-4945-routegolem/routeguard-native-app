@@ -24,7 +24,14 @@ val apiBaseUrl: String = rootProject.file("local.properties")
     ?.inputStream()?.use { Properties().apply { load(it) } }
     ?.getProperty("API_BASE_URL")
     ?: System.getenv("API_BASE_URL")
-    ?: "https://routeguard-api-mobiles-a3cza3byc3b3dpfs.brazilsouth-01.azurewebsites.net/api/v1/"
+    ?: "https://routeguard-web-services.onrender.com/api/v1/"
+
+val stripePublishableKey: String = rootProject.file("local.properties")
+    .takeIf { it.exists() }
+    ?.inputStream()?.use { Properties().apply { load(it) } }
+    ?.getProperty("STRIPE_PUBLISHABLE_KEY")
+    ?: System.getenv("STRIPE_PUBLISHABLE_KEY")
+    ?: "pk_test_51UPqsJ2cXM5Q72HKBRhXS93oFgiLy5s4YpkEuoEY7EXcgl7cRnxSJwkqNOwHw2PioQ5p5jucV2FgtKdnMdk0rvUR00D9Goup5m"
 
 android {
     namespace = "pe.edu.upc.routeguard"
@@ -40,6 +47,7 @@ android {
         versionName = "1.0"
 
         buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl.trimEnd('/')}/\"")
+        buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"$stripePublishableKey\"")
         resValue("string", "mapbox_access_token", mapboxAccessToken.ifBlank { "MISSING_MAPBOX_TOKEN" })
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -114,4 +122,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // Stripe
+    implementation(libs.stripe.android)
 }

@@ -9,6 +9,9 @@ interface SubscriptionRepository {
     /** Null when the organization has no active subscription yet. */
     suspend fun getCurrentSubscription(): Result<AccountSubscription?>
 
+    /** Creates a Stripe PaymentIntent and returns its clientSecret. */
+    suspend fun createPaymentIntent(planId: PlanId): Result<String>
+
     /** Subscribes to a plan for [days] days; the subscription starts active once paid. */
     suspend fun subscribe(planId: PlanId, days: Int): Result<AccountSubscription>
 

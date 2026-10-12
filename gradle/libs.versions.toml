@@ -18,8 +18,10 @@ hiltNavigationCompose = "1.4.0"
 kotlinSerialization = "2.4.20"
 room = "2.6.1"
 mapbox = "11.31.1"
+stripe = "21.4.1"
 
 [libraries]
+stripe-android = { module = "com.stripe:stripe-android", version.ref = "stripe" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
