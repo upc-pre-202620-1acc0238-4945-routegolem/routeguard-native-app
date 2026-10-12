@@ -1,6 +1,7 @@
 import java.util.Properties
 
 plugins {
+    alias(libs.plugins.google.services)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
@@ -16,6 +17,15 @@ val mapboxAccessToken: String = rootProject.file("local.properties")
     ?: System.getenv("MAPBOX_ACCESS_TOKEN")
     ?: ""
 
+// Backend URL. Defaults to the deployed API on Azure; to use a backend running on this PC add
+// API_BASE_URL=http://localhost:8080/api/v1/ to local.properties (never committed) and run `adb reverse tcp:8080 tcp:8080`.
+val apiBaseUrl: String = rootProject.file("local.properties")
+    .takeIf { it.exists() }
+    ?.inputStream()?.use { Properties().apply { load(it) } }
+    ?.getProperty("API_BASE_URL")
+    ?: System.getenv("API_BASE_URL")
+    ?: "https://routeguard-api-mobiles-a3cza3byc3b3dpfs.brazilsouth-01.azurewebsites.net/api/v1/"
+
 android {
     namespace = "pe.edu.upc.routeguard"
     compileSdk {
@@ -29,6 +39,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl.trimEnd('/')}/\"")
         resValue("string", "mapbox_access_token", mapboxAccessToken.ifBlank { "MISSING_MAPBOX_TOKEN" })
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -40,6 +51,11 @@ android {
                 enable = false
             }
         }
+        debug {
+            packaging {
+                jniLibs.keepDebugSymbols.add("**/*.so")
+            }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -47,6 +63,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
         resValues = true
     }
 }
@@ -73,6 +90,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Firebase
+    implementation(libs.firebase.messaging)
+
     // ViewModel Compose
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
@@ -92,5 +112,6 @@ dependencies {
 
     // Room
     implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 }

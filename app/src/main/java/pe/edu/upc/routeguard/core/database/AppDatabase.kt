@@ -1,7 +1,7 @@
 package pe.edu.upc.routeguard.core.database
 
-import androidx.room3.Database
-import androidx.room3.RoomDatabase
+import androidx.room.Database
+import androidx.room.RoomDatabase
 import pe.edu.upc.routeguard.notificationscommunication.infrastructure.local.NotificationDao
 import pe.edu.upc.routeguard.notificationscommunication.infrastructure.local.NotificationEntity
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.local.BoardingRecordEntity

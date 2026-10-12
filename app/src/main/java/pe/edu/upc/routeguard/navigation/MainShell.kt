@@ -81,6 +81,8 @@ fun MainShell(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val account = viewModel.account
+    // The API rejected the token (expired or invalid): back to sign in.
+    LaunchedEffect(Unit) { viewModel.sessionRejected.collect { onSignedOut() } }
     if (account == null) {
         LaunchedEffect(Unit) { onSignedOut() }
         return

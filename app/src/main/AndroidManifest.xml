@@ -43,6 +43,14 @@
             android:name=".tripexecutionmonitoring.infrastructure.service.TrackingForegroundService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <service
+            android:name=".notificationscommunication.infrastructure.messaging.AppFirebaseMessagingService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
