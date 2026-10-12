@@ -12,7 +12,7 @@ interface NotificationDao {
     suspend fun fetchAllNotifications(): List<NotificationEntity>
 
     @Query("DELETE FROM notifications")
-    suspend fun deleteAll()
+    suspend fun deleteAll(): Int
 
     @Upsert
     suspend fun upsertNotifications(entities: List<NotificationEntity>): List<Long>

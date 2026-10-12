@@ -1,4 +1,4 @@
-package pe.edu.upc.routeguard.notifications.infrastructure.messaging
+package pe.edu.upc.routeguard.notificationscommunication.infrastructure.messaging
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -9,8 +9,8 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import pe.edu.upc.routeguard.notifications.application.HandlePushMessageUseCase
-import pe.edu.upc.routeguard.notifications.domain.PushPayload
+import pe.edu.upc.routeguard.notificationscommunication.application.HandlePushMessageUseCase
+import pe.edu.upc.routeguard.notificationscommunication.domain.PushPayload
 
 class AppFirebaseMessagingService : FirebaseMessagingService() {
 
