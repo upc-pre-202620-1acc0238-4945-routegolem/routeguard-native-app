@@ -28,3 +28,15 @@ data class CreateSubscriptionRequestDto(
 )
 
 data class UpgradeSubscriptionRequestDto(val planId: String)
+
+data class CreatePaymentIntentRequestDto(
+    val organizationId: String,
+    val planId: String
+)
+
+data class PaymentIntentResponseDto(
+    val clientSecret: String,
+    val paymentIntentId: String,
+    val amount: Long,
+    val currency: String
+)

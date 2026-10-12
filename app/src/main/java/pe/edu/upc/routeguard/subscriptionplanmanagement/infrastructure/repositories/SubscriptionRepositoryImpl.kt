@@ -5,17 +5,13 @@ import pe.edu.upc.routeguard.core.network.safeApiCall
 import pe.edu.upc.routeguard.core.session.SessionManager
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.AccountSubscription
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.Plan
-import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.PlanTier
-import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.Quota
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.SubscriptionRepository
-import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.SubscriptionStatus
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.valueobject.PlanId
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.valueobject.SubscriptionId
 import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.mapper.toDomain
+import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.remote.CreatePaymentIntentRequestDto
 import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.remote.CreateSubscriptionRequestDto
-import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.remote.PlanDto
 import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.remote.SubscriptionApiService
-import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.remote.SubscriptionDto
 import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.remote.UpgradeSubscriptionRequestDto
 import javax.inject.Inject
 
@@ -32,6 +28,16 @@ class SubscriptionRepositoryImpl @Inject constructor(
         safeApiCall { service.getSubscriptions(sessionManager.organizationId()) }.map { list ->
             list.map { it.toDomain() }.firstOrNull { it.isActive }
         }
+
+    override suspend fun createPaymentIntent(planId: PlanId): Result<String> =
+        safeApiCall {
+            service.createPaymentIntent(
+                CreatePaymentIntentRequestDto(
+                    organizationId = sessionManager.organizationId(),
+                    planId = planId.value
+                )
+            )
+        }.map { it.clientSecret }
 
     override suspend fun subscribe(planId: PlanId, days: Int): Result<AccountSubscription> {
         val start = System.currentTimeMillis()
