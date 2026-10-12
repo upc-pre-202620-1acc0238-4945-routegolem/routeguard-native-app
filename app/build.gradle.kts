@@ -1,6 +1,7 @@
 import java.util.Properties
 
 plugins {
+    alias(libs.plugins.google.services)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
@@ -50,6 +51,11 @@ android {
                 enable = false
             }
         }
+        debug {
+            packaging {
+                jniLibs.keepDebugSymbols.add("**/*.so")
+            }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -84,6 +90,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Firebase
+    implementation(libs.firebase.messaging)
+
     // ViewModel Compose
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
@@ -103,5 +112,6 @@ dependencies {
 
     // Room
     implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 }

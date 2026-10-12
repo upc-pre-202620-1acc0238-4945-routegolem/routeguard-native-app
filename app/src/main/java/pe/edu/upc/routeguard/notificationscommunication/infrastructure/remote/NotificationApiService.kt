@@ -23,4 +23,10 @@ interface NotificationApiService {
         @Path("tripId") tripId: String,
         @Body request: BroadcastRequestDto
     ): Response<FanOutResponseDto>
+
+    @POST("users/{userId}/device-tokens")
+    suspend fun registerDeviceToken(
+        @Path("userId") userId : String,
+        @Body request: RegisterDeviceTokenRequest
+    ): Response<Unit>
 }

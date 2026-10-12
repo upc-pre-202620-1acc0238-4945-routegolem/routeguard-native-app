@@ -16,8 +16,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // Set in app/build.gradle.kts: the Azure API by default, or API_BASE_URL from local.properties.
-    private const val BASE_URL = BuildConfig.API_BASE_URL
+    // Render backend in production, or API_BASE_URL override if present
+    private val BASE_URL: String = BuildConfig.API_BASE_URL.ifBlank {
+        "https://routeguard-web-services.onrender.com/api/v1/"
+    }
 
     @Provides
     @Singleton
