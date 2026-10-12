@@ -138,9 +138,12 @@ private fun PlanCard(
     ) {
         Text("Hasta ${plan.quota.maxRoutes} rutas y ${plan.quota.maxDrivers} conductores")
         when {
-            isCurrent -> Text("Tu plan actual")
+            isCurrent -> {
+                Text("Tu plan actual")
+                BigButton(text = "Renovar con Stripe", onClick = onUpgrade, enabled = enabled)
+            }
             hasSubscription && isUpgrade -> BigButton(text = "Mejorar con Stripe", onClick = onUpgrade, enabled = enabled)
-            hasSubscription -> Unit
+            hasSubscription -> BigButton(text = "Cambiar a este plan con Stripe", onClick = onUpgrade, enabled = enabled)
             else -> BigButton(text = "Elegir y pagar con Stripe", onClick = onSubscribe, enabled = enabled)
         }
     }

@@ -40,9 +40,6 @@ class UpgradePlanUseCase @Inject constructor(private val repository: Subscriptio
         if (!current.isActive) {
             return Result.failure(IllegalStateException("Tu suscripción no está activa"))
         }
-        if (currentPlan != null && target.tier.ordinal <= currentPlan.tier.ordinal) {
-            return Result.failure(IllegalArgumentException("Elige un plan superior al actual"))
-        }
         return repository.upgradePlan(current.id, target.id)
     }
 }
