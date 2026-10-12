@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import pe.edu.upc.routeguard.BuildConfig
 import pe.edu.upc.routeguard.core.network.AuthInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,12 +16,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // 10.0.2.2 is how the Android emulator reaches the backend running on this PC (port 8080).
-    // private const val BASE_URL = "http://10.0.2.2:8080/api/v1/"
-
-    // private const val BASE_URL = "http://192.168.1.35:8080/api/v1/"
-
-    private const val BASE_URL = "https://routeguard-web-services.onrender.com/api/v1/"
+    // Render backend in production, or API_BASE_URL override if present
+    private val BASE_URL: String = BuildConfig.API_BASE_URL.ifBlank {
+        "https://routeguard-web-services.onrender.com/api/v1/"
+    }
 
     @Provides
     @Singleton
