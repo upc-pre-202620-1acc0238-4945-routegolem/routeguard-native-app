@@ -3,6 +3,7 @@ package pe.edu.upc.routeguard.notificationscommunication.infrastructure.push
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -45,13 +46,15 @@ class FcmPushAdapter @Inject constructor(
     }
 
     private fun createChannels() {
-        val system = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        system.createNotificationChannel(
-            NotificationChannel(CHANNEL_DEFAULT, "Avisos del viaje", NotificationManager.IMPORTANCE_DEFAULT)
-        )
-        system.createNotificationChannel(
-            NotificationChannel(CHANNEL_HIGH, "Alertas de alta prioridad", NotificationManager.IMPORTANCE_HIGH)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val system = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            system.createNotificationChannel(
+                NotificationChannel(CHANNEL_DEFAULT, "Avisos del viaje", NotificationManager.IMPORTANCE_DEFAULT)
+            )
+            system.createNotificationChannel(
+                NotificationChannel(CHANNEL_HIGH, "Alertas de alta prioridad", NotificationManager.IMPORTANCE_HIGH)
+            )
+        }
     }
 
     private companion object {

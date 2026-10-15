@@ -14,6 +14,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Looper
@@ -123,10 +124,12 @@ class TrackingForegroundService : Service() {
     }
 
     private fun createChannel() {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Viaje en curso", NotificationManager.IMPORTANCE_LOW)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "Viaje en curso", NotificationManager.IMPORTANCE_LOW)
+            )
+        }
     }
 
     private fun buildNotification(): Notification =

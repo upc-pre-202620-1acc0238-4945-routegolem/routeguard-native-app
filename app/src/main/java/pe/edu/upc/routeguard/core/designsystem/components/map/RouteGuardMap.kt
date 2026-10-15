@@ -110,7 +110,7 @@ fun RouteGuardMap(
     onMapClick: ((Coordinates) -> Unit)? = null,
     fitKey: Any? = Unit
 ) {
-    val token = LocalContext.current.getString(R.string.mapbox_access_token)
+    val token = androidx.compose.ui.res.stringResource(R.string.mapbox_access_token)
     val frame = modifier
         .fillMaxWidth()
         .height(height)
