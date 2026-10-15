@@ -94,7 +94,7 @@ La aplicación sigue las directrices oficiales de **Google MAD**, evaluadas y au
 El proyecto implementa los conceptos de **Domain-Driven Design (DDD)** integrados con **Clean Architecture**:
 
 <div align="center">
-  <img src="resources/assets/images/chapter-3/mobile-prototyping.png" alt="Arquitectura y Flujo RouteGuard" width="800" style="border-radius: 8px; border: 1px solid #ddd;"/>
+  <img src="https://raw.githubusercontent.com/upc-pre-202620-1acc0238-4945-routegolem/routeguard-report/main/resources/assets/images/chapter-3/mobile-prototyping.png" alt="Arquitectura y Flujo RouteGuard" width="800" style="border-radius: 8px; border: 1px solid #ddd;"/>
 </div>
 
 <br/>
