@@ -14,7 +14,14 @@
     <a href="https://developer.android.com/index.html"><img alt="Platform" src="https://img.shields.io/badge/Platform-Android_14%2B-green.svg?style=for-the-badge&logo=android"/></a>
     <a href="https://kotlinlang.org/"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-100%25-orange.svg?style=for-the-badge&logo=kotlin"/></a>
     <a href="https://developer.android.com/jetpack/compose"><img alt="Compose" src="https://img.shields.io/badge/UI-Jetpack_Compose-4285F4.svg?style=for-the-badge&logo=jetpackcompose"/></a>
-    <a href="https://stripe.com/"><img alt="Stripe" src="https://img.shields.io/badge/Payments-Stripe_Checkout-635BFF.svg?style=for-the-badge&logo=stripe"/></a>
+    <a href="https://developer.android.com/training/data-storage/room"><img alt="Room" src="https://img.shields.io/badge/Storage-Room_Offline--First-3DDC84.svg?style=for-the-badge&logo=sqlite"/></a>
+  </p>
+  <p align="center">
+    <a href="https://firebase.google.com/docs/cloud-messaging"><img alt="FCM" src="https://img.shields.io/badge/Push-Firebase_FCM-FFCA28.svg?style=for-the-badge&logo=firebase&logoColor=black"/></a>
+    <a href="https://www.mapbox.com/"><img alt="Mapbox" src="https://img.shields.io/badge/Maps-Mapbox_v11-000000.svg?style=for-the-badge&logo=mapbox"/></a>
+    <a href="https://stripe.com/"><img alt="Stripe" src="https://img.shields.io/badge/Payments-Stripe_SDK-635BFF.svg?style=for-the-badge&logo=stripe"/></a>
+    <a href="https://www.rabbitmq.com/"><img alt="RabbitMQ" src="https://img.shields.io/badge/Broker-RabbitMQ_CloudAMQP-FF6600.svg?style=for-the-badge&logo=rabbitmq"/></a>
+    <a href="https://www.postgresql.org/"><img alt="PostgreSQL" src="https://img.shields.io/badge/Database-PostgreSQL_Aiven-4169E1.svg?style=for-the-badge&logo=postgresql"/></a>
   </p>
 
 </div>
