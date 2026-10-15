@@ -10,7 +10,7 @@
   </p>
 
   <p align="center">
-    <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge&logo=apache"/></a>
+    <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge"/></a>
     <a href="https://developer.android.com/index.html"><img alt="Platform" src="https://img.shields.io/badge/Platform-Android_14%2B-green.svg?style=for-the-badge&logo=android"/></a>
     <a href="https://kotlinlang.org/"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-100%25-orange.svg?style=for-the-badge&logo=kotlin"/></a>
     <a href="https://developer.android.com/jetpack/compose"><img alt="Compose" src="https://img.shields.io/badge/UI-Jetpack_Compose-4285F4.svg?style=for-the-badge&logo=jetpackcompose"/></a>
