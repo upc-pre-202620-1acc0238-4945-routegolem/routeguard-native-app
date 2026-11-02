@@ -70,4 +70,13 @@
     <string name="assistant_btn_next">Siguiente</string>
     <string name="assistant_btn_finish">¡Entendido!</string>
     <string name="tab_guide">Guía</string>
+
+    <!-- Friendly Network & System Errors (Nielsen Heuristic #9) -->
+    <string name="error_connection_timeout">El servidor tardó en responder. Comprueba tu conexión o intenta nuevamente.</string>
+    <string name="error_session_expired">Tu sesión ha expirado o no es válida. Inicia sesión nuevamente.</string>
+    <string name="error_permission_denied">No cuentas con los permisos necesarios para realizar esta acción.</string>
+    <string name="error_server_unavailable">El servicio se encuentra temporalmente fuera de línea. Intenta en unos momentos.</string>
+    <string name="error_network_offline">Sin conexión a internet. Revisa tu red móvil o Wi-Fi.</string>
+    <string name="error_unexpected">Ocurrió un inconveniente al cargar la información.</string>
+    <string name="btn_retry">Reintentar</string>
 </resources>
