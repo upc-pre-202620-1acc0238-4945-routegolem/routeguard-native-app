@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -48,6 +47,8 @@ import pe.edu.upc.routeguard.core.designsystem.components.assistant.AssistantTut
 import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.FleetNavGraphRoute
 import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.fleetNavGraph
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Role
+import pe.edu.upc.routeguard.identityaccessmanagement.presentation.navigation.ProfileNavGraphRoute
+import pe.edu.upc.routeguard.identityaccessmanagement.presentation.navigation.profileNavGraph
 import pe.edu.upc.routeguard.notificationscommunication.presentation.navigation.NotificationsNavGraphRoute
 import pe.edu.upc.routeguard.notificationscommunication.presentation.navigation.notificationsNavGraph
 import pe.edu.upc.routeguard.stakeholderassetmanagement.presentation.navigation.StakeholderNavGraphRoute
@@ -71,17 +72,20 @@ private fun tabsFor(role: Role): List<ShellTab> = when (role) {
         ShellTab(R.string.tab_people, Icons.Filled.Person, StakeholderNavGraphRoute),
         ShellTab(R.string.tab_routes, Icons.Filled.Place, FleetNavGraphRoute),
         ShellTab(R.string.tab_live, Icons.Filled.PlayArrow, LiveMonitorNavGraphRoute),
-        ShellTab(R.string.tab_plans, Icons.Filled.Star, SubscriptionNavGraphRoute)
+        ShellTab(R.string.tab_plans, Icons.Filled.Star, SubscriptionNavGraphRoute),
+        ShellTab(R.string.tab_profile, Icons.Filled.AccountCircle, ProfileNavGraphRoute)
     )
 
     Role.DRIVER -> listOf(
         ShellTab(R.string.tab_trip, Icons.Filled.LocationOn, TripNavGraphRoute),
-        ShellTab(R.string.tab_alerts, Icons.Filled.Notifications, NotificationsNavGraphRoute)
+        ShellTab(R.string.tab_alerts, Icons.Filled.Notifications, NotificationsNavGraphRoute),
+        ShellTab(R.string.tab_profile, Icons.Filled.AccountCircle, ProfileNavGraphRoute)
     )
 
     Role.PARENT -> listOf(
         ShellTab(R.string.tab_tracking, Icons.Filled.LocationOn, FollowTripNavGraphRoute),
-        ShellTab(R.string.tab_alerts, Icons.Filled.Notifications, NotificationsNavGraphRoute)
+        ShellTab(R.string.tab_alerts, Icons.Filled.Notifications, NotificationsNavGraphRoute),
+        ShellTab(R.string.tab_profile, Icons.Filled.AccountCircle, ProfileNavGraphRoute)
     )
 }
 
@@ -106,7 +110,7 @@ fun MainShell(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showSignOutDialog by remember { mutableStateOf(false) }
 
-    // Interactive Mascot Guide (PokÃ© Boy style coach marks)
+    // Interactive Mascot Guide (Poké Boy style coach marks)
     val tutorialSteps = remember(role) { AssistantTutorialProvider.stepsFor(role) }
     var showTutorial by rememberSaveable { mutableStateOf(false) }
     var tutorialStepIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -204,6 +208,16 @@ fun MainShell(
                             notificationsNavGraph(navController, isDriver = false)
                         }
                     }
+
+                    profileNavGraph(
+                        navController = navController,
+                        account = account,
+                        onSignOut = { showSignOutDialog = true },
+                        onLaunchTutorial = {
+                            navigateToTutorialStep(0)
+                            showTutorial = true
+                        }
+                    )
                 }
             }
 
@@ -229,34 +243,6 @@ fun MainShell(
                         )
                     )
                 }
-
-                // Interactive Tutorial / Mascot Guide Button
-                val guideText = stringResource(R.string.tab_guide)
-                NavigationBarItem(
-                    selected = showTutorial,
-                    onClick = {
-                        navigateToTutorialStep(0)
-                        showTutorial = true
-                    },
-                    icon = { Icon(Icons.Filled.Info, contentDescription = guideText) },
-                    label = { Text(guideText) },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        selectedTextColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                val exitText = stringResource(R.string.tab_exit)
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { showSignOutDialog = true },
-                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = exitText) },
-                    label = { Text(exitText) },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                )
             }
         }
 

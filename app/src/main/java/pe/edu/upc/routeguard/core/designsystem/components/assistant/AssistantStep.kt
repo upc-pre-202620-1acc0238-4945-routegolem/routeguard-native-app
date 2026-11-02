@@ -48,6 +48,11 @@ object AssistantTutorialProvider {
                 titleRes = R.string.assistant_title_admin_plans,
                 messageRes = R.string.assistant_msg_admin_plans,
                 targetTabIndex = 3
+            ),
+            AssistantStep(
+                titleRes = R.string.assistant_title_admin_profile,
+                messageRes = R.string.assistant_msg_admin_profile,
+                targetTabIndex = 4
             )
         )
 
@@ -66,6 +71,11 @@ object AssistantTutorialProvider {
                 titleRes = R.string.assistant_title_driver_alerts,
                 messageRes = R.string.assistant_msg_driver_alerts,
                 targetTabIndex = 1
+            ),
+            AssistantStep(
+                titleRes = R.string.assistant_title_driver_profile,
+                messageRes = R.string.assistant_msg_driver_profile,
+                targetTabIndex = 2
             )
         )
 
@@ -84,6 +94,11 @@ object AssistantTutorialProvider {
                 titleRes = R.string.assistant_title_parent_alerts,
                 messageRes = R.string.assistant_msg_parent_alerts,
                 targetTabIndex = 1
+            ),
+            AssistantStep(
+                titleRes = R.string.assistant_title_parent_profile,
+                messageRes = R.string.assistant_msg_parent_profile,
+                targetTabIndex = 2
             )
         )
     }

@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">RouteGuard</string>
     <string name="app_subtitle">Movilidad escolar segura</string>
     <string name="welcome_title">Bienvenido</string>
@@ -32,6 +32,7 @@
     <string name="tab_trip">Viaje</string>
     <string name="tab_alerts">Alertas</string>
     <string name="tab_tracking">Seguimiento</string>
+    <string name="tab_profile">Perfil</string>
     <string name="toggle_password_visibility">Mostrar u ocultar contraseña</string>
     <string name="error_credentials_required">Ingresa tu correo y contraseña</string>
     <string name="error_fill_all_fields">Completa todos los campos</string>
@@ -49,6 +50,8 @@
     <string name="assistant_msg_admin_live">Sigue la ubicación de los vehículos escolares en tiempo real con alertas y telemetría de ruta.</string>
     <string name="assistant_title_admin_plans">Suscripciones y Pagos</string>
     <string name="assistant_msg_admin_plans">Administra los planes contratados para tus colegios con pasarela segura Stripe y renueva tu membresía.</string>
+    <string name="assistant_title_admin_profile">Mi Perfil y Ajustes</string>
+    <string name="assistant_msg_admin_profile">Aquí puedes consultar tus datos de usuario, volver a iniciar esta guía cuando desees y cerrar tu sesión de forma segura.</string>
 
     <string name="assistant_title_driver_welcome">¡Hola, Conductor!</string>
     <string name="assistant_msg_driver_welcome">Te ayudaré a conocer tu herramienta de trabajo diario para viajes seguros.</string>
@@ -56,6 +59,8 @@
     <string name="assistant_msg_driver_trip">Inicia tu recorrido, consulta la lista de estudiantes por recoger y confirma su abordaje con un solo toque.</string>
     <string name="assistant_title_driver_alerts">Notificaciones y Alertas</string>
     <string name="assistant_msg_driver_alerts">Recibe avisos inmediatos ante incidentes viales, retrasos o comunicaciones del colegio.</string>
+    <string name="assistant_title_driver_profile">Mi Perfil y Cuenta</string>
+    <string name="assistant_msg_driver_profile">Consulta tus credenciales de conductor, accede a la guía de ayuda y gestiona el cierre seguro de tu sesión.</string>
 
     <string name="assistant_title_parent_welcome">¡Bienvenido, Padre de Familia!</string>
     <string name="assistant_msg_parent_welcome">RouteGuard te brinda tranquilidad en el traslado escolar de tus hijos.</string>
@@ -63,6 +68,8 @@
     <string name="assistant_msg_parent_tracking">Observa en el mapa la ubicación exacta del transporte escolar y conoce el tiempo estimado de llegada.</string>
     <string name="assistant_title_parent_alerts">Avisos y Llegadas</string>
     <string name="assistant_msg_parent_alerts">Recibe notificaciones automáticas cuando tu hijo aborde el vehículo y cuando llegue seguro a su destino.</string>
+    <string name="assistant_title_parent_profile">Mi Perfil Familiar</string>
+    <string name="assistant_msg_parent_profile">Revisa tu cuenta de apoderado, vuelve a activar la guía de usuario y cierra sesión cuando lo requieras.</string>
 
     <string name="assistant_step_counter">Paso %1$d de %2$d</string>
     <string name="assistant_btn_skip">Omitir</string>
@@ -79,4 +86,23 @@
     <string name="error_network_offline">Sin conexión a internet. Revisa tu red móvil o Wi-Fi.</string>
     <string name="error_unexpected">Ocurrió un inconveniente al cargar la información.</string>
     <string name="btn_retry">Reintentar</string>
+
+    <!-- Profile Screen Strings -->
+    <string name="profile_title">Mi Perfil</string>
+    <string name="profile_subtitle">Detalles de cuenta y preferencias del sistema</string>
+    <string name="profile_section_account">Datos de la cuenta</string>
+    <string name="profile_section_help">Asistencia y tutorial</string>
+    <string name="profile_section_session">Seguridad y sesión</string>
+    <string name="profile_role_label">Rol asignado</string>
+    <string name="profile_role_admin">Administrador de Transporte</string>
+    <string name="profile_role_driver">Conductor Oficial</string>
+    <string name="profile_role_parent">Padre de Familia / Apoderado</string>
+    <string name="profile_email_label">Correo electrónico</string>
+    <string name="profile_org_label">Institución / Colegio</string>
+    <string name="profile_action_guide">Ver Guía interactiva</string>
+    <string name="profile_action_guide_desc">Repasa las funciones de la app con nuestro asistente.</string>
+    <string name="profile_app_version">Versión de la aplicación</string>
+    <string name="profile_app_version_val">RouteGuard v1.0.0 (Build 1)</string>
+    <string name="profile_sign_out_button">Cerrar sesión</string>
+    <string name="profile_sign_out_hint">Para salir de tu cuenta, presiona este botón y confirma la acción.</string>
 </resources>
