@@ -1,8 +1,8 @@
-﻿<resources>
+<resources>
     <string name="app_name">RouteGuard</string>
-    <string name="app_subtitle">Safe school transit</string>
+    <string name="app_subtitle">Safe school transport</string>
     <string name="welcome_title">Welcome</string>
-    <string name="welcome_subtitle">Sign in with your account to continue</string>
+    <string name="welcome_subtitle">Sign in to your account to continue</string>
     <string name="label_email">Email address</string>
     <string name="label_password">Password</string>
     <string name="label_password_hint">Password (min. 8)</string>
@@ -11,18 +11,18 @@
     <string name="label_org_name">Transport company</string>
     <string name="label_forgot_password">Forgot your password?</string>
     <string name="forgot_password_title">Reset password</string>
-    <string name="forgot_password_message">For school safety and privacy regulations, to reset your credentials please contact your school administrator or write to support@routeguard.pe.</string>
+    <string name="forgot_password_message">Due to school safety and data privacy policies, to reset your credentials please contact your educational institution administrator or reach out to soporte@routeguard.pe.</string>
     <string name="btn_login">Sign in</string>
     <string name="btn_register_admin">Register administrator</string>
     <string name="btn_create_account">Create account</string>
     <string name="btn_cancel">Cancel</string>
-    <string name="btn_accept">Understood</string>
-    <string name="terms_accept_prefix">I have read and agree to the </string>
+    <string name="btn_accept">Got it</string>
+    <string name="terms_accept_prefix">I have read and accept the </string>
     <string name="terms_link">Terms and Conditions</string>
-    <string name="terms_dialog_title">RouteGuard Terms &amp; Conditions</string>
-    <string name="terms_dialog_content">RouteGuard guarantees the confidentiality and protection of children, parents, and drivers data according to privacy laws. By using this platform, you consent to passive GPS tracking of school mobility vehicles exclusively during school operational transit hours.</string>
+    <string name="terms_dialog_title">RouteGuard Terms and Conditions</string>
+    <string name="terms_dialog_content">RouteGuard guarantees the confidentiality and security of students, parents, and drivers personal data in compliance with privacy laws. By using this service, you consent to passive GPS vehicle tracking strictly during school transit hours to safeguard student commute.</string>
     <string name="sign_out_title">Sign out?</string>
-    <string name="sign_out_confirm">Are you sure you want to sign out of RouteGuard?</string>
+    <string name="sign_out_confirm">Are you sure you want to sign out of your RouteGuard account?</string>
     <string name="sign_out_action">Sign out</string>
     <string name="tab_people">People</string>
     <string name="tab_routes">Routes</string>
@@ -32,6 +32,7 @@
     <string name="tab_trip">Trip</string>
     <string name="tab_alerts">Alerts</string>
     <string name="tab_tracking">Tracking</string>
+    <string name="tab_profile">Profile</string>
     <string name="toggle_password_visibility">Show or hide password</string>
     <string name="error_credentials_required">Enter your email and password</string>
     <string name="error_fill_all_fields">Fill in all fields</string>
@@ -49,6 +50,8 @@
     <string name="assistant_msg_admin_live">Track school transport units in real-time with safety alerts and telemetry.</string>
     <string name="assistant_title_admin_plans">Subscriptions &amp; Plans</string>
     <string name="assistant_msg_admin_plans">Manage school subscription plans securely powered by Stripe and renew institutional memberships.</string>
+    <string name="assistant_title_admin_profile">My Profile &amp; Settings</string>
+    <string name="assistant_msg_admin_profile">Here you can review your user details, re-launch this guide anytime, and securely sign out.</string>
 
     <string name="assistant_title_driver_welcome">Hello, Driver!</string>
     <string name="assistant_msg_driver_welcome">I will show you how to use your daily route companion for safe school trips.</string>
@@ -56,6 +59,8 @@
     <string name="assistant_msg_driver_trip">Start your itinerary, view the student pickup checklist, and confirm boarding with a single tap.</string>
     <string name="assistant_title_driver_alerts">Notifications &amp; Alerts</string>
     <string name="assistant_msg_driver_alerts">Receive urgent dispatch alerts, traffic delays, and administrative notifications instantly.</string>
+    <string name="assistant_title_driver_profile">My Profile &amp; Account</string>
+    <string name="assistant_msg_driver_profile">Check your driver credentials, access the helper guide, and safely sign out when your shift ends.</string>
 
     <string name="assistant_title_parent_welcome">Welcome, Parent!</string>
     <string name="assistant_msg_parent_welcome">RouteGuard brings you peace of mind during your children\'s daily school commute.</string>
@@ -63,6 +68,8 @@
     <string name="assistant_msg_parent_tracking">Follow the exact school bus location on the live map with accurate estimated arrival times.</string>
     <string name="assistant_title_parent_alerts">Alerts &amp; Arrivals</string>
     <string name="assistant_msg_parent_alerts">Get automated push notifications the moment your child boards the vehicle and arrives safely at school.</string>
+    <string name="assistant_title_parent_profile">My Family Profile</string>
+    <string name="assistant_msg_parent_profile">Review your parent guardian account, re-activate the helper guide, and sign out when needed.</string>
 
     <string name="assistant_step_counter">Step %1$d of %2$d</string>
     <string name="assistant_btn_skip">Skip</string>
@@ -79,4 +86,23 @@
     <string name="error_network_offline">No internet connection. Please check your mobile network or Wi-Fi.</string>
     <string name="error_unexpected">An unexpected issue occurred while retrieving data.</string>
     <string name="btn_retry">Retry</string>
+
+    <!-- Profile Screen Strings -->
+    <string name="profile_title">My Profile</string>
+    <string name="profile_subtitle">Account details and system preferences</string>
+    <string name="profile_section_account">Account information</string>
+    <string name="profile_section_help">Help &amp; Tutorial</string>
+    <string name="profile_section_session">Security &amp; Session</string>
+    <string name="profile_role_label">Assigned Role</string>
+    <string name="profile_role_admin">Transport Administrator</string>
+    <string name="profile_role_driver">Official Driver</string>
+    <string name="profile_role_parent">Parent / Guardian</string>
+    <string name="profile_email_label">Email address</string>
+    <string name="profile_org_label">Institution / School</string>
+    <string name="profile_action_guide">View Interactive Guide</string>
+    <string name="profile_action_guide_desc">Revisit application features with our mascot assistant.</string>
+    <string name="profile_app_version">Application Version</string>
+    <string name="profile_app_version_val">RouteGuard v1.0.0 (Build 1)</string>
+    <string name="profile_sign_out_button">Sign out</string>
+    <string name="profile_sign_out_hint">To sign out of your account, tap this button and confirm the action.</string>
 </resources>
