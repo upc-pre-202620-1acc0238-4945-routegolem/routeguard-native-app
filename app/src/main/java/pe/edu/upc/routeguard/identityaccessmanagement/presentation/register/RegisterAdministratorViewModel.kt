@@ -18,6 +18,7 @@ data class RegisterAdministratorUiState(
     val organizationName: String = "",
     val email: String = "",
     val password: String = "",
+    val acceptedTerms: Boolean = false,
     val isLoading: Boolean = false,
     val account: Account? = null,
     val errorMessage: String? = null
@@ -36,9 +37,14 @@ class RegisterAdministratorViewModel @Inject constructor(
     fun onOrganizationChange(v: String) = _state.update { it.copy(organizationName = v, errorMessage = null) }
     fun onEmailChange(v: String) = _state.update { it.copy(email = v, errorMessage = null) }
     fun onPasswordChange(v: String) = _state.update { it.copy(password = v, errorMessage = null) }
+    fun onAcceptedTermsChange(v: Boolean) = _state.update { it.copy(acceptedTerms = v, errorMessage = null) }
 
     fun register() {
         val s = _state.value
+        if (!s.acceptedTerms) {
+            _state.update { it.copy(errorMessage = "Debes aceptar los Términos y Condiciones") }
+            return
+        }
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             registerAdministrator(s.firstName, s.lastName, s.organizationName, s.email, s.password)
