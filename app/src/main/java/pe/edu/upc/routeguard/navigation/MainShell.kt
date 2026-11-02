@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -42,6 +43,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.designsystem.components.assistant.AssistantGuideOverlay
+import pe.edu.upc.routeguard.core.designsystem.components.assistant.AssistantTutorialProvider
 import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.FleetNavGraphRoute
 import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.fleetNavGraph
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Role
@@ -103,6 +106,31 @@ fun MainShell(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showSignOutDialog by remember { mutableStateOf(false) }
 
+    // Interactive Mascot Guide (PokÃ© Boy style coach marks)
+    val tutorialSteps = remember(role) { AssistantTutorialProvider.stepsFor(role) }
+    var showTutorial by rememberSaveable { mutableStateOf(false) }
+    var tutorialStepIndex by rememberSaveable { mutableIntStateOf(0) }
+
+    LaunchedEffect(account.id.value) {
+        if (!viewModel.hasSeenTutorial(account.id.value)) {
+            tutorialStepIndex = 0
+            showTutorial = true
+        }
+    }
+
+    fun navigateToTutorialStep(newIndex: Int) {
+        tutorialStepIndex = newIndex
+        val targetTab = tutorialSteps.getOrNull(newIndex)?.targetTabIndex
+        if (targetTab != null && targetTab in tabs.indices) {
+            selectedTab = targetTab
+            navController.navigate(tabs[targetTab].route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     val notificationsPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -151,64 +179,109 @@ fun MainShell(
         )
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        Box(modifier = Modifier.weight(1f)) {
-            NavHost(
-                navController = navController,
-                startDestination = tabs.first().route
-            ) {
-                when (role) {
-                    Role.ADMINISTRATOR -> {
-                        stakeholderNavGraph(navController)
-                        fleetNavGraph(navController)
-                        liveMonitorNavGraph(navController)
-                        subscriptionNavGraph(navController)
-                    }
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                NavHost(
+                    navController = navController,
+                    startDestination = tabs.first().route
+                ) {
+                    when (role) {
+                        Role.ADMINISTRATOR -> {
+                            stakeholderNavGraph(navController)
+                            fleetNavGraph(navController)
+                            liveMonitorNavGraph(navController)
+                            subscriptionNavGraph(navController)
+                        }
 
-                    Role.DRIVER -> {
-                        tripNavGraph(navController)
-                        notificationsNavGraph(navController, isDriver = true)
-                    }
+                        Role.DRIVER -> {
+                            tripNavGraph(navController)
+                            notificationsNavGraph(navController, isDriver = true)
+                        }
 
-                    Role.PARENT -> {
-                        followTripNavGraph(navController)
-                        notificationsNavGraph(navController, isDriver = false)
+                        Role.PARENT -> {
+                            followTripNavGraph(navController)
+                            notificationsNavGraph(navController, isDriver = false)
+                        }
                     }
                 }
             }
-        }
 
-        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-            tabs.forEachIndexed { index, tab ->
-                val labelText = stringResource(tab.labelRes)
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                tabs.forEachIndexed { index, tab ->
+                    val labelText = stringResource(tab.labelRes)
+                    NavigationBarItem(
+                        selected = selectedTab == index && !showTutorial,
+                        onClick = {
+                            selectedTab = index
+                            navController.navigate(tab.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(tab.icon, contentDescription = labelText) },
+                        label = { Text(labelText) },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
+                // Interactive Tutorial / Mascot Guide Button
+                val guideText = stringResource(R.string.tab_guide)
                 NavigationBarItem(
-                    selected = selectedTab == index,
+                    selected = showTutorial,
                     onClick = {
-                        selectedTab = index
-                        navController.navigate(tab.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navigateToTutorialStep(0)
+                        showTutorial = true
                     },
-                    icon = { Icon(tab.icon, contentDescription = labelText) },
-                    label = { Text(labelText) },
+                    icon = { Icon(Icons.Filled.Info, contentDescription = guideText) },
+                    label = { Text(guideText) },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         selectedTextColor = MaterialTheme.colorScheme.primary
                     )
                 )
-            }
-            val exitText = stringResource(R.string.tab_exit)
-            NavigationBarItem(
-                selected = false,
-                onClick = { showSignOutDialog = true },
-                icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = exitText) },
-                label = { Text(exitText) },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+
+                val exitText = stringResource(R.string.tab_exit)
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { showSignOutDialog = true },
+                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = exitText) },
+                    label = { Text(exitText) },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 )
+            }
+        }
+
+        // Floating Mascot Interactive Tutorial Layer
+        if (showTutorial) {
+            AssistantGuideOverlay(
+                steps = tutorialSteps,
+                currentStepIndex = tutorialStepIndex,
+                onNext = {
+                    if (tutorialStepIndex < tutorialSteps.size - 1) {
+                        navigateToTutorialStep(tutorialStepIndex + 1)
+                    } else {
+                        viewModel.markTutorialAsSeen(account.id.value)
+                        showTutorial = false
+                    }
+                },
+                onPrevious = {
+                    if (tutorialStepIndex > 0) {
+                        navigateToTutorialStep(tutorialStepIndex - 1)
+                    }
+                },
+                onDismiss = {
+                    viewModel.markTutorialAsSeen(account.id.value)
+                    showTutorial = false
+                }
             )
         }
     }

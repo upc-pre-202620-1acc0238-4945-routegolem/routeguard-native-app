@@ -12,7 +12,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     getCurrentAccount: GetCurrentAccountUseCase,
     private val signOut: SignOutUseCase,
-    sessionManager: SessionManager
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     val account: Account? = getCurrentAccount()
@@ -21,4 +21,10 @@ class MainViewModel @Inject constructor(
     val sessionRejected = sessionManager.sessionRejected
 
     fun onSignOut() = signOut()
+
+    fun hasSeenTutorial(userId: String): Boolean = sessionManager.hasSeenTutorial(userId)
+
+    fun markTutorialAsSeen(userId: String) = sessionManager.setTutorialSeen(userId, true)
+
+    fun resetTutorialForUser(userId: String) = sessionManager.setTutorialSeen(userId, false)
 }
