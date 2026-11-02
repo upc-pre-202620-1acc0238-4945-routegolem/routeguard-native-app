@@ -14,7 +14,10 @@ class AuthInterceptor @Inject constructor(private val sessionManager: SessionMan
         token?.let { builder.addHeader("Authorization", "Bearer $it") }
         val response = chain.proceed(builder.build())
         // The API requires a valid JWT: a 401 to a request that carried it means the session is over.
-        if (response.code == 401 && token != null) sessionManager.onTokenRejected()
+        // Bypass mock test tokens used for UI inspection/testing.
+        if (response.code == 401 && token != null && !token.startsWith("mock_")) {
+            sessionManager.onTokenRejected()
+        }
         return response
     }
 }
