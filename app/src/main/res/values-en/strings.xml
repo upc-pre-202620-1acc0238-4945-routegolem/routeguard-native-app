@@ -70,4 +70,13 @@
     <string name="assistant_btn_next">Next</string>
     <string name="assistant_btn_finish">Got it!</string>
     <string name="tab_guide">Guide</string>
+
+    <!-- Friendly Network & System Errors (Nielsen Heuristic #9) -->
+    <string name="error_connection_timeout">The server took too long to respond. Please check your connection or try again.</string>
+    <string name="error_session_expired">Your session has expired or is invalid. Please sign in again.</string>
+    <string name="error_permission_denied">You do not have the required permissions to perform this action.</string>
+    <string name="error_server_unavailable">The service is temporarily unavailable. Please try again shortly.</string>
+    <string name="error_network_offline">No internet connection. Please check your mobile network or Wi-Fi.</string>
+    <string name="error_unexpected">An unexpected issue occurred while retrieving data.</string>
+    <string name="btn_retry">Retry</string>
 </resources>
