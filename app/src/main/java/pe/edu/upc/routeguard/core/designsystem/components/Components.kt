@@ -5,14 +5,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,16 +28,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import pe.edu.upc.routeguard.R
 
 @Composable
 fun LoadingBox(modifier: Modifier = Modifier) {
@@ -42,15 +50,78 @@ fun LoadingBox(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Translates low-level technical strings (timeout, HTTP 401, 503) into localized user-friendly guidance
+ * following Nielsen's Heuristic #9.
+ */
 @Composable
-fun ErrorText(message: String?, modifier: Modifier = Modifier) {
+fun friendlyErrorMessage(rawMessage: String?): String {
+    if (rawMessage.isNullOrBlank()) return ""
+    val trimmed = rawMessage.trim()
+    return when {
+        trimmed.contains("timeout", ignoreCase = true) -> stringResource(R.string.error_connection_timeout)
+        trimmed.contains("401", ignoreCase = true) || trimmed.contains("unauthorized", ignoreCase = true) -> stringResource(R.string.error_session_expired)
+        trimmed.contains("403", ignoreCase = true) || trimmed.contains("forbidden", ignoreCase = true) -> stringResource(R.string.error_permission_denied)
+        trimmed.contains("500", ignoreCase = true) || trimmed.contains("502", ignoreCase = true) || trimmed.contains("503", ignoreCase = true) || trimmed.contains("504", ignoreCase = true) -> stringResource(R.string.error_server_unavailable)
+        trimmed.contains("offline", ignoreCase = true) || trimmed.contains("connect_failed", ignoreCase = true) || trimmed.contains("unable to resolve host", ignoreCase = true) -> stringResource(R.string.error_network_offline)
+        else -> rawMessage
+    }
+}
+
+/**
+ * Accessible and Nielsen Heuristic #9 compliant error banner.
+ * Replaces technical codes with a stylized Material 3 alert card.
+ */
+@Composable
+fun ErrorText(
+    message: String?,
+    modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null
+) {
     if (message.isNullOrBlank()) return
-    Text(
-        text = message,
-        color = MaterialTheme.colorScheme.error,
-        style = MaterialTheme.typography.bodyMedium,
+    val friendly = friendlyErrorMessage(message)
+
+    Surface(
         modifier = modifier
-    )
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.88f),
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = friendly,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
+            if (onRetry != null) {
+                TextButton(
+                    onClick = onRetry,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_retry),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
