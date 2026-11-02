@@ -66,6 +66,13 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
         prefs.edit().putString(KEY_CACHE_OWNER, userId).apply()
     }
 
+    /** Whether the user has completed or dismissed the interactive mascot tutorial. */
+    fun hasSeenTutorial(userId: String): Boolean = prefs.getBoolean(KEY_TUTORIAL_SEEN_PREFIX + userId, false)
+
+    fun setTutorialSeen(userId: String, seen: Boolean = true) {
+        prefs.edit().putBoolean(KEY_TUTORIAL_SEEN_PREFIX + userId, seen).apply()
+    }
+
     /** The server answered 401 to a request that carried the token: drop the session and notify the UI. */
     fun onTokenRejected() {
         if (token() == null) return
@@ -82,5 +89,6 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
         const val KEY_ORGANIZATION_ID = "organization_id"
         const val KEY_PROFILE_ID = "profile_id"
         const val KEY_CACHE_OWNER = "cache_owner"
+        const val KEY_TUTORIAL_SEEN_PREFIX = "tutorial_seen_"
     }
 }
