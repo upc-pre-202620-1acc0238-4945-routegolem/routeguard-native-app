@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">RouteGuard</string>
     <string name="app_subtitle">Movilidad escolar segura</string>
     <string name="welcome_title">Bienvenido</string>
@@ -32,9 +32,42 @@
     <string name="tab_trip">Viaje</string>
     <string name="tab_alerts">Alertas</string>
     <string name="tab_tracking">Seguimiento</string>
-    <string name="toggle_password_visibility">Mostrar u ocultar contrase�a</string>
-    <string name="error_credentials_required">Ingresa tu correo y contrase�a</string>
+    <string name="toggle_password_visibility">Mostrar u ocultar contraseña</string>
+    <string name="error_credentials_required">Ingresa tu correo y contraseña</string>
     <string name="error_fill_all_fields">Completa todos los campos</string>
-    <string name="error_accept_terms">Debes aceptar los T�rminos y Condiciones</string>
-    <string name="error_login_failed">No se pudo iniciar sesi�n</string>
+    <string name="error_accept_terms">Debes aceptar los Términos y Condiciones</string>
+    <string name="error_login_failed">No se pudo iniciar sesión</string>
+
+    <!-- Interactive Assistant / Coach Marks Guide -->
+    <string name="assistant_title_admin_welcome">¡Bienvenido a RouteGuard!</string>
+    <string name="assistant_msg_admin_welcome">Soy tu asistente RouteGuard. Te guiaré brevemente por las funciones principales de tu panel administrativo.</string>
+    <string name="assistant_title_admin_people">Gestión de Personas</string>
+    <string name="assistant_msg_admin_people">Aquí puedes registrar y administrar transportistas, padres de familia y asociar estudiantes a sus movilidades.</string>
+    <string name="assistant_title_admin_routes">Planificador de Rutas</string>
+    <string name="assistant_msg_admin_routes">Traza recorridos óptimos, asigna paradas escolares y visualiza las rutas activas de tu flota.</string>
+    <string name="assistant_title_admin_live">Monitoreo en Vivo</string>
+    <string name="assistant_msg_admin_live">Sigue la ubicación de los vehículos escolares en tiempo real con alertas y telemetría de ruta.</string>
+    <string name="assistant_title_admin_plans">Suscripciones y Pagos</string>
+    <string name="assistant_msg_admin_plans">Administra los planes contratados para tus colegios con pasarela segura Stripe y renueva tu membresía.</string>
+
+    <string name="assistant_title_driver_welcome">¡Hola, Conductor!</string>
+    <string name="assistant_msg_driver_welcome">Te ayudaré a conocer tu herramienta de trabajo diario para viajes seguros.</string>
+    <string name="assistant_title_driver_trip">Tu Viaje en Curso</string>
+    <string name="assistant_msg_driver_trip">Inicia tu recorrido, consulta la lista de estudiantes por recoger y confirma su abordaje con un solo toque.</string>
+    <string name="assistant_title_driver_alerts">Notificaciones y Alertas</string>
+    <string name="assistant_msg_driver_alerts">Recibe avisos inmediatos ante incidentes viales, retrasos o comunicaciones del colegio.</string>
+
+    <string name="assistant_title_parent_welcome">¡Bienvenido, Padre de Familia!</string>
+    <string name="assistant_msg_parent_welcome">RouteGuard te brinda tranquilidad en el traslado escolar de tus hijos.</string>
+    <string name="assistant_title_parent_tracking">Seguimiento en Tiempo Real</string>
+    <string name="assistant_msg_parent_tracking">Observa en el mapa la ubicación exacta del transporte escolar y conoce el tiempo estimado de llegada.</string>
+    <string name="assistant_title_parent_alerts">Avisos y Llegadas</string>
+    <string name="assistant_msg_parent_alerts">Recibe notificaciones automáticas cuando tu hijo aborde el vehículo y cuando llegue seguro a su destino.</string>
+
+    <string name="assistant_step_counter">Paso %1$d de %2$d</string>
+    <string name="assistant_btn_skip">Omitir</string>
+    <string name="assistant_btn_back">Atrás</string>
+    <string name="assistant_btn_next">Siguiente</string>
+    <string name="assistant_btn_finish">¡Entendido!</string>
+    <string name="tab_guide">Guía</string>
 </resources>

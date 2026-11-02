@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">RouteGuard</string>
     <string name="app_subtitle">Safe school transit</string>
     <string name="welcome_title">Welcome</string>
@@ -37,4 +37,37 @@
     <string name="error_fill_all_fields">Fill in all fields</string>
     <string name="error_accept_terms">You must accept the Terms and Conditions</string>
     <string name="error_login_failed">Could not sign in</string>
+
+    <!-- Interactive Assistant / Coach Marks Guide -->
+    <string name="assistant_title_admin_welcome">Welcome to RouteGuard!</string>
+    <string name="assistant_msg_admin_welcome">I am your RouteGuard assistant. I will briefly guide you through the key features of your administration panel.</string>
+    <string name="assistant_title_admin_people">People Management</string>
+    <string name="assistant_msg_admin_people">Register and manage school drivers, parents, and assign students to their transport units.</string>
+    <string name="assistant_title_admin_routes">Route Planner</string>
+    <string name="assistant_msg_admin_routes">Design optimal routes, assign school stops, and visualize active routes across your fleet.</string>
+    <string name="assistant_title_admin_live">Live Monitoring</string>
+    <string name="assistant_msg_admin_live">Track school transport units in real-time with safety alerts and telemetry.</string>
+    <string name="assistant_title_admin_plans">Subscriptions &amp; Plans</string>
+    <string name="assistant_msg_admin_plans">Manage school subscription plans securely powered by Stripe and renew institutional memberships.</string>
+
+    <string name="assistant_title_driver_welcome">Hello, Driver!</string>
+    <string name="assistant_msg_driver_welcome">I will show you how to use your daily route companion for safe school trips.</string>
+    <string name="assistant_title_driver_trip">Your Active Trip</string>
+    <string name="assistant_msg_driver_trip">Start your itinerary, view the student pickup checklist, and confirm boarding with a single tap.</string>
+    <string name="assistant_title_driver_alerts">Notifications &amp; Alerts</string>
+    <string name="assistant_msg_driver_alerts">Receive urgent dispatch alerts, traffic delays, and administrative notifications instantly.</string>
+
+    <string name="assistant_title_parent_welcome">Welcome, Parent!</string>
+    <string name="assistant_msg_parent_welcome">RouteGuard brings you peace of mind during your children\'s daily school commute.</string>
+    <string name="assistant_title_parent_tracking">Real-Time Tracking</string>
+    <string name="assistant_msg_parent_tracking">Follow the exact school bus location on the live map with accurate estimated arrival times.</string>
+    <string name="assistant_title_parent_alerts">Alerts &amp; Arrivals</string>
+    <string name="assistant_msg_parent_alerts">Get automated push notifications the moment your child boards the vehicle and arrives safely at school.</string>
+
+    <string name="assistant_step_counter">Step %1$d of %2$d</string>
+    <string name="assistant_btn_skip">Skip</string>
+    <string name="assistant_btn_back">Back</string>
+    <string name="assistant_btn_next">Next</string>
+    <string name="assistant_btn_finish">Got it!</string>
+    <string name="tab_guide">Guide</string>
 </resources>
