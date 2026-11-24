@@ -527,18 +527,45 @@ private fun WaypointCard(
                     }
                 }
                 BoardingState.OMITTED -> {
-                    TextButton(
-                        onClick = { onBoardingStatus(waypoint.studentId, BoardingState.BOARDED) },
-                        enabled = canRecord,
-                        modifier = Modifier.align(Alignment.End)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = BrandEmeraldDark, modifier = Modifier.size(16.dp))
+                        TextButton(
+                            onClick = { onBoardingStatus(waypoint.studentId, BoardingState.MISSING) },
+                            enabled = canRecord
+                        ) {
+                            Text("Deshacer: Volver a Pendiente", color = Color(0xFF64748B), style = MaterialTheme.typography.bodySmall)
+                        }
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Rectificar: Marcar como Subió", color = BrandEmeraldDark, fontWeight = FontWeight.Bold)
+                        TextButton(
+                            onClick = { onBoardingStatus(waypoint.studentId, BoardingState.BOARDED) },
+                            enabled = canRecord
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = null, tint = BrandEmeraldDark, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Rectificar: Subió", color = BrandEmeraldDark, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
                 BoardingState.BOARDED -> {
-                    // Status badge already indicates "A bordo"
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = { onBoardingStatus(waypoint.studentId, BoardingState.MISSING) },
+                            enabled = canRecord
+                        ) {
+                            Text(
+                                text = "Deshacer abordaje (volver a Pendiente)",
+                                color = Color(0xFF64748B),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
                 }
             }
         }
