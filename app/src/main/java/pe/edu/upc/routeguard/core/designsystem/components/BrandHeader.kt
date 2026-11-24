@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,6 +26,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
@@ -40,8 +40,8 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavyDeep
 
 /**
- * Navy header with the RouteGuard shield, the same identity as the landing page.
- * It draws behind the status bar, so the status bar icons are switched to light while it is on screen.
+ * Modern navy brand header with RouteGuard shield, aligned with the landing page and Flutter app.
+ * Draws behind the status bar with light status bar icons.
  */
 @Composable
 fun BrandHeader(
@@ -52,29 +52,40 @@ fun BrandHeader(
     onBack: (() -> Unit)? = null
 ) {
     LightStatusBarIcons()
+    val shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp))
+            .shadow(6.dp, shape)
+            .clip(shape)
             .background(Brush.verticalGradient(listOf(BrandNavy, BrandNavyDeep)))
             .statusBarsPadding()
     ) {
         if (onBack != null) {
-            IconButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart).padding(4.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = Color.White
+                )
             }
         }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = if (compact) 20.dp else 36.dp),
+                .padding(horizontal = 24.dp, vertical = if (compact) 18.dp else 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Image(
                 painter = painterResource(R.drawable.brand_logo),
                 contentDescription = "RouteGuard",
-                modifier = Modifier.height(if (compact) 56.dp else 96.dp)
+                modifier = Modifier.height(if (compact) 52.dp else 84.dp)
             )
             Text(
                 text = title,
@@ -82,12 +93,16 @@ fun BrandHeader(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            Surface(color = BrandEmerald.copy(alpha = 0.18f), shape = CircleShape) {
+            Surface(
+                color = BrandEmerald.copy(alpha = 0.22f),
+                shape = CircleShape
+            ) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFA7F3D0),
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
                 )
             }
         }

@@ -5,9 +5,12 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.LocationOn
@@ -22,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,10 +36,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -44,6 +51,9 @@ import kotlinx.serialization.Serializable
 import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.assistant.AssistantGuideOverlay
 import pe.edu.upc.routeguard.core.designsystem.components.assistant.AssistantTutorialProvider
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandBorder
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.FleetNavGraphRoute
 import pe.edu.upc.routeguard.fleetroutemanagement.presentation.navigation.fleetNavGraph
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Role
@@ -221,27 +231,60 @@ fun MainShell(
                 }
             }
 
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                tabs.forEachIndexed { index, tab ->
-                    val labelText = stringResource(tab.labelRes)
-                    NavigationBarItem(
-                        selected = selectedTab == index && !showTutorial,
-                        onClick = {
-                            selectedTab = index
-                            navController.navigate(tab.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = BrandCardWhite,
+                shadowElevation = 8.dp,
+                border = BorderStroke(1.dp, BrandBorder)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier.widthIn(max = if (tabs.size <= 3) 420.dp else 560.dp)
+                    ) {
+                        NavigationBar(
+                            containerColor = Color.Transparent,
+                            tonalElevation = 0.dp
+                        ) {
+                            tabs.forEachIndexed { index, tab ->
+                                val labelText = stringResource(tab.labelRes)
+                                val isSelected = selectedTab == index && !showTutorial
+                                NavigationBarItem(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedTab = index
+                                        navController.navigate(tab.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    },
+                                    icon = {
+                                        Icon(
+                                            imageVector = tab.icon,
+                                            contentDescription = labelText
+                                        )
+                                    },
+                                    label = {
+                                        Text(
+                                            text = labelText,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        indicatorColor = BrandNavy.copy(alpha = 0.12f),
+                                        selectedIconColor = BrandNavy,
+                                        selectedTextColor = BrandNavy,
+                                        unselectedIconColor = Color(0xFF64748B),
+                                        unselectedTextColor = Color(0xFF64748B)
+                                    )
+                                )
                             }
-                        },
-                        icon = { Icon(tab.icon, contentDescription = labelText) },
-                        label = { Text(labelText) },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
+                        }
+                    }
                 }
             }
         }
