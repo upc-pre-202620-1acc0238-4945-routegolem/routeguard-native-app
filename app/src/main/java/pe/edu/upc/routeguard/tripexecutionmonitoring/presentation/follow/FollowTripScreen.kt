@@ -2,17 +2,34 @@ package pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.follow
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -21,19 +38,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
+import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapVehicle
 import pe.edu.upc.routeguard.core.designsystem.components.map.RouteGuardMap
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandBorder
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmerald
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmeraldDark
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.withEstimate
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.formatAge
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.parentLabel
@@ -43,7 +70,7 @@ private const val REFRESH_MS = 5_000L
 private const val VEHICLE_ID = "vehicle"
 private const val STALE_THRESHOLD_MS = 180_000L // 3 minutes
 
-/** Parent view: where is the vehicle that carries my children, and how far is the next stop. */
+/** Parent view: where is the vehicle that carries my children, speed, and real-time stops. */
 @Composable
 fun FollowTripScreen(
     modifier: Modifier = Modifier,
@@ -61,36 +88,70 @@ fun FollowTripScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Seguimiento")
+        ScreenHeader(title = "Seguimiento en Vivo")
 
         val trip = state.trip
         when {
             !state.hasLoaded -> LoadingBox()
 
             trip == null -> Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ErrorText(state.errorMessage)
-                InfoCard(
-                    title = "Sin viaje en curso",
-                    subtitle = "Cuando el conductor inicie la ruta de tu hijo, verás aquí dónde está el vehículo."
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrandCardWhite),
+                    elevation = CardDefaults.cardElevation(2.dp),
+                    border = BorderStroke(1.dp, BrandBorder)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = BrandNavy.copy(alpha = 0.1f),
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Filled.LocationOn, contentDescription = null, tint = BrandNavy, modifier = Modifier.size(28.dp))
+                            }
+                        }
+                        Text(
+                            text = "Sin viaje en curso",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandNavy
+                        )
+                        Text(
+                            text = "Cuando el conductor inicie la ruta escolar de tu hijo, verás aquí su ubicación en tiempo real sobre el mapa, velocidad y horario estimado de llegada.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                }
             }
 
             else -> Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 val nextStop = trip.nextStop?.withEstimate(state.arrival)
+
+                // Interactive Map View
                 RouteGuardMap(
                     stops = trip.stops.map {
                         MapStop(it.name, it.coordinates, it.order, it.reached, it.order == nextStop?.order)
                     },
                     vehicles = trip.location?.let {
-                        listOf(MapVehicle(VEHICLE_ID, "Vehículo", it.coordinates))
+                        listOf(MapVehicle(VEHICLE_ID, "Vehículo Escolar", it.coordinates))
                     }.orEmpty(),
                     followVehicleId = VEHICLE_ID,
                     routePath = state.roadPath,
@@ -100,82 +161,268 @@ fun FollowTripScreen(
 
                 ErrorText(state.errorMessage)
 
-                InfoCard(
-                    title = trip.routeName,
-                    subtitle = "Conductor: ${trip.driverName.ifBlank { "—" }}"
+                // Live Vehicle Telemetry Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrandCardWhite),
+                    elevation = CardDefaults.cardElevation(2.dp),
+                    border = BorderStroke(1.dp, BrandBorder)
                 ) {
-                    val location = trip.location
-                    if (location != null) {
-                        val isStale = (System.currentTimeMillis() - location.recordedAt) > STALE_THRESHOLD_MS
-                        Text("Velocidad: ${location.speedKmh.toInt()} km/h · ${formatAge(location.recordedAt)}")
-                        if (isStale) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.padding(top = 4.dp)
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = trip.routeName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandNavy
+                                )
+                                Text(
+                                    text = "Conductor: ${trip.driverName.ifBlank { "Personal Institucional" }}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                            StatusChip(
+                                text = "En ruta",
+                                containerColor = Color(0xFFD1FAE5),
+                                contentColor = Color(0xFF064E3B),
+                                icon = Icons.Filled.Check
+                            )
+                        }
+
+                        val location = trip.location
+                        if (location != null) {
+                            val isStale = (System.currentTimeMillis() - location.recordedAt) > STALE_THRESHOLD_MS
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                StatusChip(
+                                    text = "${location.speedKmh.toInt()} km/h",
+                                    containerColor = BrandNavy.copy(alpha = 0.08f),
+                                    contentColor = BrandNavy
+                                )
+                                StatusChip(
+                                    text = "Actualizado ${formatAge(location.recordedAt)}",
+                                    containerColor = Color(0xFFF1F5F9),
+                                    contentColor = Color(0xFF475569)
+                                )
+                            }
+
+                            if (isStale) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.padding(top = 4.dp)
                                 ) {
-                                    Icon(
-                                        Icons.Default.Warning,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        "Ubicación GPS desactualizada (${formatAge(location.recordedAt)}). Posible pérdida de cobertura móvil del conductor.",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onErrorContainer
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Warning,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Text(
+                                            "Ubicación GPS desactualizada (${formatAge(location.recordedAt)}). Posible pérdida de cobertura móvil del conductor.",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
                                 }
                             }
+                        } else {
+                            Text(
+                                "Esperando la primera señal GPS de la unidad...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF64748B)
+                            )
                         }
-                    } else {
-                        Text("Esperando la primera señal GPS del vehículo")
                     }
                 }
 
                 // Ficha de seguridad y trazabilidad del vehículo (Carmen V-01)
-                InfoCard(
-                    title = "Vehículo Asignado y Trazabilidad",
-                    subtitle = "Mercedes-Benz Sprinter 516 (Blanco) · Placa ABC-789"
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrandCardWhite),
+                    elevation = CardDefaults.cardElevation(2.dp),
+                    border = BorderStroke(1.dp, BrandBorder)
                 ) {
-                    Text("Conductor titular: ${trip.driverName.ifBlank { "Conductor institucional" }} (DNI 08492019)")
-                    Text("Teléfono móvil directo: +51 987 654 321")
-                    Text("Seguro escolar / SOAT y Récord de manejo: Vigente (A-IIIa)")
-                }
-
-                InfoCard(title = "Próxima parada") {
-                    Text(
-                        text = if (nextStop == null) {
-                            "El vehículo ya pasó por todas las paradas"
-                        } else {
-                            "${nextStop.name} · ${nextStop.progressText()}"
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Vehículo y Seguridad",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandNavy
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFFFEF3C7),
+                                border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                            ) {
+                                Text(
+                                    text = "Placa ABC-789",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF92400E),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
                         }
-                    )
-                }
-
-                InfoCard(title = "Tus hijos") {
-                    if (trip.children.isEmpty()) Text("Ninguno de tus hijos viaja en esta ruta")
-                    trip.children.forEach { child ->
-                        Text("• ${child.name}: ${child.state.parentLabel()}")
-                        if (nextStop != null) {
-                            Text("  Próxima parada estimada: ${nextStop.name} (${nextStop.progressText()})")
+                        Text(
+                            text = "Unidad: Mercedes-Benz Sprinter 516 (Blanco)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF334155)
+                        )
+                        Text(
+                            text = "Conductor titular: ${trip.driverName.ifBlank { "Personal Autorizado" }} · DNI 08492019",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF64748B)
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFD1FAE5)
+                        ) {
+                            Text(
+                                text = "SOAT y Récord de manejo: Vigente (Licencia A-IIIa)",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF064E3B),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
                         }
                     }
                 }
 
-                // Llamada directa al conductor (RuwaLabs #12, Miriam V-03)
-                SecondaryButton(
-                    text = "Llamar al conductor (${trip.driverName.ifBlank { "Conductor" }})",
+                // Next Stop Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrandCardWhite),
+                    elevation = CardDefaults.cardElevation(2.dp),
+                    border = BorderStroke(1.dp, BrandBorder)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Próxima parada",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandNavy
+                        )
+                        Text(
+                            text = if (nextStop == null) {
+                                "El vehículo ya pasó por todas las paradas programadas"
+                            } else {
+                                "${nextStop.name} · ${nextStop.progressText()}"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF334155)
+                        )
+                    }
+                }
+
+                // Children in Route Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrandCardWhite),
+                    elevation = CardDefaults.cardElevation(2.dp),
+                    border = BorderStroke(1.dp, BrandBorder)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Tus hijos en esta ruta",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandNavy
+                        )
+                        if (trip.children.isEmpty()) {
+                            Text(
+                                text = "Ninguno de tus hijos viaja en esta ruta actualmente.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF64748B)
+                            )
+                        } else {
+                            trip.children.forEach { child ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(BrandNavy.copy(alpha = 0.1f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = child.name.take(1).uppercase(),
+                                            fontWeight = FontWeight.Bold,
+                                            color = BrandNavy
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = child.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "Estado: ${child.state.parentLabel()}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF64748B)
+                                        )
+                                    }
+                                    StatusChip(
+                                        text = child.state.parentLabel(),
+                                        containerColor = Color(0xFFD1FAE5),
+                                        contentColor = Color(0xFF064E3B)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // SOS / Llamada directa al conductor (RuwaLabs #12, Miriam V-03)
+                BigButton(
+                    text = "Llamar al conductor (${trip.driverName.ifBlank { "Personal" }})",
                     onClick = {
                         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+51987654321"))
                         context.startActivity(intent)
-                    }
+                    },
+                    containerColor = BrandEmeraldDark,
+                    icon = Icons.Filled.Call
                 )
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
