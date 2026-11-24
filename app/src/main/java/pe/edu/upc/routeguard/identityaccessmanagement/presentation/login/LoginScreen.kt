@@ -327,7 +327,7 @@ fun LoginScreen(
                             selected = state.email == "parent@routeguard.pe",
                             onClick = {
                                 viewModel.onEmailChange("parent@routeguard.pe")
-                                viewModel.onPasswordChange("password123")
+                                viewModel.onPasswordChange("parent123")
                             },
                             label = { Text("Apoderado", style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {
@@ -341,7 +341,7 @@ fun LoginScreen(
                             selected = state.email == "driver@routeguard.pe",
                             onClick = {
                                 viewModel.onEmailChange("driver@routeguard.pe")
-                                viewModel.onPasswordChange("password123")
+                                viewModel.onPasswordChange("driver123")
                             },
                             label = { Text("Conductor", style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {
@@ -355,7 +355,7 @@ fun LoginScreen(
                             selected = state.email == "admin@routeguard.pe",
                             onClick = {
                                 viewModel.onEmailChange("admin@routeguard.pe")
-                                viewModel.onPasswordChange("password123")
+                                viewModel.onPasswordChange("admin123")
                             },
                             label = { Text("Administrador", style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {

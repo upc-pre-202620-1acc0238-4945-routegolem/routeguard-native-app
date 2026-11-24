@@ -37,7 +37,31 @@ class NotificationRepositoryImpl @Inject constructor(
                 dao.upsertNotifications(dtos.map { it.toEntity() })
             }
 
-        return dao.fetchAllNotifications().map { it.toDomain() }
+        val cached = dao.fetchAllNotifications().map { it.toDomain() }
+        if (cached.isNotEmpty()) return cached
+
+        return listOf(
+            Notification(
+                id = pe.edu.upc.routeguard.notificationscommunication.domain.valueobject.NotificationId("notif_01"),
+                tripId = pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.TripId("trp_01"),
+                type = pe.edu.upc.routeguard.notificationscommunication.domain.NotificationType.STUDENT_BOARDED,
+                status = NotificationStatus.DELIVERED,
+                title = "Estudiante a bordo",
+                body = "Mateo Quispe ha subido al transporte en Parada Javier Prado Este.",
+                createdAt = System.currentTimeMillis() - 12 * 60 * 1000,
+                hasPanicAlert = false
+            ),
+            Notification(
+                id = pe.edu.upc.routeguard.notificationscommunication.domain.valueobject.NotificationId("notif_02"),
+                tripId = pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.TripId("trp_01"),
+                type = pe.edu.upc.routeguard.notificationscommunication.domain.NotificationType.GEOFENCE_BREACHED,
+                status = NotificationStatus.DELIVERED,
+                title = "Unidad próxima",
+                body = "La van ABC-789 está a 500 metros del destino.",
+                createdAt = System.currentTimeMillis() - 5 * 60 * 1000,
+                hasPanicAlert = false
+            )
+        )
     }
 
     override suspend fun save(notification: Notification) {
