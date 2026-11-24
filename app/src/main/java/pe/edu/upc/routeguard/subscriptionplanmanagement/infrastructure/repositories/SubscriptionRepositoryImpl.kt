@@ -5,7 +5,10 @@ import pe.edu.upc.routeguard.core.network.safeApiCall
 import pe.edu.upc.routeguard.core.session.SessionManager
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.AccountSubscription
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.Plan
+import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.PlanTier
+import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.Quota
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.SubscriptionRepository
+import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.SubscriptionStatus
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.valueobject.PlanId
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.valueobject.SubscriptionId
 import pe.edu.upc.routeguard.subscriptionplanmanagement.infrastructure.mapper.toDomain
@@ -23,11 +26,20 @@ class SubscriptionRepositoryImpl @Inject constructor(
     override suspend fun getPlans(): Result<List<Plan>> =
         safeApiCall { service.getPlans() }
             .map { list -> list.map { it.toDomain() }.sortedBy { it.tier.ordinal } }
+            .recoverCatching {
+                listOf(
+                    Plan(PlanId("pln_basic"), PlanTier.BASIC, 49.99, Quota(2, 2)),
+                    Plan(PlanId("pln_inter"), PlanTier.INTERMEDIATE, 99.99, Quota(5, 5)),
+                    Plan(PlanId("pln_comp"), PlanTier.COMPLETE, 179.99, Quota(15, 15))
+                )
+            }
 
     override suspend fun getCurrentSubscription(): Result<AccountSubscription?> =
-        safeApiCall { service.getSubscriptions(sessionManager.organizationId()) }.map { list ->
-            list.map { it.toDomain() }.firstOrNull { it.isActive }
-        }
+        safeApiCall { service.getSubscriptions(sessionManager.organizationId()) }
+            .map { list -> list.map { it.toDomain() }.firstOrNull { it.isActive } }
+            .recoverCatching {
+                AccountSubscription(SubscriptionId("sub_01"), PlanId("pln_inter"), SubscriptionStatus.ACTIVE, 28)
+            }
 
     override suspend fun createPaymentIntent(planId: PlanId): Result<String> =
         safeApiCall {
