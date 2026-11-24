@@ -9,6 +9,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -28,6 +33,14 @@ fun RegisterChildScreen(
     onBack: () -> Unit = {}
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
+    var parentSearchQuery by rememberSaveable { mutableStateOf("") }
+    val filteredParents = remember(state.parents, parentSearchQuery) {
+        if (parentSearchQuery.isBlank()) state.parents
+        else state.parents.filter {
+            it.fullName.contains(parentSearchQuery, ignoreCase = true) ||
+            it.email.value.contains(parentSearchQuery, ignoreCase = true)
+        }
+    }
 
     LaunchedEffect(state.registered) {
         if (state.registered) onBack()
@@ -46,7 +59,12 @@ fun RegisterChildScreen(
             FormField(state.age, viewModel::onAgeChange, "Edad", keyboardType = KeyboardType.Number)
 
             SectionTitle("Vincular a un padre registrado")
-            state.parents.forEach { parent ->
+            FormField(
+                value = parentSearchQuery,
+                onValueChange = { parentSearchQuery = it },
+                label = "Buscar padre por nombre o correo..."
+            )
+            filteredParents.forEach { parent ->
                 SelectableRow(
                     title = parent.fullName,
                     subtitle = parent.email.value,

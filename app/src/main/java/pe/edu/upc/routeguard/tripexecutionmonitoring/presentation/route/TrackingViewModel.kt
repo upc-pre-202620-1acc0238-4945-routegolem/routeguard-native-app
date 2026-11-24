@@ -88,6 +88,13 @@ class TrackingViewModel @Inject constructor(
                 val estimate = roadGuidance.arrivalFor(location, next)
                 _uiState.update { it.copy(arrival = estimate) }
             }
+
+            // Automatic background sync attempt when location ping succeeds (V-04 Don Luis Johnny recommendation)
+            if (state.pendingRecords > 0) {
+                syncOfflineRecords(trip.id).onSuccess {
+                    _uiState.update { it.copy(pendingRecords = countPendingRecords(trip.id)) }
+                }
+            }
         }
     }
 
@@ -98,7 +105,41 @@ class TrackingViewModel @Inject constructor(
 
     fun onBoardingStatus(studentId: StudentId, state: BoardingState) {
         val trip = _uiState.value.trip ?: return
-        execute(null) { boardStudent(trip, studentId, state) }
+        viewModelScope.launch {
+            boardStudent(trip, studentId, state)
+                .onSuccess { updatedTrip ->
+                    val pending = countPendingRecords(updatedTrip.id)
+                    _uiState.update { it.copy(trip = updatedTrip, pendingRecords = pending) }
+                    // Automatic background sync when mobile network is reachable
+                    if (pending > 0) {
+                        syncOfflineRecords(updatedTrip.id).onSuccess {
+                            _uiState.update { it.copy(pendingRecords = countPendingRecords(updatedTrip.id)) }
+                        }
+                    }
+                }
+                .onFailure { e -> _uiState.update { it.copy(errorMessage = e.message) } }
+        }
+    }
+
+    /** One-touch batch drop-off at school for all remaining students (V-05 Don Iván Oscco recommendation). */
+    fun onArriveAtSchool() {
+        val trip = _uiState.value.trip ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            trip.waypoints.filter { it.status == BoardingState.MISSING }.forEach { wp ->
+                boardStudent(trip, wp.studentId, BoardingState.BOARDED)
+            }
+            syncOfflineRecords(trip.id)
+            val updated = getActiveTrip()
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    trip = updated ?: trip,
+                    message = "Llegada al colegio confirmada: todos los estudiantes entregados",
+                    pendingRecords = updated?.let { t -> countPendingRecords(t.id) } ?: 0
+                )
+            }
+        }
     }
 
     fun onReportIncident(type: IncidentType, description: String) {

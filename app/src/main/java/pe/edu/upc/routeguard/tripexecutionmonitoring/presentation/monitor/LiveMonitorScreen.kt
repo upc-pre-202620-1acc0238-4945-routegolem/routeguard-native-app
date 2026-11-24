@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,7 +105,13 @@ fun LiveMonitorScreen(
                         } ?: "Sin señal GPS todavía"
                     )
                     Text(text = next?.let { "Próxima parada: ${it.name} · ${it.progressText()}" } ?: "Recorrido completo")
-                    if (trip.tripId == selected.tripId) Text("Seleccionado en el mapa")
+                    if (trip.tripId == selected.tripId) {
+                        Text(
+                            "📍 Vehículo seleccionado en el mapa (marcador rojo destacado)",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
             }
         }

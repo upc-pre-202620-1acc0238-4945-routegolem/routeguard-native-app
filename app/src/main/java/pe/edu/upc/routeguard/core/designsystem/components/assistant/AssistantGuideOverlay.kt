@@ -24,10 +24,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -97,7 +101,7 @@ fun AssistantGuideOverlay(
                     .fillMaxWidth()
                     .padding(20.dp)
             ) {
-                // Header with Mascot Avatar + Step Content
+                // Header with Mascot Avatar + Step Content + Dismiss action
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Top,
@@ -138,6 +142,18 @@ fun AssistantGuideOverlay(
                             )
                         }
                     }
+
+                    // Direct Dismiss Button (V-05 Don Iván Oscco recommendation)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.assistant_btn_skip),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(18.dp))
@@ -163,19 +179,19 @@ fun AssistantGuideOverlay(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        TextButton(onClick = onDismiss) {
+                            Text(
+                                text = stringResource(R.string.assistant_btn_skip),
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+
                         if (currentStepIndex > 0) {
                             OutlinedButton(
                                 onClick = onPrevious,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(stringResource(R.string.assistant_btn_back))
-                            }
-                        } else {
-                            TextButton(onClick = onDismiss) {
-                                Text(
-                                    text = stringResource(R.string.assistant_btn_skip),
-                                    color = MaterialTheme.colorScheme.outline
-                                )
                             }
                         }
 
