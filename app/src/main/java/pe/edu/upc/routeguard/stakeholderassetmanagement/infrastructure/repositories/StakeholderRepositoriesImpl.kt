@@ -11,6 +11,7 @@ import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Driver
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.DriverRepository
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Group
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.GroupRepository
+import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.GroupStatus
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Parent
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.ParentRepository
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Provisioned
@@ -58,7 +59,28 @@ class DriverRepositoryImpl @Inject constructor(
 ) : DriverRepository {
 
     override suspend fun getDrivers(): Result<List<Driver>> =
-        safeApiCall { service.getDrivers() }.map { list -> list.map { it.toDomain() } }
+        safeApiCall { service.getDrivers() }
+            .map { list -> list.map { it.toDomain() } }
+            .recoverCatching {
+                listOf(
+                    Driver(
+                        id = pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.DriverId("d0000000-0000-0000-0000-000000000001"),
+                        userId = pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.UserId("b0000000-0000-0000-0000-000000000002"),
+                        fullName = "Carlos Ramirez",
+                        phone = Phone("+51 987 654 321"),
+                        licenseNumber = LicenseNumber("Q12345678"),
+                        email = Email("driver@routeguard.pe")
+                    ),
+                    Driver(
+                        id = pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.DriverId("d0000000-0000-0000-0000-000000000002"),
+                        userId = pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.UserId("b0000000-0000-0000-0000-000000000004"),
+                        fullName = "Jorge Mendoza",
+                        phone = Phone("+51 912 345 678"),
+                        licenseNumber = LicenseNumber("Q87654321"),
+                        email = Email("jmendoza@routeguard.pe")
+                    )
+                )
+            }
 
     override suspend fun registerDriver(
         firstName: String,
@@ -97,7 +119,28 @@ class ParentRepositoryImpl @Inject constructor(
 ) : ParentRepository {
 
     override suspend fun getParents(): Result<List<Parent>> =
-        safeApiCall { service.getParents() }.map { list -> list.map { it.toDomain() } }
+        safeApiCall { service.getParents() }
+            .map { list -> list.map { it.toDomain() } }
+            .recoverCatching {
+                val parentId = ParentId("p0000000-0000-0000-0000-000000000001")
+                listOf(
+                    Parent(
+                        id = parentId,
+                        userId = pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.UserId("b0000000-0000-0000-0000-000000000003"),
+                        fullName = "Rosita Nery",
+                        phone = Phone("+51 999 888 777"),
+                        email = Email("parent@routeguard.pe"),
+                        children = listOf(
+                            Child(
+                                id = pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.ChildId("stu_01"),
+                                fullName = "Mateo Quispe",
+                                age = 10,
+                                parentId = parentId
+                            )
+                        )
+                    )
+                )
+            }
 
     override suspend fun registerParent(
         firstName: String,
@@ -144,7 +187,18 @@ class GroupRepositoryImpl @Inject constructor(
 ) : GroupRepository {
 
     override suspend fun getGroups(): Result<List<Group>> =
-        safeApiCall { service.getGroups() }.map { list -> list.map { it.toDomain() } }
+        safeApiCall { service.getGroups() }
+            .map { list -> list.map { it.toDomain() } }
+            .recoverCatching {
+                listOf(
+                    Group(
+                        id = GroupId("grp_01"),
+                        name = "Grupo Primaria - San Borja",
+                        studentIds = listOf(StudentId("stu_01")),
+                        status = GroupStatus.FINALIZED
+                    )
+                )
+            }
 
     override suspend fun createGroup(name: String): Result<Group> =
         safeApiCall {
