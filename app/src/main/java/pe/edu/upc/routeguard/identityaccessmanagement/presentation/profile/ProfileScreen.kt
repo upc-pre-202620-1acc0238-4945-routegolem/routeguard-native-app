@@ -1,6 +1,11 @@
 package pe.edu.upc.routeguard.identityaccessmanagement.presentation.profile
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,14 +23,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -48,12 +59,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SectionTitle
+import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Account
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Role
 
@@ -64,6 +79,30 @@ fun ProfileScreen(
     onLaunchTutorial: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    var activeRole by remember { mutableStateOf(account.role) }
+    var selectedLanguage by remember { mutableStateOf("ES") }
+    var avatarBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var showPhotoDialog by remember { mutableStateOf(false) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bmp ->
+        if (bmp != null) avatarBitmap = bmp
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    avatarBitmap = BitmapFactory.decodeStream(stream)
+                }
+            } catch (_: Exception) { }
+        }
+    }
+
     val initials = account.fullName
         .split(" ")
         .filter { it.isNotBlank() }
@@ -72,19 +111,19 @@ fun ProfileScreen(
         .joinToString("")
         .ifBlank { "RG" }
 
-    val roleLabel = when (account.role) {
+    val roleLabel = when (activeRole) {
         Role.ADMINISTRATOR -> stringResource(R.string.profile_role_admin)
         Role.DRIVER -> stringResource(R.string.profile_role_driver)
         Role.PARENT -> stringResource(R.string.profile_role_parent)
     }
 
-    val roleContainerColor = when (account.role) {
+    val roleContainerColor = when (activeRole) {
         Role.ADMINISTRATOR -> MaterialTheme.colorScheme.primaryContainer
         Role.DRIVER -> MaterialTheme.colorScheme.secondaryContainer
         Role.PARENT -> MaterialTheme.colorScheme.tertiaryContainer
     }
 
-    val roleContentColor = when (account.role) {
+    val roleContentColor = when (activeRole) {
         Role.ADMINISTRATOR -> MaterialTheme.colorScheme.onPrimaryContainer
         Role.DRIVER -> MaterialTheme.colorScheme.onSecondaryContainer
         Role.PARENT -> MaterialTheme.colorScheme.onTertiaryContainer
@@ -126,20 +165,57 @@ fun ProfileScreen(
                             .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Avatar Circle
+                        // Avatar Circle with Camera Picker Badge
                         Box(
                             modifier = Modifier
-                                .size(76.dp)
-                                .clip(CircleShape)
-                                .background(roleContainerColor),
+                                .size(84.dp)
+                                .clickable { showPhotoDialog = true },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = initials,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = roleContentColor
-                            )
+                            if (avatarBitmap != null) {
+                                Image(
+                                    bitmap = avatarBitmap!!.asImageBitmap(),
+                                    contentDescription = "Foto de perfil",
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape)
+                                        .background(roleContainerColor),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = initials,
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = roleContentColor
+                                    )
+                                }
+                            }
+
+                            // Camera / Edit icon badge
+                            Surface(
+                                shape = CircleShape,
+                                color = BrandNavy,
+                                border = BorderStroke(2.dp, Color.White),
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(26.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Edit,
+                                        contentDescription = "Cambiar foto",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -191,8 +267,213 @@ fun ProfileScreen(
                 }
             }
 
+            // Role Mode Switcher Card (Parity with Flutter)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = null,
+                                tint = BrandNavy,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Modo de Operación / Rol",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandNavy
+                                )
+                                Text(
+                                    text = "Vista: $roleLabel",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val roles = listOf(
+                                Triple(Role.PARENT, "Apoderado", Icons.Filled.Person),
+                                Triple(Role.DRIVER, "Conductor", Icons.Filled.LocationOn),
+                                Triple(Role.ADMINISTRATOR, "Admin", Icons.Filled.Person)
+                            )
+
+                            roles.forEach { (r, label, icon) ->
+                                val isSelected = activeRole == r
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { activeRole = r },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) BrandNavy.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) BrandNavy else MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (isSelected) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = BrandNavy,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                        }
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) BrandNavy else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // System Language Switcher Card (Parity with Flutter)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Info,
+                                contentDescription = null,
+                                tint = BrandNavy,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Idioma del sistema",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandNavy
+                                )
+                                Text(
+                                    text = if (selectedLanguage == "ES") "Español (ES)" else "English (EN)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            listOf("ES", "EN").forEach { lang ->
+                                val isSelected = selectedLanguage == lang
+                                Surface(
+                                    modifier = Modifier.clickable { selectedLanguage = lang },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) BrandNavy.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) BrandNavy else MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                ) {
+                                    Text(
+                                        text = lang,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) BrandNavy else MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Subscription Shortcut Card (Parity with Flutter)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFD97706),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Planes y Suscripción",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandNavy
+                                )
+                                Text(
+                                    text = "Plan Intermedio Activo · S/ 99.99/mes",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = Color(0xFF94A3B8),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
             // Caregivers Section (V-01 Carmen López recommendation & Cross-App Consistency)
-            if (account.role == Role.PARENT) {
+            if (activeRole == Role.PARENT) {
                 item {
                     SectionTitle(text = "Cuidadores Autorizados")
                     Spacer(modifier = Modifier.height(8.dp))
@@ -441,6 +722,83 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showPhotoDialog) {
+        AlertDialog(
+            onDismissRequest = { showPhotoDialog = false },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        tint = BrandNavy,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text("Foto de Perfil", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Elige una opción para actualizar tu foto de perfil:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            showPhotoDialog = false
+                            cameraLauncher.launch(null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Tomar foto con la cámara")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            showPhotoDialog = false
+                            galleryLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Seleccionar de la galería o archivos")
+                    }
+                    if (avatarBitmap != null) {
+                        OutlinedButton(
+                            onClick = {
+                                avatarBitmap = null
+                                showPhotoDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Eliminar foto / Restablecer iniciales")
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showPhotoDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     if (showAddCaregiverDialog) {
