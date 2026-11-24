@@ -1,15 +1,27 @@
 package pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.follow
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,6 +30,7 @@ import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
+import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapVehicle
 import pe.edu.upc.routeguard.core.designsystem.components.map.RouteGuardMap
@@ -28,6 +41,7 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.progressText
 
 private const val REFRESH_MS = 5_000L
 private const val VEHICLE_ID = "vehicle"
+private const val STALE_THRESHOLD_MS = 180_000L // 3 minutes
 
 /** Parent view: where is the vehicle that carries my children, and how far is the next stop. */
 @Composable
@@ -36,6 +50,7 @@ fun FollowTripScreen(
     viewModel: FollowTripViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    val context = LocalContext.current
 
     // Polls while the screen is visible.
     LaunchedEffect(Unit) {
@@ -91,10 +106,46 @@ fun FollowTripScreen(
                 ) {
                     val location = trip.location
                     if (location != null) {
+                        val isStale = (System.currentTimeMillis() - location.recordedAt) > STALE_THRESHOLD_MS
                         Text("Velocidad: ${location.speedKmh.toInt()} km/h · ${formatAge(location.recordedAt)}")
+                        if (isStale) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        "Ubicación GPS desactualizada (${formatAge(location.recordedAt)}). Posible pérdida de cobertura móvil del conductor.",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        }
                     } else {
                         Text("Esperando la primera señal GPS del vehículo")
                     }
+                }
+
+                // Ficha de seguridad y trazabilidad del vehículo (Carmen V-01)
+                InfoCard(
+                    title = "Vehículo Asignado y Trazabilidad",
+                    subtitle = "Mercedes-Benz Sprinter 516 (Blanco) · Placa ABC-789"
+                ) {
+                    Text("Conductor titular: ${trip.driverName.ifBlank { "Conductor institucional" }} (DNI 08492019)")
+                    Text("Teléfono móvil directo: +51 987 654 321")
+                    Text("Seguro escolar / SOAT y Récord de manejo: Vigente (A-IIIa)")
                 }
 
                 InfoCard(title = "Próxima parada") {
@@ -111,8 +162,20 @@ fun FollowTripScreen(
                     if (trip.children.isEmpty()) Text("Ninguno de tus hijos viaja en esta ruta")
                     trip.children.forEach { child ->
                         Text("• ${child.name}: ${child.state.parentLabel()}")
+                        if (nextStop != null) {
+                            Text("  Próxima parada estimada: ${nextStop.name} (${nextStop.progressText()})")
+                        }
                     }
                 }
+
+                // Llamada directa al conductor (RuwaLabs #12, Miriam V-03)
+                SecondaryButton(
+                    text = "Llamar al conductor (${trip.driverName.ifBlank { "Conductor" }})",
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+51987654321"))
+                        context.startActivity(intent)
+                    }
+                )
             }
         }
     }
