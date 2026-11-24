@@ -12,13 +12,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -156,6 +161,7 @@ fun RouteMapScreen(
                     nextStop = state.nextStop,
                     enabled = !state.isLoading,
                     onBoardingStatus = viewModel::onBoardingStatus,
+                    onArriveAtSchool = viewModel::onArriveAtSchool,
                     onSync = viewModel::onSyncOffline,
                     onReportIncident = viewModel::onReportIncident,
                     onFinish = viewModel::onFinishTrip
@@ -178,20 +184,69 @@ private fun LazyListScope.tripContent(
     nextStop: NextStop?,
     enabled: Boolean,
     onBoardingStatus: (StudentId, BoardingState) -> Unit,
+    onArriveAtSchool: () -> Unit,
     onSync: () -> Unit,
     onReportIncident: (IncidentType, String) -> Unit,
     onFinish: () -> Unit
 ) {
     item {
-        Text(
-            text = when (trip.status) {
-                TripStatus.PENDING -> "Viaje pendiente"
-                TripStatus.IN_PROGRESS -> "Viaje en curso · ${trip.boardedCount} a bordo · " +
-                    "${trip.absentCount} ausentes · ${trip.waypoints.size} en total"
-                TripStatus.COMPLETED -> "Viaje finalizado"
-            },
-            style = MaterialTheme.typography.titleMedium
-        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = when (trip.status) {
+                    TripStatus.PENDING -> "Viaje pendiente"
+                    TripStatus.IN_PROGRESS -> "Viaje en curso"
+                    TripStatus.COMPLETED -> "Viaje finalizado"
+                },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            if (trip.status == TripStatus.IN_PROGRESS) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "${trip.boardedCount} a bordo",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "${trip.absentCount} ausentes",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "${trip.waypoints.size} en total",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 
     item {
@@ -214,6 +269,14 @@ private fun LazyListScope.tripContent(
                 trip.stops.forEach { Text("${it.order}. ${it.name}") }
             }
         }
+    }
+
+    item {
+        SecondaryButton(
+            text = "Llegada al colegio (Descenso general)",
+            onClick = onArriveAtSchool,
+            enabled = enabled && trip.isActive
+        )
     }
 
     items(trip.waypoints, key = { it.id.value }) { waypoint ->
@@ -284,7 +347,7 @@ private fun WaypointCard(
         when (waypoint.status) {
             BoardingState.MISSING -> {
                 BigButton(
-                    text = "Check-in",
+                    text = "Subió",
                     onClick = { onBoardingStatus(waypoint.studentId, BoardingState.BOARDED) },
                     enabled = canRecord,
                     containerColor = Green
@@ -301,7 +364,7 @@ private fun WaypointCard(
             BoardingState.OMITTED -> {
                 Text("No asistió")
                 SecondaryButton(
-                    text = "Check-in",
+                    text = "Marcar como Subió",
                     onClick = { onBoardingStatus(waypoint.studentId, BoardingState.BOARDED) },
                     enabled = canRecord
                 )

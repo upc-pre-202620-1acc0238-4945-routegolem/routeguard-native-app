@@ -8,6 +8,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -27,6 +31,7 @@ fun RoutesScreen(
     onRouteClick: (String) -> Unit = {}
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
 
@@ -55,10 +60,14 @@ fun RoutesScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     FormField(state.newRouteName, viewModel::onNewRouteNameChange, "Nombre de la nueva ruta")
                     SecondaryButton("Definir ruta", viewModel::createRoute, enabled = !state.isLoading)
+                    FormField(searchQuery, { searchQuery = it }, "Buscar ruta...")
                     ErrorText(state.errorMessage)
                 }
             }
-            items(state.routes, key = { it.id.value }) { route ->
+            val filteredRoutes = if (searchQuery.isBlank()) state.routes else state.routes.filter {
+                it.name.contains(searchQuery, ignoreCase = true)
+            }
+            items(filteredRoutes, key = { it.id.value }) { route ->
                 InfoCard(
                     title = route.name,
                     subtitle = when (route.status) {
