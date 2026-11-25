@@ -81,7 +81,7 @@ jobs:
         if: steps.firebase_check.outputs.enabled == 'true'
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          app: ${{ secrets.FIREBASE_APP_ID != '' && secrets.FIREBASE_APP_ID || '1:447657870033:android:0a0328e0e280b676c4fbf0' }}
+          appId: ${{ secrets.FIREBASE_APP_ID != '' && secrets.FIREBASE_APP_ID || '1:447657870033:android:0a0328e0e280b676c4fbf0' }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
           groups: ${{ vars.FIREBASE_TESTER_GROUPS != '' && vars.FIREBASE_TESTER_GROUPS || 'testers' }}
           releaseNotes: ${{ steps.meta.outputs.notes }}
