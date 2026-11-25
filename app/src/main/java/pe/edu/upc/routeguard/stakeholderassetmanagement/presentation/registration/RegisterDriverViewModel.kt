@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.RegisterDriverUseCase
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.AccountCredentials
 import javax.inject.Inject
@@ -25,7 +27,8 @@ data class RegisterDriverUiState(
 
 @HiltViewModel
 class RegisterDriverViewModel @Inject constructor(
-    private val registerDriver: RegisterDriverUseCase
+    private val registerDriver: RegisterDriverUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterDriverUiState())
@@ -46,7 +49,7 @@ class RegisterDriverViewModel @Inject constructor(
                     _state.update { it.copy(isLoading = false, credentials = provisioned.credentials) }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, errorMessage = e.message) }
+                    _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
         }
     }

@@ -11,9 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -37,7 +39,7 @@ fun GroupEditorScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Grupo de estudiantes", onBack = onBack)
+        ScreenHeader(title = stringResource(R.string.group_editor_title), onBack = onBack)
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -46,44 +48,44 @@ fun GroupEditorScreen(
         ) {
             val group = state.group
 
-            SectionTitle("1. Nombre del grupo")
-            FormField(state.name, viewModel::onNameChange, "Nombre")
+            SectionTitle(stringResource(R.string.group_editor_step1))
+            FormField(state.name, viewModel::onNameChange, stringResource(R.string.group_editor_name_label))
             if (group == null) {
-                BigButton(text = "Crear grupo", onClick = viewModel::create, enabled = !state.isLoading)
+                BigButton(text = stringResource(R.string.stakeholders_btn_create_group), onClick = viewModel::create, enabled = !state.isLoading)
             } else {
-                Text(text = "Grupo creado: ${group.name} · ${group.studentIds.size} estudiantes incluidos")
+                Text(text = stringResource(R.string.group_editor_created_info, group.name, group.studentIds.size))
 
-                SectionTitle("2. Elige los padres")
+                SectionTitle(stringResource(R.string.group_editor_step2))
                 state.parents.forEach { parent ->
                     SelectableRow(
                         title = parent.fullName,
-                        subtitle = "${parent.children.size} estudiantes",
+                        subtitle = stringResource(R.string.stakeholders_group_students_count, parent.children.size),
                         selected = parent.id in state.selectedParentIds,
                         onClick = { viewModel.toggleParent(parent.id) }
                     )
                 }
 
-                SectionTitle("3. Estudiantes vinculados")
+                SectionTitle(stringResource(R.string.group_editor_step3))
                 if (state.availableStudents.isEmpty()) {
-                    Text("Elige padres que tengan estudiantes registrados.")
+                    Text(stringResource(R.string.group_editor_step3_empty))
                 }
                 state.availableStudents.forEach { child ->
                     SelectableRow(
                         title = child.fullName,
-                        subtitle = "${child.age} años",
+                        subtitle = stringResource(R.string.group_editor_age_subtitle, child.age),
                         selected = StudentId(child.id.value) in state.selectedStudentIds,
                         onClick = { viewModel.toggleStudent(StudentId(child.id.value)) }
                     )
                 }
                 SecondaryButton(
-                    text = "Incluir estudiantes",
+                    text = stringResource(R.string.group_editor_include_btn),
                     onClick = viewModel::includeSelectedStudents,
                     enabled = state.selectedStudentIds.isNotEmpty() && !state.isLoading
                 )
 
-                SectionTitle("4. Finalizar")
+                SectionTitle(stringResource(R.string.group_editor_step4))
                 BigButton(
-                    text = "Finalizar grupo",
+                    text = stringResource(R.string.group_editor_finalize_btn),
                     onClick = viewModel::finalizeCurrent,
                     enabled = group.studentIds.isNotEmpty() && !state.isLoading
                 )

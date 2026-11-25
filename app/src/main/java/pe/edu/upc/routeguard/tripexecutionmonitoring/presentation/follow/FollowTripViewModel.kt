@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.FollowChildTripUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.ArrivalEstimate
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.LiveTrip
@@ -27,7 +29,8 @@ data class FollowTripUiState(
 @HiltViewModel
 class FollowTripViewModel @Inject constructor(
     private val followChildTrip: FollowChildTripUseCase,
-    private val roadGuidance: RoadGuidance
+    private val roadGuidance: RoadGuidance,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FollowTripUiState())
@@ -41,7 +44,7 @@ class FollowTripViewModel @Inject constructor(
                     if (trip != null) enrichWithRoads(trip)
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(hasLoaded = true, errorMessage = e.message) }
+                    _uiState.update { it.copy(hasLoaded = true, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
         }
     }

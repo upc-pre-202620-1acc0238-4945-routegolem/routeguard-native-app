@@ -92,12 +92,12 @@ data class LocationRecord(
     val synced: Boolean = false
 ) : BaseEntity<LocationRecordId>
 
-enum class IncidentType(val label: String) {
-    TRAFFIC("Tráfico"),
-    MECHANICAL("Falla mecánica"),
-    MEDICAL("Emergencia médica"),
-    ACCIDENT("Accidente"),
-    OTHER("Otro")
+enum class IncidentType(@androidx.annotation.StringRes val labelRes: Int, val label: String) {
+    TRAFFIC(pe.edu.upc.routeguard.R.string.incident_traffic, "Tráfico"),
+    MECHANICAL(pe.edu.upc.routeguard.R.string.incident_mechanical, "Falla mecánica"),
+    MEDICAL(pe.edu.upc.routeguard.R.string.incident_medical, "Emergencia médica"),
+    ACCIDENT(pe.edu.upc.routeguard.R.string.incident_accident, "Accidente"),
+    OTHER(pe.edu.upc.routeguard.R.string.incident_other, "Otro")
 }
 
 data class Incident(

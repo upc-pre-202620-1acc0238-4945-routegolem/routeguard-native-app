@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.identityaccessmanagement.application.SignInUseCase
 import pe.edu.upc.routeguard.notificationscommunication.application.RegisterDeviceTokenUseCase
 import javax.inject.Inject
@@ -16,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val signIn: SignInUseCase,
-    private val registerDeviceToken: RegisterDeviceTokenUseCase
+    private val registerDeviceToken: RegisterDeviceTokenUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginUiState())
@@ -45,7 +48,7 @@ class LoginViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _state.update {
-                        it.copy(isLoading = false, errorMessage = e.message ?: "No se pudo iniciar sesión")
+                        it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_login_failed))
                     }
                 }
         }

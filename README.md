@@ -11,17 +11,16 @@
 
   <p align="center">
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge"/></a>
-    <a href="https://developer.android.com/index.html"><img alt="Platform" src="https://img.shields.io/badge/Platform-Android_14%2B-green.svg?style=for-the-badge&logo=android"/></a>
-    <a href="https://kotlinlang.org/"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-100%25-orange.svg?style=for-the-badge&logo=kotlin"/></a>
+    <a href="https://developer.android.com/index.html"><img alt="Platform" src="https://img.shields.io/badge/Platform-Android_7.0%2B_(API_24--37)-green.svg?style=for-the-badge&logo=android"/></a>
+    <a href="https://kotlinlang.org/"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.4.20-orange.svg?style=for-the-badge&logo=kotlin"/></a>
     <a href="https://developer.android.com/jetpack/compose"><img alt="Compose" src="https://img.shields.io/badge/UI-Jetpack_Compose-4285F4.svg?style=for-the-badge&logo=jetpackcompose"/></a>
-    <a href="https://developer.android.com/training/data-storage/room"><img alt="Room" src="https://img.shields.io/badge/Storage-Room_Offline--First-3DDC84.svg?style=for-the-badge&logo=sqlite"/></a>
+    <a href="https://developer.android.com/training/data-storage/room"><img alt="Room" src="https://img.shields.io/badge/Storage-Room_2.6.1_Offline--First-3DDC84.svg?style=for-the-badge&logo=sqlite"/></a>
   </p>
   <p align="center">
     <a href="https://firebase.google.com/docs/cloud-messaging"><img alt="FCM" src="https://img.shields.io/badge/Push-Firebase_FCM-FFCA28.svg?style=for-the-badge&logo=firebase&logoColor=black"/></a>
-    <a href="https://www.mapbox.com/"><img alt="Mapbox" src="https://img.shields.io/badge/Maps-Mapbox_v11-000000.svg?style=for-the-badge&logo=mapbox"/></a>
-    <a href="https://stripe.com/"><img alt="Stripe" src="https://img.shields.io/badge/Payments-Stripe_SDK-635BFF.svg?style=for-the-badge&logo=stripe"/></a>
-    <a href="https://www.rabbitmq.com/"><img alt="RabbitMQ" src="https://img.shields.io/badge/Broker-RabbitMQ_CloudAMQP-FF6600.svg?style=for-the-badge&logo=rabbitmq"/></a>
-    <a href="https://www.postgresql.org/"><img alt="PostgreSQL" src="https://img.shields.io/badge/Database-PostgreSQL_Aiven-4169E1.svg?style=for-the-badge&logo=postgresql"/></a>
+    <a href="https://www.mapbox.com/"><img alt="Mapbox" src="https://img.shields.io/badge/Maps-Mapbox_v11.31.1-000000.svg?style=for-the-badge&logo=mapbox"/></a>
+    <a href="https://stripe.com/"><img alt="Stripe" src="https://img.shields.io/badge/Payments-Stripe_SDK_21.4.1-635BFF.svg?style=for-the-badge&logo=stripe"/></a>
+    <a href="https://developer.android.com/guide/topics/resources/localization"><img alt="i18n" src="https://img.shields.io/badge/i18n-ES_%2F_EN_Reactivo-00897B.svg?style=for-the-badge"/></a>
   </p>
 
 </div>
@@ -32,62 +31,77 @@
 
 ## 📱 Descripción del Proyecto
 
-**RouteGuard** es una solución integral diseñada para brindar tranquilidad y trazabilidad en el transporte escolar diario. Permite a los **conductores** registrar el check-in/check-out de los estudiantes en cada parada de manera *offline-first*, y a los **padres de familia** recibir notificaciones push en tiempo real con geocercas inteligentes y seguimiento en vivo del vehículo.
+**RouteGuard** es una solución integral diseñada para brindar tranquilidad y trazabilidad en el transporte escolar diario para **Administradores**, **Conductores** y **Padres de Familia / Apoderados**. Permite planificar rutas y asignar personal, registrar el check-in/check-out de estudiantes en cada parada de manera *offline-first* (con rectificación/deshacer de abordaje y descenso grupal en colegio), emitir alertas de pánico/avisos, y ofrecer a los padres seguimiento GPS en vivo, llamada directa al conductor y notificaciones push con geocercas inteligentes.
 
 <br/>
 
-## 🚀 Matriz de Modern Android Development (MAD)
+## 🚀 Matriz de Tecnologías & Modern Android Development (MAD)
 
-La aplicación sigue las directrices oficiales de **Google MAD**, evaluadas y auditadas mediante **Google Android Lint** con **0 errores de análisis estático**:
+La aplicación sigue las directrices oficiales de **Google MAD**:
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
   <thead>
     <tr style="background: linear-gradient(90deg, #0d47a1, #1976d2); color: white;">
-      <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Pilar MAD</th>
+      <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Pilar / Capa</th>
       <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Tecnología Adoptada</th>
-      <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Propósito & Beneficio Técnico</th>
+      <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Uso Real en la App</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="padding: 12px; border: 1px solid #ddd;"><b>💎 Lenguaje</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Kotlin 2.x</code> + <code>Coroutines</code> + <code>Flow</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">100% de la base de código libre de Java legacy. Programación reactiva con <code>StateFlow</code> en ciclo de vida consciente (<code>collectAsStateWithLifecycle</code>).</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>💎 Lenguaje & Reactividad</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Kotlin 2.4.20</code> + <code>Coroutines</code> + <code>StateFlow</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">100% Kotlin con programación reactiva consciente del ciclo de vida (<code>collectAsStateWithLifecycle</code>) y <code>kotlinx.serialization</code>.</td>
     </tr>
     <tr style="background-color: #f9fbfd;">
       <td style="padding: 12px; border: 1px solid #ddd;"><b>🎨 UI Declarativa</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Jetpack Compose</code> + <code>Material 3</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Eliminación total de vistas XML para pantallas. Diseño reactivo atómico con soporte nativo para Modo Oscuro y componentes reutilizables.</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Jetpack Compose (BOM 2026.09.00)</code> + <code>Material 3</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Pantallas 100% Compose con componentes reutilizables (<code>BrandHeader</code>, tarjetas elevadas, chips de estado) y asistente interactivo paso a paso.</td>
     </tr>
     <tr>
       <td style="padding: 12px; border: 1px solid #ddd;"><b>🧭 Navegación</b></td>
       <td style="padding: 12px; border: 1px solid #ddd;"><code>Navigation Compose (Type-Safe)</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Navegación fuertemente tipada con objetos y clases serializables (<code>@Serializable</code>), evitando strings mágicos propensos a errores.</td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Rutas fuertemente tipadas con <code>@Serializable</code> por rol (<code>AppNavHost</code> y <code>MainShell</code>).</td>
     </tr>
     <tr style="background-color: #f9fbfd;">
       <td style="padding: 12px; border: 1px solid #ddd;"><b>💉 Inyección (DI)</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Dagger Hilt 2.60</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Inyección de dependencias modular que asegura inversión de control en repositorios, casos de uso y ViewModels desacoplados.</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Dagger Hilt 2.60.1</code> + <code>KSP 2.3.6</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Inyección de módulos de red, base local, Mapbox, sesión y ViewModels (<code>hilt-navigation-compose 1.4.0</code>).</td>
     </tr>
     <tr>
-      <td style="padding: 12px; border: 1px solid #ddd;"><b>💾 Persistencia</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Room 2.6</code> + <code>KSP</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Soporte <b>Offline-First</b> para telemetría y check-in de estudiantes sin cobertura móvil, compilado ultra rápido mediante <b>Kotlin Symbol Processing</b>.</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>🌐 Red & API REST</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Retrofit 3.0.0</code> + <code>Gson</code> + <code>OkHttp</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Consumo de endpoints REST (<code>routeguard-web-services</code>) con <code>AuthInterceptor</code> para inyección de JWT Bearer y detección de 401.</td>
     </tr>
     <tr style="background-color: #f9fbfd;">
-      <td style="padding: 12px; border: 1px solid #ddd;"><b>🔔 Notificaciones</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Firebase Cloud Messaging (FCM)</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Recepción en segundo plano de alertas críticas, avisos de arribo y eventos de abordaje en canales con prioridad alta.</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>💾 Persistencia Offline-First</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Room 2.6.1</code> (SQLite) + <code>SharedPreferences</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>AppDatabase</code> (<code>routeguard.db</code>) almacena <code>TripEntity</code>, <code>WaypointEntity</code>, <code>LocationRecordEntity</code>, <code>BoardingRecordEntity</code> y <code>NotificationEntity</code> (DAOs <code>TripDao</code> y <code>NotificationDao</code>). <code>SessionManager</code> persiste JWT, rol, tutorial e idioma.</td>
     </tr>
     <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>🗺️ Cartografía & Rutas</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Mapbox Maps SDK v11.31.1</code> + <code>Directions / Optimization / Geocoding API</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>RouteGuardMap</code> dibuja paraderos, polilíneas viales y flota en vivo; <code>MapboxClient</code> busca direcciones, calcula ETA vial y sugiere el orden óptimo de paradas.</td>
+    </tr>
+    <tr style="background-color: #f9fbfd;">
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>📍 GPS & Acciones Android</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>LocationManager</code> (Foreground Service) + <code>ActivityResultContracts</code> + Intents</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>TrackingForegroundService</code> transmite y guarda puntos GPS en segundo plano; navegación en Google Maps (<code>google.navigation:</code>), llamada telefónica (<code>ACTION_DIAL</code>) y selector de foto de perfil desde cámara o galería.</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>🔔 Notificaciones Push</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Firebase Cloud Messaging (FCM 24.0.2)</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>AppFirebaseMessagingService</code> y <code>FcmPushAdapter</code> procesan alertas críticas, avisos del conductor y eventos de geocerca por canales de prioridad.</td>
+    </tr>
+    <tr style="background-color: #f9fbfd;">
       <td style="padding: 12px; border: 1px solid #ddd;"><b>💳 Pasarela de Pago</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Stripe Android PaymentSheet</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Procesamiento seguro de suscripciones empresariales en modo Sandbox con validación de tarjetas y flujo seguro de <code>PaymentIntent</code>.</td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>Stripe Android SDK 21.4.1</code> (<code>PaymentSheet</code>)</td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Procesamiento real de suscripciones institucionales en modo Sandbox mediante <code>PaymentIntent</code> y hoja de pago Stripe.</td>
     </tr>
-    <tr style="background-color: #f9fbfd;">
-      <td style="padding: 12px; border: 1px solid #ddd;"><b>🗺️ Cartografía</b></td>
-      <td style="padding: 12px; border: 1px solid #ddd;"><code>Mapbox Maps SDK v11</code></td>
-      <td style="padding: 12px; border: 1px solid #ddd;">Visualización de rutas optimizadas, dibujo de polilíneas y ubicación en tiempo real de vehículos escolares.</td>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><b>🌍 Internacionalización (i18n)</b></td>
+      <td style="padding: 12px; border: 1px solid #ddd;"><code>strings.xml</code> (ES/EN) + <code>LocaleHelper</code> + <code>LocalResources</code></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Cambio reactivo ES ↔ EN en tiempo real desde Perfil sin reiniciar la actividad, con paridad verificada mediante prueba unitaria (<code>StringsXmlParityTest</code>).</td>
     </tr>
   </tbody>
 </table>
@@ -113,18 +127,20 @@ El proyecto implementa los conceptos de **Domain-Driven Design (DDD)** integrado
 pe.edu.upc.routeguard/
 │
 ├── 📦 core/                               # Núcleo compartido del sistema
-│   ├── database/                          # Instancia Room AppDatabase y migraciones
-│   ├── designsystem/                      # Temas Material 3, tipografías, botones e iconos
-│   ├── di/                                # Módulos Hilt transversales (Red, Local, Sesión)
-│   ├── network/                           # Cliente Retrofit y adaptadores de error
-│   └── session/                           # SessionManager con persistencia encriptada
+│   ├── database/                          # Instancia Room AppDatabase (routeguard.db)
+│   ├── designsystem/                      # Temas Material 3, mapas Mapbox y asistente interactivo
+│   ├── di/                                # Módulos Hilt transversales (NetworkModule, LocalModule, MapboxModule)
+│   ├── localization/                      # LocaleHelper, AppStringsProvider y LocalizedException (ES/EN)
+│   ├── network/                           # Cliente Retrofit, AuthInterceptor y MapboxClient
+│   └── session/                           # SessionManager (JWT, rol, tutorial e idioma persistido)
 │
-├── 📦 identityaccessmanagement/           # Contexto: Autenticación, registro y roles (IAM)
-├── 📦 fleetroutemanagement/               # Contexto: Trazado de rutas, paradas y flota vehicular
-├── 📦 stakeholderassetmanagement/         # Contexto: Administración de apoderados, alumnos y choferes
-├── 📦 tripexecutionmonitoring/            # Contexto: Ejecución de viaje, telemetría y sincronización offline
-├── 📦 notificationscommunication/         # Contexto: Alertas Push (FCM), canales y avisos al padre
-└── 📦 subscriptionplanmanagement/         # Contexto: Planes corporativos y pasarela de pago Stripe
+├── 📦 navigation/                         # AppNavHost, MainShell y navegación multi-rol
+├── 📦 identityaccessmanagement/           # Contexto: Login, registro admin, perfil, foto y cuidadores (IAM)
+├── 📦 fleetroutemanagement/               # Contexto: Rutas, paradas en mapa, búsqueda y optimización de orden
+├── 📦 stakeholderassetmanagement/         # Contexto: Conductores, padres, alumnos y grupos escolares
+├── 📦 tripexecutionmonitoring/            # Contexto: Viaje conductor (Room + GPS Service), monitor flota y padre
+├── 📦 notificationscommunication/         # Contexto: Alertas Push (FCM), pánico, avisos y geocercas
+└── 📦 subscriptionplanmanagement/         # Contexto: Planes corporativos y pasarela Stripe PaymentSheet
 ```
 </details>
 

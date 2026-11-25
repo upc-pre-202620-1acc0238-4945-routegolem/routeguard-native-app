@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.notificationscommunication.application.GetNotificationsUseCase
 import pe.edu.upc.routeguard.notificationscommunication.application.MarkNotificationsDeliveredUseCase
 import pe.edu.upc.routeguard.notificationscommunication.application.PostBroadcastMessageUseCase
@@ -23,7 +25,8 @@ class NotificationsViewModel @Inject constructor(
     private val triggerPanicAlert: TriggerPanicAlertUseCase,
     private val postBroadcastMessage: PostBroadcastMessageUseCase,
     // Customer/supplier relation with Trip: the driver communicates about the trip in progress.
-    private val getActiveTrip: GetActiveTripUseCase
+    private val getActiveTrip: GetActiveTripUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
@@ -43,7 +46,7 @@ class NotificationsViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Error inesperado") }
+                _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
             }
         }
     }
@@ -55,10 +58,10 @@ class NotificationsViewModel @Inject constructor(
             triggerPanicAlert(getActiveTrip()?.id?.value)
                 .onSuccess { count ->
                     _uiState.update {
-                        it.copy(message = "Alerta de pánico enviada a $count padres", errorMessage = null)
+                        it.copy(message = strings.getString(R.string.notif_sent_panic_count, count), errorMessage = null)
                     }
                 }
-                .onFailure { e -> _uiState.update { it.copy(errorMessage = e.message ?: "No se pudo enviar la alerta") } }
+                .onFailure { e -> _uiState.update { it.copy(errorMessage = strings.resolveError(e, R.string.notif_error_panic)) } }
         }
     }
 
@@ -67,10 +70,10 @@ class NotificationsViewModel @Inject constructor(
             postBroadcastMessage(getActiveTrip()?.id?.value, _uiState.value.broadcastMessage)
                 .onSuccess { count ->
                     _uiState.update {
-                        it.copy(broadcastMessage = "", message = "Aviso enviado a $count padres", errorMessage = null)
+                        it.copy(broadcastMessage = "", message = strings.getString(R.string.notif_sent_broadcast_count, count), errorMessage = null)
                     }
                 }
-                .onFailure { e -> _uiState.update { it.copy(errorMessage = e.message) } }
+                .onFailure { e -> _uiState.update { it.copy(errorMessage = strings.resolveError(e, R.string.notif_error_panic)) } }
         }
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -41,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.stripe.android.paymentsheet.rememberPaymentSheet
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
@@ -97,7 +99,7 @@ fun SubscriptionScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Planes de Suscripción")
+        ScreenHeader(title = stringResource(R.string.plans_title))
 
         if (state.isLoading && state.plans.isEmpty()) {
             LoadingBox()
@@ -117,6 +119,7 @@ fun SubscriptionScreen(
 
             item {
                 val current = state.current
+                val currentTierName = state.currentPlan?.let { stringResource(it.tier.labelRes) } ?: ""
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -134,22 +137,26 @@ fun SubscriptionScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (current == null) "Estado de Suscripción" else "Plan ${state.currentPlan?.tier?.label ?: ""}".trim(),
+                                text = if (current == null) {
+                                    stringResource(R.string.plans_state_title)
+                                } else {
+                                    stringResource(R.string.plans_current_title, currentTierName).trim()
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = BrandNavy
                             )
                             StatusChip(
-                                text = if (current == null) "Sin plan activo" else "Activo",
+                                text = if (current == null) stringResource(R.string.plans_no_active_badge) else stringResource(R.string.plans_status_active),
                                 containerColor = if (current == null) Color(0xFFFEF3C7) else Color(0xFFD1FAE5),
                                 contentColor = if (current == null) Color(0xFF92400E) else Color(0xFF064E3B)
                             )
                         }
                         Text(
                             text = if (current == null) {
-                                "Selecciona uno de los planes institucionales para habilitar el seguimiento GPS y gestión de rutas escolares."
+                                stringResource(R.string.plans_no_active_desc)
                             } else {
-                                "Tu suscripción se encuentra activa. Quedan ${current.remainingDays} días de vigencia en el periodo actual."
+                                stringResource(R.string.plans_remaining_active, current.remainingDays)
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF64748B)
@@ -159,7 +166,7 @@ fun SubscriptionScreen(
             }
 
             item {
-                SectionTitle(text = "Planes Disponibles")
+                SectionTitle(text = stringResource(R.string.plans_available_section))
             }
 
             items(state.plans, key = { it.id.value }) { plan ->
@@ -187,7 +194,7 @@ fun SubscriptionScreen(
                     ) {
                         Icon(Icons.Filled.Lock, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
                         Text(
-                            text = "Pagos procesados de forma segura con Stripe Checkout (Modo Sandbox).",
+                            text = stringResource(R.string.plans_stripe_checkout_note),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B)
                         )
@@ -230,13 +237,13 @@ private fun PlanCard(
             ) {
                 Column {
                     Text(
-                        text = plan.tier.label,
+                        text = stringResource(plan.tier.labelRes),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = BrandNavy
                     )
                     Text(
-                        text = "S/ ${"%.2f".format(plan.price)} / mes",
+                        text = stringResource(R.string.plans_price_per_month, "%.2f".format(plan.price)),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F172A)
@@ -244,7 +251,7 @@ private fun PlanCard(
                 }
                 if (isCurrent) {
                     StatusChip(
-                        text = "Plan Actual",
+                        text = stringResource(R.string.plans_current_badge),
                         containerColor = Color(0xFFD1FAE5),
                         contentColor = Color(0xFF064E3B)
                     )
@@ -253,10 +260,10 @@ private fun PlanCard(
 
             // Benefits list
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                PlanFeatureItem("Hasta ${plan.quota.maxRoutes} rutas escolares concurrentes")
-                PlanFeatureItem("Hasta ${plan.quota.maxDrivers} conductores registrados")
-                PlanFeatureItem("Monitoreo telemétrico GPS en tiempo real")
-                PlanFeatureItem("App para padres con red de cuidadores autorizados")
+                PlanFeatureItem(stringResource(R.string.plans_feat_routes, plan.quota.maxRoutes))
+                PlanFeatureItem(stringResource(R.string.plans_feat_drivers, plan.quota.maxDrivers))
+                PlanFeatureItem(stringResource(R.string.plans_feat_gps))
+                PlanFeatureItem(stringResource(R.string.plans_feat_caregivers))
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -264,7 +271,7 @@ private fun PlanCard(
             when {
                 isCurrent -> {
                     BigButton(
-                        text = "Renovar suscripción con Stripe",
+                        text = stringResource(R.string.plans_btn_renew),
                         onClick = onUpgrade,
                         enabled = enabled,
                         containerColor = BrandNavy
@@ -272,7 +279,7 @@ private fun PlanCard(
                 }
                 hasSubscription && isUpgrade -> {
                     BigButton(
-                        text = "Mejorar a este plan con Stripe",
+                        text = stringResource(R.string.plans_btn_upgrade),
                         onClick = onUpgrade,
                         enabled = enabled,
                         containerColor = BrandNavy
@@ -280,7 +287,7 @@ private fun PlanCard(
                 }
                 hasSubscription -> {
                     BigButton(
-                        text = "Cambiar a este plan con Stripe",
+                        text = stringResource(R.string.plans_btn_switch),
                         onClick = onUpgrade,
                         enabled = enabled,
                         containerColor = Color(0xFF475569)
@@ -288,7 +295,7 @@ private fun PlanCard(
                 }
                 else -> {
                     BigButton(
-                        text = "Elegir y pagar con Stripe",
+                        text = stringResource(R.string.plans_btn_choose_pay),
                         onClick = onSubscribe,
                         enabled = enabled,
                         containerColor = BrandNavy

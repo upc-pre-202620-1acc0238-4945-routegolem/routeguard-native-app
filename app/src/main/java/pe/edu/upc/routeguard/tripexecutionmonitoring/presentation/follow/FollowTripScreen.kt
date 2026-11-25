@@ -41,11 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
@@ -62,9 +64,9 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmerald
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmeraldDark
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.withEstimate
-import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.formatAge
-import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.parentLabel
-import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.progressText
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedFormatAge
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedParentLabel
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedProgressText
 
 private const val REFRESH_MS = 5_000L
 private const val VEHICLE_ID = "vehicle"
@@ -88,7 +90,7 @@ fun FollowTripScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Seguimiento en Vivo")
+        ScreenHeader(title = stringResource(R.string.follow_title))
 
         val trip = state.trip
         when {
@@ -123,13 +125,13 @@ fun FollowTripScreen(
                             }
                         }
                         Text(
-                            text = "Sin viaje en curso",
+                            text = stringResource(R.string.follow_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = BrandNavy
                         )
                         Text(
-                            text = "Cuando el conductor inicie la ruta escolar de tu hijo, verás aquí su ubicación en tiempo real sobre el mapa, velocidad y horario estimado de llegada.",
+                            text = stringResource(R.string.follow_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF64748B)
                         )
@@ -151,7 +153,7 @@ fun FollowTripScreen(
                         MapStop(it.name, it.coordinates, it.order, it.reached, it.order == nextStop?.order)
                     },
                     vehicles = trip.location?.let {
-                        listOf(MapVehicle(VEHICLE_ID, "Vehículo Escolar", it.coordinates))
+                        listOf(MapVehicle(VEHICLE_ID, stringResource(R.string.follow_map_vehicle_label), it.coordinates))
                     }.orEmpty(),
                     followVehicleId = VEHICLE_ID,
                     routePath = state.roadPath,
@@ -186,13 +188,16 @@ fun FollowTripScreen(
                                     color = BrandNavy
                                 )
                                 Text(
-                                    text = "Conductor: ${trip.driverName.ifBlank { "Personal Institucional" }}",
+                                    text = stringResource(
+                                        R.string.monitor_driver_chip,
+                                        trip.driverName.ifBlank { stringResource(R.string.monitor_driver_fallback) }
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF64748B)
                                 )
                             }
                             StatusChip(
-                                text = "En ruta",
+                                text = stringResource(R.string.follow_badge_en_route),
                                 containerColor = Color(0xFFD1FAE5),
                                 contentColor = Color(0xFF064E3B),
                                 icon = Icons.Filled.Check
@@ -202,6 +207,7 @@ fun FollowTripScreen(
                         val location = trip.location
                         if (location != null) {
                             val isStale = (System.currentTimeMillis() - location.recordedAt) > STALE_THRESHOLD_MS
+                            val ageLabel = localizedFormatAge(location.recordedAt)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -212,7 +218,7 @@ fun FollowTripScreen(
                                     contentColor = BrandNavy
                                 )
                                 StatusChip(
-                                    text = "Actualizado ${formatAge(location.recordedAt)}",
+                                    text = stringResource(R.string.follow_updated_ago, ageLabel),
                                     containerColor = Color(0xFFF1F5F9),
                                     contentColor = Color(0xFF475569)
                                 )
@@ -236,7 +242,7 @@ fun FollowTripScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Text(
-                                            "Ubicación GPS desactualizada (${formatAge(location.recordedAt)}). Posible pérdida de cobertura móvil del conductor.",
+                                            stringResource(R.string.follow_gps_stale_warning, ageLabel),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.onErrorContainer
                                         )
@@ -245,7 +251,7 @@ fun FollowTripScreen(
                             }
                         } else {
                             Text(
-                                "Esperando la primera señal GPS de la unidad...",
+                                stringResource(R.string.follow_waiting_first_gps),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF64748B)
                             )
@@ -271,7 +277,7 @@ fun FollowTripScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Vehículo y Seguridad",
+                                text = stringResource(R.string.follow_vehicle_card_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = BrandNavy
@@ -282,7 +288,7 @@ fun FollowTripScreen(
                                 border = BorderStroke(1.dp, Color(0xFFFDE68A))
                             ) {
                                 Text(
-                                    text = "Placa ABC-789",
+                                    text = stringResource(R.string.follow_vehicle_plate_chip),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF92400E),
@@ -291,12 +297,15 @@ fun FollowTripScreen(
                             }
                         }
                         Text(
-                            text = "Unidad: Mercedes-Benz Sprinter 516 (Blanco)",
+                            text = stringResource(R.string.follow_vehicle_unit_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF334155)
                         )
                         Text(
-                            text = "Conductor titular: ${trip.driverName.ifBlank { "Personal Autorizado" }} · DNI 08492019",
+                            text = stringResource(
+                                R.string.follow_vehicle_driver_dni,
+                                trip.driverName.ifBlank { stringResource(R.string.follow_driver_authorized_fallback) }
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B)
                         )
@@ -305,7 +314,7 @@ fun FollowTripScreen(
                             color = Color(0xFFD1FAE5)
                         ) {
                             Text(
-                                text = "SOAT y Récord de manejo: Vigente (Licencia A-IIIa)",
+                                text = stringResource(R.string.follow_vehicle_soat_status),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF064E3B),
@@ -328,16 +337,16 @@ fun FollowTripScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Próxima parada",
+                            text = stringResource(R.string.follow_next_stop_label),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = BrandNavy
                         )
                         Text(
                             text = if (nextStop == null) {
-                                "El vehículo ya pasó por todas las paradas programadas"
+                                stringResource(R.string.follow_next_stop_all_passed)
                             } else {
-                                "${nextStop.name} · ${nextStop.progressText()}"
+                                "${nextStop.name} · ${nextStop.localizedProgressText()}"
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF334155)
@@ -358,19 +367,20 @@ fun FollowTripScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Tus hijos en esta ruta",
+                            text = stringResource(R.string.follow_children_card_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = BrandNavy
                         )
                         if (trip.children.isEmpty()) {
                             Text(
-                                text = "Ninguno de tus hijos viaja en esta ruta actualmente.",
+                                text = stringResource(R.string.follow_children_empty),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF64748B)
                             )
                         } else {
                             trip.children.forEach { child ->
+                                val childStatusText = child.state.localizedParentLabel()
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
@@ -396,13 +406,13 @@ fun FollowTripScreen(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Estado: ${child.state.parentLabel()}",
+                                            text = stringResource(R.string.follow_child_state_prefix, childStatusText),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = Color(0xFF64748B)
                                         )
                                     }
                                     StatusChip(
-                                        text = child.state.parentLabel(),
+                                        text = childStatusText,
                                         containerColor = Color(0xFFD1FAE5),
                                         contentColor = Color(0xFF064E3B)
                                     )
@@ -414,7 +424,10 @@ fun FollowTripScreen(
 
                 // SOS / Llamada directa al conductor (RuwaLabs #12, Miriam V-03)
                 BigButton(
-                    text = "Llamar al conductor (${trip.driverName.ifBlank { "Personal" }})",
+                    text = stringResource(
+                        R.string.follow_call_driver_btn,
+                        trip.driverName.ifBlank { stringResource(R.string.follow_driver_staff_fallback) }
+                    ),
                     onClick = {
                         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+51987654321"))
                         context.startActivity(intent)

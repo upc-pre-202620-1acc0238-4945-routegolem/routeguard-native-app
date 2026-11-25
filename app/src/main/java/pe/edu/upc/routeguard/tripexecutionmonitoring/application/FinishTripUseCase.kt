@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.tripexecutionmonitoring.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Trip
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripRepository
 import javax.inject.Inject
@@ -12,7 +14,7 @@ class FinishTripUseCase @Inject constructor(
 
     suspend operator fun invoke(trip: Trip): Result<Trip> {
         if (!trip.isActive) {
-            return Result.failure(IllegalStateException("El viaje ya fue finalizado"))
+            return Result.failure(LocalizedException(R.string.tracking_error_already_finished, fallback = "El viaje ya fue finalizado"))
         }
         // Deliver whatever is pending first; a failure here does not block the completion.
         syncOfflineRecords(trip.id)

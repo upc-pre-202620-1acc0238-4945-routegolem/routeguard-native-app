@@ -14,10 +14,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -44,7 +46,7 @@ fun RouteDetailScreen(
     LaunchedEffect(routeId) { viewModel.load(routeId) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = state.route?.name ?: "Ruta", onBack = onBack)
+        ScreenHeader(title = state.route?.name ?: stringResource(R.string.route_detail_name_loading), onBack = onBack)
 
         val route = state.route
         Column(
@@ -61,14 +63,14 @@ fun RouteDetailScreen(
                 val editable = route.isEditable && !state.isLoading
                 Text(
                     text = when (route.status) {
-                        RouteStatus.DRAFT -> "Ruta en borrador"
-                        RouteStatus.ACTIVE -> "Ruta activa (ya no se puede modificar)"
-                        RouteStatus.INACTIVE -> "Ruta inactiva (ya no se puede modificar)"
-                    } + " · ${route.stopCount} paradas"
+                        RouteStatus.DRAFT -> stringResource(R.string.route_detail_status_draft)
+                        RouteStatus.ACTIVE -> stringResource(R.string.route_detail_status_active)
+                        RouteStatus.INACTIVE -> stringResource(R.string.route_detail_status_inactive)
+                    } + stringResource(R.string.route_detail_stops_suffix, route.stopCount)
                 )
 
                 // Pick Waypoints
-                SectionTitle("Paradas")
+                SectionTitle(stringResource(R.string.route_detail_stops_heading))
                 route.waypoints.forEach { Text("${it.orderIndex}. ${it.name}") }
                 RouteGuardMap(
                     stops = route.waypoints.map { MapStop(it.name, it.coordinates, it.orderIndex) },
@@ -80,10 +82,10 @@ fun RouteDetailScreen(
                 )
 
                 if (route.isEditable) {
-                    Text("Busca una dirección o toca el mapa para elegir la ubicación de la nueva parada.")
-                    FormField(state.searchQuery, viewModel::onSearchQueryChange, "Buscar dirección (ej. Av. Larco 345)")
+                    Text(stringResource(R.string.route_detail_tap_map_hint))
+                    FormField(state.searchQuery, viewModel::onSearchQueryChange, stringResource(R.string.route_detail_search_address))
                     SecondaryButton(
-                        text = if (state.isSearching) "Buscando..." else "Buscar",
+                        text = if (state.isSearching) stringResource(R.string.route_detail_searching) else stringResource(R.string.route_detail_search_btn),
                         onClick = viewModel::onSearch,
                         enabled = !state.isSearching && state.searchQuery.isNotBlank()
                     )
@@ -95,94 +97,94 @@ fun RouteDetailScreen(
                         )
                     }
 
-                    FormField(state.waypointName, viewModel::onWaypointNameChange, "Nombre de la parada")
+                    FormField(state.waypointName, viewModel::onWaypointNameChange, stringResource(R.string.route_detail_stop_name))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FormField(
-                            state.latitude, viewModel::onLatitudeChange, "Latitud",
+                            state.latitude, viewModel::onLatitudeChange, stringResource(R.string.route_detail_lat),
                             modifier = Modifier.weight(1f), keyboardType = KeyboardType.Decimal
                         )
                         FormField(
-                            state.longitude, viewModel::onLongitudeChange, "Longitud",
+                            state.longitude, viewModel::onLongitudeChange, stringResource(R.string.route_detail_lng),
                             modifier = Modifier.weight(1f), keyboardType = KeyboardType.Decimal
                         )
                     }
-                    SecondaryButton("Agregar parada", viewModel::addWaypoint, enabled = editable)
+                    SecondaryButton(stringResource(R.string.route_detail_add_stop), viewModel::addWaypoint, enabled = editable)
 
                     // US-04: best order of the stops according to Mapbox
                     if (route.waypoints.size >= 3) {
-                        SecondaryButton("Sugerir mejor orden de paradas", viewModel::suggestOrder, enabled = editable)
+                        SecondaryButton(stringResource(R.string.route_detail_suggest_order), viewModel::suggestOrder, enabled = editable)
                     }
                     state.suggestedOrder?.let { proposal ->
                         InfoCard(
-                            title = "Orden sugerido",
-                            subtitle = "La primera y la última parada se mantienen."
+                            title = stringResource(R.string.route_detail_suggested_title),
+                            subtitle = stringResource(R.string.route_detail_suggested_banner)
                         ) {
                             proposal.forEachIndexed { index, stop -> Text("${index + 1}. ${stop.name}") }
-                            BigButton("Aplicar este orden", viewModel::applySuggestedOrder, enabled = editable)
-                            SecondaryButton("Descartar", viewModel::discardSuggestedOrder)
+                            BigButton(stringResource(R.string.route_detail_apply_order), viewModel::applySuggestedOrder, enabled = editable)
+                            SecondaryButton(stringResource(R.string.route_detail_discard_order), viewModel::discardSuggestedOrder)
                         }
                     }
                 }
 
                 // Select Vehicle (+ driver)
-                SectionTitle("Vehículo")
+                SectionTitle(stringResource(R.string.route_detail_vehicle_heading))
                 if (route.isEditable) {
                     state.vehicles.forEach { vehicle ->
                         SelectableRow(
                             title = vehicle.plate.value,
-                            subtitle = "${vehicle.model} · ${vehicle.capacity} asientos",
+                            subtitle = stringResource(R.string.route_detail_seats_fmt, vehicle.model, vehicle.capacity),
                             selected = vehicle.id == state.selectedVehicleId,
                             onClick = { viewModel.onVehicleSelected(vehicle.id) }
                         )
                     }
                 } else {
-                    Text(route.vehicle?.let { "${it.plate.value} · ${it.model}" } ?: "Sin vehículo")
+                    Text(route.vehicle?.let { "${it.plate.value} · ${it.model}" } ?: stringResource(R.string.route_detail_no_vehicle))
                 }
-                SectionTitle("Conductor")
+                SectionTitle(stringResource(R.string.route_detail_driver_label))
                 if (route.isEditable) {
                     state.drivers.forEach { driver ->
                         SelectableRow(
                             title = driver.fullName,
-                            subtitle = "Licencia ${driver.licenseNumber.value}",
+                            subtitle = stringResource(R.string.route_detail_license_fmt, driver.licenseNumber.value),
                             selected = driver.id.value == state.selectedDriverId?.value,
                             onClick = { viewModel.onDriverSelected(pe.edu.upc.routeguard.fleetroutemanagement.domain.valueobject.DriverId(driver.id.value)) }
                         )
                     }
-                    SecondaryButton("Asignar vehículo y conductor", viewModel::saveVehicle, enabled = editable)
+                    SecondaryButton(stringResource(R.string.route_detail_save_vehicle_driver), viewModel::saveVehicle, enabled = editable)
                 } else {
                     Text(
-                        state.drivers.firstOrNull { it.id.value == route.driverId?.value }?.fullName ?: "Sin conductor"
+                        state.drivers.firstOrNull { it.id.value == route.driverId?.value }?.fullName ?: stringResource(R.string.route_detail_no_driver)
                     )
                 }
 
                 // Assign Students To Route (needs the driver first)
-                SectionTitle("Estudiantes (de grupos finalizados)")
+                SectionTitle(stringResource(R.string.route_detail_students_heading))
                 if (route.isEditable) {
                     if (route.driverId == null || route.driverId.value.isBlank()) {
-                        Text("Asigna primero un conductor para poder asignar estudiantes.")
+                        Text(stringResource(R.string.route_detail_assign_driver_first))
                     }
                     if (state.assignableStudents.isEmpty()) {
-                        Text("Aún no hay grupos finalizados con estudiantes.")
+                        Text(stringResource(R.string.route_detail_no_groups_hint))
                     }
                     state.assignableStudents.forEach { child ->
                         SelectableRow(
                             title = child.fullName,
-                            subtitle = "${child.age} años",
+                            subtitle = stringResource(R.string.group_editor_age_subtitle, child.age),
                             selected = state.selectedStudentIds.any { it.value == child.id.value },
                             onClick = { viewModel.toggleStudent(pe.edu.upc.routeguard.fleetroutemanagement.domain.valueobject.StudentId(child.id.value)) }
                         )
                     }
                     SecondaryButton(
-                        "Asignar estudiantes",
+                        stringResource(R.string.route_detail_save_students),
                         viewModel::saveStudents,
                         enabled = editable && state.selectedStudentIds.isNotEmpty()
                     )
                 } else {
-                    Text("${route.studentIds.size} estudiantes asignados")
+                    Text(stringResource(R.string.stakeholders_group_students_count, route.studentIds.size))
                 }
 
                 // Define Service Days
-                SectionTitle("Días de servicio")
+                SectionTitle(stringResource(R.string.route_detail_days_section))
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -191,32 +193,33 @@ fun RouteDetailScreen(
                         FilterChip(
                             selected = day in state.selectedDays,
                             onClick = { if (route.isEditable) viewModel.toggleDay(day) },
-                            label = { Text(day.label) }
+                            label = { Text(stringResource(day.shortRes)) }
                         )
                     }
                 }
                 if (route.isEditable) {
-                    SecondaryButton("Guardar días", viewModel::saveServiceDays, enabled = editable)
+                    SecondaryButton(stringResource(R.string.route_detail_save_days), viewModel::saveServiceDays, enabled = editable)
                 }
 
                 // Set Departure Time
-                SectionTitle("Hora de salida")
+                SectionTitle(stringResource(R.string.route_detail_departure_section))
                 if (route.isEditable) {
-                    FormField(state.departureTime, viewModel::onDepartureTimeChange, "HH:mm (ej. 06:30)")
-                    SecondaryButton("Guardar hora", viewModel::saveDepartureTime, enabled = editable)
+                    FormField(state.departureTime, viewModel::onDepartureTimeChange, stringResource(R.string.route_detail_departure_label))
+                    SecondaryButton(stringResource(R.string.route_detail_save_departure), viewModel::saveDepartureTime, enabled = editable)
                 } else {
-                    Text(route.departureTime ?: "Sin hora")
+                    Text(route.departureTime ?: stringResource(R.string.route_detail_no_time))
                 }
 
                 // Route Activation Finalized
-                SectionTitle("Activación")
+                SectionTitle(stringResource(R.string.route_detail_activation_heading))
                 BigButton(
-                    text = if (route.isEditable) "Activar ruta" else "Ruta activa",
+                    text = if (route.isEditable) stringResource(R.string.route_detail_activate_btn) else stringResource(R.string.route_detail_active_btn),
                     onClick = viewModel::activate,
                     enabled = editable && route.missingForActivation.isEmpty()
                 )
-                if (route.isEditable && route.missingForActivation.isNotEmpty()) {
-                    Text("Falta: ${route.missingForActivation.joinToString(", ")}.")
+                if (route.isEditable && route.missingActivationRes.isNotEmpty()) {
+                    val missingText = route.missingActivationRes.map { stringResource(it) }.joinToString(", ")
+                    Text(stringResource(R.string.route_detail_missing_prefix, missingText))
                 }
             }
         }

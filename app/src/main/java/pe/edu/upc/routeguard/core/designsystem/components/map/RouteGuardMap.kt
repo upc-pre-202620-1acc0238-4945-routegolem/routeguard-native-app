@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mapbox.geojson.Point
@@ -124,7 +125,7 @@ fun RouteGuardMap(
     if (!token.startsWith("pk.")) {
         Box(modifier = frame, contentAlignment = Alignment.Center) {
             Text(
-                text = "Mapa desactivado: agrega MAPBOX_ACCESS_TOKEN=pk... en local.properties y vuelve a compilar.",
+                text = androidx.compose.ui.res.stringResource(R.string.map_mapbox_disabled),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -238,14 +239,14 @@ fun RouteGuardMap(
         ) {
             if (followed != null) {
                 FilledTonalButton(onClick = { following = true }, enabled = !following) {
-                    Text("Seguir")
+                    Text(stringResource(R.string.map_follow_btn))
                 }
             }
             FilledTonalButton(onClick = {
                 following = false
                 refitSignal++
             }) {
-                Text("Ver todo")
+                Text(stringResource(R.string.map_see_all_btn))
             }
         }
 
@@ -264,19 +265,19 @@ fun RouteGuardMap(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(VehicleColor))
-                    Text("Vehículo", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.map_legend_vehicle), style = MaterialTheme.typography.labelSmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(NextStopColor))
-                    Text("Próx. parada", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.map_legend_next_stop), style = MaterialTheme.typography.labelSmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(StopColor))
-                    Text("Parada pendiente", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.map_legend_pending_stop), style = MaterialTheme.typography.labelSmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(ReachedColor))
-                    Text("Parada visitada", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.map_legend_visited_stop), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }

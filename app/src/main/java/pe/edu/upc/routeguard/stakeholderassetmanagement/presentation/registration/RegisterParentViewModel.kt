@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.RegisterParentUseCase
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.AccountCredentials
 import javax.inject.Inject
@@ -24,7 +26,8 @@ data class RegisterParentUiState(
 
 @HiltViewModel
 class RegisterParentViewModel @Inject constructor(
-    private val registerParent: RegisterParentUseCase
+    private val registerParent: RegisterParentUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterParentUiState())
@@ -44,7 +47,7 @@ class RegisterParentViewModel @Inject constructor(
                     _state.update { it.copy(isLoading = false, credentials = provisioned.credentials) }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, errorMessage = e.message) }
+                    _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
         }
     }

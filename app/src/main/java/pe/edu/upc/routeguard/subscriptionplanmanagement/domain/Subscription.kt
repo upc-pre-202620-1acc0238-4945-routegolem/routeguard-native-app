@@ -1,14 +1,16 @@
 package pe.edu.upc.routeguard.subscriptionplanmanagement.domain
 
+import androidx.annotation.StringRes
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.shared.domain.AggregateRoot
 import pe.edu.upc.routeguard.shared.domain.BaseEntity
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.valueobject.PlanId
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.valueobject.SubscriptionId
 
-enum class PlanTier(val label: String) {
-    BASIC("Básico"),
-    INTERMEDIATE("Intermedio"),
-    COMPLETE("Completo");
+enum class PlanTier(@StringRes val labelRes: Int, val label: String) {
+    BASIC(R.string.plan_tier_basic, "Básico"),
+    INTERMEDIATE(R.string.plan_tier_intermediate, "Intermedio"),
+    COMPLETE(R.string.plan_tier_complete, "Completo");
 
     companion object {
         fun from(value: String): PlanTier =

@@ -22,10 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -36,6 +38,7 @@ import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.SectionTitle
 import pe.edu.upc.routeguard.notificationscommunication.domain.Notification
 import pe.edu.upc.routeguard.notificationscommunication.domain.NotificationStatus
+import pe.edu.upc.routeguard.notificationscommunication.domain.NotificationType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,7 +56,7 @@ fun AlertsScreen(
     LaunchedEffect(Unit) { viewModel.refresh(confirmDelivery = !isDriver) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Alertas", onBack = onBack)
+        ScreenHeader(title = stringResource(R.string.alerts_title), onBack = onBack)
 
         if (state.isLoading && state.notifications.isEmpty()) {
             LoadingBox()
@@ -75,14 +78,14 @@ fun AlertsScreen(
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PanicButton(onConfirm = viewModel::onPanic)
-                        SectionTitle("Aviso a los padres")
+                        SectionTitle(stringResource(R.string.alerts_broadcast_section))
                         FormField(
                             value = state.broadcastMessage,
                             onValueChange = viewModel::onBroadcastChange,
-                            label = "Mensaje (ej. retraso por tráfico)"
+                            label = stringResource(R.string.alerts_broadcast_label)
                         )
                         SecondaryButton(
-                            text = "Publicar aviso",
+                            text = stringResource(R.string.alerts_broadcast_send),
                             onClick = viewModel::onSendBroadcast,
                             enabled = state.broadcastMessage.isNotBlank()
                         )
@@ -90,9 +93,9 @@ fun AlertsScreen(
                 }
             }
 
-            item { SectionTitle("Historial") }
+            item { SectionTitle(stringResource(R.string.alerts_history_title)) }
             if (state.notifications.isEmpty()) {
-                item { Text("Aún no tienes notificaciones.") }
+                item { Text(stringResource(R.string.alerts_empty)) }
             }
             items(state.notifications, key = { it.id.value }) { notification ->
                 NotificationCard(notification)
@@ -118,7 +121,7 @@ private fun NotificationCard(notification: Notification) {
         )
     ) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = notification.title, fontWeight = FontWeight.Bold)
+            Text(text = localizedNotificationTitle(notification), fontWeight = FontWeight.Bold)
             Text(text = notification.body)
             Text(
                 text = formatDate(notification.createdAt) + " · " + statusLabel(notification.status),
@@ -133,7 +136,7 @@ private fun PanicButton(onConfirm: () -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
 
     BigButton(
-        text = "Alerta de pánico",
+        text = stringResource(R.string.alerts_panic_fab),
         onClick = { showDialog = true },
         containerColor = Color(0xFFB91C1C)
     )
@@ -141,25 +144,40 @@ private fun PanicButton(onConfirm: () -> Unit) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("¿Enviar alerta de pánico?") },
-            text = { Text("Se notificará con alta prioridad a todos los padres de la ruta.") },
+            title = { Text(stringResource(R.string.alerts_panic_dialog_title)) },
+            text = { Text(stringResource(R.string.alerts_panic_dialog_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     showDialog = false
                     onConfirm()
-                }) { Text("Enviar") }
+                }) { Text(stringResource(R.string.alerts_panic_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.btn_cancel)) }
             }
         )
     }
 }
 
+@Composable
+private fun localizedNotificationTitle(notification: Notification): String = when (notification.type) {
+    NotificationType.ANNOUNCEMENT -> stringResource(R.string.notif_title_announcement)
+    NotificationType.TRIP_STARTED -> stringResource(R.string.notif_title_trip_started)
+    NotificationType.PANIC_ALERT -> stringResource(R.string.notif_title_panic)
+    NotificationType.GEOFENCE_BREACHED -> {
+        if (notification.title == "Llegada al colegio") stringResource(R.string.geofence_arrived_school)
+        else stringResource(R.string.notif_title_geofence)
+    }
+    NotificationType.STUDENT_BOARDED -> stringResource(R.string.notif_title_student_boarded)
+    NotificationType.INCIDENT_REPORTED -> stringResource(R.string.notif_title_incident)
+    NotificationType.GENERAL -> notification.title.ifBlank { stringResource(R.string.notif_title_general) }
+}
+
+@Composable
 private fun statusLabel(status: NotificationStatus) = when (status) {
-    NotificationStatus.PENDING -> "Pendiente"
-    NotificationStatus.DISPATCHED -> "Enviada"
-    NotificationStatus.DELIVERED -> "Entregada"
+    NotificationStatus.PENDING -> stringResource(R.string.notif_status_pending)
+    NotificationStatus.DISPATCHED -> stringResource(R.string.notif_status_sent)
+    NotificationStatus.DELIVERED -> stringResource(R.string.notif_status_delivered)
 }
 
 private fun formatDate(millis: Long): String =

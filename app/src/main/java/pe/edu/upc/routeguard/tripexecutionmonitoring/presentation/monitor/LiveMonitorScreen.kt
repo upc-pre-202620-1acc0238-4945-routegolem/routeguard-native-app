@@ -36,11 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
@@ -55,8 +57,8 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmerald
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.withEstimate
-import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.formatAge
-import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.progressText
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedFormatAge
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedProgressText
 
 private const val REFRESH_MS = 5_000L
 
@@ -76,7 +78,7 @@ fun LiveMonitorScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Flota en Vivo")
+        ScreenHeader(title = stringResource(R.string.monitor_title))
 
         if (!state.hasLoaded) {
             LoadingBox()
@@ -115,13 +117,13 @@ fun LiveMonitorScreen(
                             }
                         }
                         Text(
-                            text = "Sin viajes en curso",
+                            text = stringResource(R.string.monitor_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = BrandNavy
                         )
                         Text(
-                            text = "Cuando un conductor inicie su recorrido escolar asignado, podrás monitorear aquí la posición simultánea de toda la flota.",
+                            text = stringResource(R.string.monitor_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF64748B)
                         )
@@ -166,20 +168,20 @@ fun LiveMonitorScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFFBA1A1A)))
-                        Text("Seleccionada", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.monitor_legend_selected), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF047857)))
-                        Text("En movimiento", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.monitor_legend_moving), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF64748B)))
-                        Text("Detenida", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.monitor_legend_stopped), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
 
-            SectionTitle(text = "Unidades Activas en Servicio (${state.trips.size})")
+            SectionTitle(text = stringResource(R.string.monitor_active_section, state.trips.size))
 
             // Active Vehicle Cards with Capacity Progress
             state.trips.forEach { trip ->
@@ -222,20 +224,23 @@ fun LiveMonitorScreen(
                                     color = BrandNavy
                                 )
                                 Text(
-                                    text = "Conductor: ${trip.driverName.ifBlank { "Personal Institucional" }}",
+                                    text = stringResource(
+                                        R.string.monitor_driver_chip,
+                                        trip.driverName.ifBlank { stringResource(R.string.monitor_driver_fallback) }
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF64748B)
                                 )
                             }
                             if (isSelected) {
                                 StatusChip(
-                                    text = "En foco",
+                                    text = stringResource(R.string.monitor_badge_focused),
                                     containerColor = BrandNavy,
                                     contentColor = Color.White
                                 )
                             } else {
                                 StatusChip(
-                                    text = "Activa",
+                                    text = stringResource(R.string.monitor_badge_active),
                                     containerColor = Color(0xFFD1FAE5),
                                     contentColor = Color(0xFF064E3B)
                                 )
@@ -249,12 +254,17 @@ fun LiveMonitorScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Ocupación de estudiantes",
+                                    text = stringResource(R.string.monitor_occupancy_label),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color(0xFF64748B)
                                 )
                                 Text(
-                                    text = "${trip.boardedCount} de ${trip.totalChildren} a bordo (${(capacityRatio * 100).toInt()}%)",
+                                    text = stringResource(
+                                        R.string.monitor_occupancy_progress,
+                                        trip.boardedCount,
+                                        trip.totalChildren,
+                                        (capacityRatio * 100).toInt()
+                                    ),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = BrandNavy
@@ -282,14 +292,15 @@ fun LiveMonitorScreen(
                                 contentColor = BrandNavy
                             )
                             StatusChip(
-                                text = trip.location?.let { formatAge(it.recordedAt) } ?: "Sin señal",
+                                text = trip.location?.let { localizedFormatAge(it.recordedAt) } ?: stringResource(R.string.monitor_no_signal),
                                 containerColor = Color(0xFFF1F5F9),
                                 contentColor = Color(0xFF475569)
                             )
                         }
 
                         Text(
-                            text = next?.let { "Próxima parada: ${it.name} · ${it.progressText()}" } ?: "Recorrido completo",
+                            text = next?.let { stringResource(R.string.monitor_next_stop_format, it.name, it.localizedProgressText()) }
+                                ?: stringResource(R.string.monitor_trip_completed),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF334155),
                             fontWeight = FontWeight.Medium

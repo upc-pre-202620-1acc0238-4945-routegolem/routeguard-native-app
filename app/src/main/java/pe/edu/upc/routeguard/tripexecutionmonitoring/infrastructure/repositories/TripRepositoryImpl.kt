@@ -91,7 +91,12 @@ class TripRepositoryImpl @Inject constructor(
 
     override suspend fun startTrip(routeId: RouteId): Result<Trip> {
         val driverId = sessionManager.profileId()
-            ?: return Result.failure(IllegalStateException("Tu cuenta no tiene un perfil de conductor"))
+            ?: return Result.failure(
+                pe.edu.upc.routeguard.core.localization.LocalizedException(
+                    pe.edu.upc.routeguard.R.string.tracking_error_missing_driver_profile,
+                    fallback = "Tu cuenta no tiene un perfil de conductor"
+                )
+            )
 
         val route = safeApiCall { service.getRoute(routeId.value) }.getOrElse { return Result.failure(it) }
         val studentNames = safeApiCall { service.getParents() }.getOrNull()
@@ -219,7 +224,12 @@ class TripRepositoryImpl @Inject constructor(
 
     override suspend fun getLiveTripForParent(): Result<LiveTrip?> {
         val parentId = sessionManager.profileId()
-            ?: return Result.failure(IllegalStateException("Tu cuenta no tiene un perfil de padre"))
+            ?: return Result.failure(
+                pe.edu.upc.routeguard.core.localization.LocalizedException(
+                    pe.edu.upc.routeguard.R.string.tracking_error_missing_parent_profile,
+                    fallback = "Tu cuenta no tiene un perfil de padre"
+                )
+            )
         return try {
             val response = service.getParentActiveTrip(parentId)
             val body = response.body()

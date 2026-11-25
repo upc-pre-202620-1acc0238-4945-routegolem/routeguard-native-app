@@ -127,7 +127,11 @@ class TrackingForegroundService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Viaje en curso", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(
+                    CHANNEL_ID,
+                    getString(pe.edu.upc.routeguard.R.string.tracking_fg_channel_name),
+                    NotificationManager.IMPORTANCE_LOW
+                )
             )
         }
     }
@@ -135,8 +139,8 @@ class TrackingForegroundService : Service() {
     private fun buildNotification(): Notification =
         NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle("RouteGuard")
-            .setContentText("Compartiendo tu ubicación con los padres")
+            .setContentTitle(getString(pe.edu.upc.routeguard.R.string.app_name))
+            .setContentText(getString(pe.edu.upc.routeguard.R.string.tracking_fg_notification_text))
             .setOngoing(true)
             .build()
 

@@ -1,5 +1,8 @@
 package pe.edu.upc.routeguard.fleetroutemanagement.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedActivationException
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.FleetRepository
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.Route
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.ServiceDay
@@ -24,7 +27,7 @@ class GetVehiclesUseCase @Inject constructor(private val repository: FleetReposi
 
 class DefineRouteUseCase @Inject constructor(private val repository: FleetRepository) {
     suspend operator fun invoke(name: String): Result<Route> {
-        if (name.isBlank()) return Result.failure(IllegalArgumentException("La ruta necesita un nombre"))
+        if (name.isBlank()) return Result.failure(LocalizedException(R.string.fleet_error_name_req, fallback = "La ruta necesita un nombre"))
         return repository.defineRoute(name.trim())
     }
 }
@@ -34,10 +37,10 @@ class PickWaypointUseCase @Inject constructor(private val repository: FleetRepos
         val lat = latitude.trim().toDoubleOrNull()
         val lng = longitude.trim().toDoubleOrNull()
         if (name.isBlank() || lat == null || lng == null) {
-            return Result.failure(IllegalArgumentException("Ingresa el nombre de la parada y coordenadas válidas"))
+            return Result.failure(LocalizedException(R.string.fleet_error_stop_invalid, fallback = "Ingresa el nombre de la parada y coordenadas válidas"))
         }
         if (lat !in -90.0..90.0 || lng !in -180.0..180.0) {
-            return Result.failure(IllegalArgumentException("Las coordenadas están fuera de rango"))
+            return Result.failure(LocalizedException(R.string.fleet_error_coords_range, fallback = "Las coordenadas están fuera de rango"))
         }
         return repository.pickWaypoint(routeId, name.trim(), Coordinates(lat, lng))
     }
@@ -47,11 +50,11 @@ class PickWaypointUseCase @Inject constructor(private val repository: FleetRepos
 class AssignStudentsToRouteUseCase @Inject constructor(private val repository: FleetRepository) {
     suspend operator fun invoke(route: Route, studentIds: Collection<StudentId>): Result<Route> {
         if (route.driverId == null || route.driverId.value.isBlank()) {
-            return Result.failure(IllegalStateException("Asigna un conductor antes de asignar estudiantes"))
+            return Result.failure(LocalizedException(R.string.fleet_error_driver_before_students, fallback = "Asigna un conductor antes de asignar estudiantes"))
         }
         val pending = studentIds.filter { it !in route.studentIds }
         if (pending.isEmpty()) {
-            return Result.failure(IllegalArgumentException("Selecciona al menos un estudiante nuevo"))
+            return Result.failure(LocalizedException(R.string.fleet_error_select_new_student, fallback = "Selecciona al menos un estudiante nuevo"))
         }
         var current = route
         for (studentId in pending) {
@@ -65,7 +68,7 @@ class AssignStudentsToRouteUseCase @Inject constructor(private val repository: F
 class SelectVehicleUseCase @Inject constructor(private val repository: FleetRepository) {
     suspend operator fun invoke(routeId: RouteId, vehicle: Vehicle?, driverId: DriverId?): Result<Route> {
         if (vehicle == null || driverId == null || driverId.value.isBlank()) {
-            return Result.failure(IllegalArgumentException("Selecciona un vehículo y un conductor"))
+            return Result.failure(LocalizedException(R.string.fleet_error_select_vehicle_driver, fallback = "Selecciona un vehículo y un conductor"))
         }
         repository.selectVehicle(routeId, vehicle).onFailure { return Result.failure(it) }
         return repository.assignDriver(routeId, driverId)
@@ -74,7 +77,7 @@ class SelectVehicleUseCase @Inject constructor(private val repository: FleetRepo
 
 class DefineServiceDaysUseCase @Inject constructor(private val repository: FleetRepository) {
     suspend operator fun invoke(routeId: RouteId, days: Set<ServiceDay>): Result<Route> {
-        if (days.isEmpty()) return Result.failure(IllegalArgumentException("Selecciona al menos un día"))
+        if (days.isEmpty()) return Result.failure(LocalizedException(R.string.fleet_error_select_day, fallback = "Selecciona al menos un día"))
         return repository.defineServiceDays(routeId, days)
     }
 }
@@ -82,7 +85,7 @@ class DefineServiceDaysUseCase @Inject constructor(private val repository: Fleet
 class SetDepartureTimeUseCase @Inject constructor(private val repository: FleetRepository) {
     suspend operator fun invoke(routeId: RouteId, time: String): Result<Route> {
         if (!TIME_REGEX.matches(time.trim())) {
-            return Result.failure(IllegalArgumentException("Usa el formato HH:mm (por ejemplo 06:30)"))
+            return Result.failure(LocalizedException(R.string.fleet_error_time_format, fallback = "Usa el formato HH:mm (por ejemplo 06:30)"))
         }
         return repository.setDepartureTime(routeId, time.trim())
     }
@@ -97,7 +100,12 @@ class ActivateRouteUseCase @Inject constructor(private val repository: FleetRepo
     suspend operator fun invoke(route: Route): Result<Route> {
         val missing = route.missingForActivation
         if (missing.isNotEmpty()) {
-            return Result.failure(IllegalStateException("Falta ${missing.joinToString(", ")} para activar la ruta"))
+            return Result.failure(
+                LocalizedActivationException(
+                    missingResIds = route.missingActivationRes,
+                    fallback = "Falta ${missing.joinToString(", ")} para activar la ruta"
+                )
+            )
         }
         return repository.activateRoute(route.id)
     }

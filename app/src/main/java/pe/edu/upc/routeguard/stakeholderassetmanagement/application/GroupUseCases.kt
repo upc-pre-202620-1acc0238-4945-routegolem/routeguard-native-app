@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.stakeholderassetmanagement.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Group
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.GroupRepository
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.valueobject.StudentId
@@ -14,7 +16,7 @@ class CreateGroupUseCase @Inject constructor(private val repository: GroupReposi
 
     suspend operator fun invoke(name: String): Result<Group> {
         if (name.isBlank()) {
-            return Result.failure(IllegalArgumentException("El grupo necesita un nombre"))
+            return Result.failure(LocalizedException(R.string.error_group_name_req, fallback = "El grupo necesita un nombre"))
         }
         return repository.createGroup(name.trim())
     }
@@ -26,7 +28,7 @@ class IncludeLinkedStudentsUseCase @Inject constructor(private val repository: G
     suspend operator fun invoke(group: Group, studentIds: Collection<StudentId>): Result<Group> {
         val pending = studentIds.filter { it !in group.studentIds }
         if (pending.isEmpty()) {
-            return Result.failure(IllegalArgumentException("Selecciona al menos un estudiante nuevo"))
+            return Result.failure(LocalizedException(R.string.error_group_min_student, fallback = "Selecciona al menos un estudiante nuevo"))
         }
         var current = group
         for (studentId in pending) {
@@ -41,7 +43,7 @@ class FinalizeGroupUseCase @Inject constructor(private val repository: GroupRepo
 
     suspend operator fun invoke(group: Group): Result<Group> {
         if (group.studentIds.isEmpty()) {
-            return Result.failure(IllegalStateException("El grupo necesita al menos un estudiante incluido"))
+            return Result.failure(LocalizedException(R.string.error_group_finalize_empty, fallback = "El grupo necesita al menos un estudiante incluido"))
         }
         return repository.finalizeGroup(group.id)
     }

@@ -27,4 +27,8 @@ class MainViewModel @Inject constructor(
     fun markTutorialAsSeen(userId: String) = sessionManager.setTutorialSeen(userId, true)
 
     fun resetTutorialForUser(userId: String) = sessionManager.setTutorialSeen(userId, false)
+
+    val languageFlow = sessionManager.languageFlow
+
+    fun setLanguage(code: String) = sessionManager.setLanguage(code)
 }

@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetLiveTripsUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.ArrivalEstimate
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.LiveTrip
@@ -32,7 +34,8 @@ data class LiveMonitorUiState(
 @HiltViewModel
 class LiveMonitorViewModel @Inject constructor(
     private val getLiveTrips: GetLiveTripsUseCase,
-    private val roadGuidance: RoadGuidance
+    private val roadGuidance: RoadGuidance,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LiveMonitorUiState())
@@ -46,7 +49,7 @@ class LiveMonitorViewModel @Inject constructor(
                     enrichSelectedTrip()
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(hasLoaded = true, errorMessage = e.message) }
+                    _uiState.update { it.copy(hasLoaded = true, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
         }
     }

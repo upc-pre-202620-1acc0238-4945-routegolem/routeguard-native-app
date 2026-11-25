@@ -222,6 +222,8 @@ fun MainShell(
                     profileNavGraph(
                         navController = navController,
                         account = account,
+                        languageFlow = viewModel.languageFlow,
+                        onLanguageSelected = viewModel::setLanguage,
                         onSignOut = { showSignOutDialog = true },
                         onLaunchTutorial = {
                             navigateToTutorialStep(0)

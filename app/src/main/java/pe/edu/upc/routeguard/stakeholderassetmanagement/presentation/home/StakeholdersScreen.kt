@@ -40,10 +40,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -71,7 +73,7 @@ fun StakeholdersScreen(
     LaunchedEffect(Unit) { viewModel.refresh() }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Gestión de Personal")
+        ScreenHeader(title = stringResource(R.string.stakeholders_title))
 
         Column(
             modifier = Modifier
@@ -91,7 +93,7 @@ fun StakeholdersScreen(
                         onClick = { viewModel.onTabSelected(tab) },
                         label = {
                             Text(
-                                tab.label,
+                                stringResource(tab.labelRes),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
@@ -108,7 +110,7 @@ fun StakeholdersScreen(
             FormField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = "Buscar en ${state.tab.label.lowercase()}..."
+                label = stringResource(R.string.stakeholders_search_in_tab, stringResource(state.tab.labelRes).lowercase())
             )
         }
 
@@ -129,7 +131,7 @@ fun StakeholdersScreen(
                 StakeholderTab.DRIVERS -> {
                     item {
                         BigButton(
-                            text = "Registrar nuevo conductor",
+                            text = stringResource(R.string.stakeholders_btn_register_driver),
                             onClick = onRegisterDriver,
                             containerColor = BrandNavy,
                             icon = Icons.Filled.Add
@@ -165,9 +167,13 @@ fun StakeholdersScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(driver.fullName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = BrandNavy)
-                                    Text("Licencia: ${driver.licenseNumber} · Tel: ${driver.phone}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+                                    Text(
+                                        stringResource(R.string.stakeholders_driver_sub, driver.licenseNumber.toString(), driver.phone.toString()),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF64748B)
+                                    )
                                 }
-                                StatusChip(text = "Habilitado", containerColor = Color(0xFFD1FAE5), contentColor = Color(0xFF064E3B))
+                                StatusChip(text = stringResource(R.string.stakeholders_badge_enabled), containerColor = Color(0xFFD1FAE5), contentColor = Color(0xFF064E3B))
                             }
                         }
                     }
@@ -176,8 +182,8 @@ fun StakeholdersScreen(
                 StakeholderTab.PARENTS -> {
                     item {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            SecondaryButton("Registrar padre", onRegisterParent, modifier = Modifier.weight(1f))
-                            SecondaryButton("Registrar hijo", onRegisterChild, modifier = Modifier.weight(1f))
+                            SecondaryButton(stringResource(R.string.stakeholders_btn_register_parent), onRegisterParent, modifier = Modifier.weight(1f))
+                            SecondaryButton(stringResource(R.string.stakeholders_btn_register_child), onRegisterChild, modifier = Modifier.weight(1f))
                         }
                     }
                     val filteredParents = if (searchQuery.isBlank()) state.parents else state.parents.filter {
@@ -212,14 +218,18 @@ fun StakeholdersScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(parent.fullName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = BrandNavy)
-                                        Text("${parent.email} · Tel: ${parent.phone}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+                                        Text(
+                                            stringResource(R.string.stakeholders_parent_meta, parent.email.toString(), parent.phone.toString()),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF64748B)
+                                        )
                                     }
                                 }
                                 if (parent.children.isNotEmpty()) {
                                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         parent.children.forEach { child ->
                                             StatusChip(
-                                                text = "${child.fullName} (${child.age} años)",
+                                                text = stringResource(R.string.stakeholders_child_age, child.fullName, child.age),
                                                 containerColor = Color(0xFFF1F5F9),
                                                 contentColor = Color(0xFF334155)
                                             )
@@ -234,7 +244,7 @@ fun StakeholdersScreen(
                 StakeholderTab.GROUPS -> {
                     item {
                         BigButton(
-                            text = "Crear nuevo grupo escolar",
+                            text = stringResource(R.string.stakeholders_btn_create_group),
                             onClick = onCreateGroup,
                             containerColor = BrandNavy,
                             icon = Icons.Filled.Add
@@ -258,10 +268,10 @@ fun StakeholdersScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(group.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = BrandNavy)
-                                    Text("${group.studentIds.size} estudiantes asignados", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+                                    Text(stringResource(R.string.stakeholders_group_students_count, group.studentIds.size), style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
                                 }
                                 StatusChip(
-                                    text = if (group.isFinalized) "Finalizado" else "Borrador",
+                                    text = if (group.isFinalized) stringResource(R.string.stakeholders_group_finalized) else stringResource(R.string.stakeholders_group_draft),
                                     containerColor = if (group.isFinalized) Color(0xFFD1FAE5) else Color(0xFFFEF3C7),
                                     contentColor = if (group.isFinalized) Color(0xFF064E3B) else Color(0xFF92400E)
                                 )

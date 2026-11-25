@@ -75,13 +75,14 @@ import pe.edu.upc.routeguard.identityaccessmanagement.domain.Role
 @Composable
 fun ProfileScreen(
     account: Account,
+    selectedLanguage: String = "es",
+    onLanguageSelected: (String) -> Unit = {},
     onSignOut: () -> Unit,
     onLaunchTutorial: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var activeRole by remember { mutableStateOf(account.role) }
-    var selectedLanguage by remember { mutableStateOf("ES") }
     var avatarBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var showPhotoDialog by remember { mutableStateOf(false) }
 
@@ -129,14 +130,13 @@ fun ProfileScreen(
         Role.PARENT -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 
-    var caregivers by remember {
-        mutableStateOf(
-            listOf(
-                Triple("Carmen López de Aljovín", "Abuela / Cuidadora principal", "987-123-456"),
-                Triple("Laura Gómez", "Madre / Apoderada titular", "999-888-777")
-            )
-        )
-    }
+    val caregiverRel1 = stringResource(R.string.profile_caregiver_demo_rel1)
+    val caregiverRel2 = stringResource(R.string.profile_caregiver_demo_rel2)
+    var customCaregivers by remember { mutableStateOf(emptyList<Triple<String, String, String>>()) }
+    val caregivers = listOf(
+        Triple("Carmen López de Aljovín", caregiverRel1, "987-123-456"),
+        Triple("Laura Gómez", caregiverRel2, "999-888-777")
+    ) + customCaregivers
     var showAddCaregiverDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -175,7 +175,7 @@ fun ProfileScreen(
                             if (avatarBitmap != null) {
                                 Image(
                                     bitmap = avatarBitmap!!.asImageBitmap(),
-                                    contentDescription = "Foto de perfil",
+                                    contentDescription = stringResource(R.string.profile_photo_cd),
                                     modifier = Modifier
                                         .size(80.dp)
                                         .clip(CircleShape),
@@ -210,7 +210,7 @@ fun ProfileScreen(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Filled.Edit,
-                                        contentDescription = "Cambiar foto",
+                                        contentDescription = stringResource(R.string.profile_change_photo_cd),
                                         tint = Color.White,
                                         modifier = Modifier.size(14.dp)
                                     )
@@ -293,13 +293,13 @@ fun ProfileScreen(
                             )
                             Column {
                                 Text(
-                                    text = "Modo de Operación / Rol",
+                                    text = stringResource(R.string.profile_role_mode_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = BrandNavy
                                 )
                                 Text(
-                                    text = "Vista: $roleLabel",
+                                    text = stringResource(R.string.profile_role_mode_subtitle, roleLabel),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF64748B)
                                 )
@@ -311,9 +311,9 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             val roles = listOf(
-                                Triple(Role.PARENT, "Apoderado", Icons.Filled.Person),
-                                Triple(Role.DRIVER, "Conductor", Icons.Filled.LocationOn),
-                                Triple(Role.ADMINISTRATOR, "Admin", Icons.Filled.Person)
+                                Triple(Role.PARENT, stringResource(R.string.role_parent_short), Icons.Filled.Person),
+                                Triple(Role.DRIVER, stringResource(R.string.role_driver_short), Icons.Filled.LocationOn),
+                                Triple(Role.ADMINISTRATOR, stringResource(R.string.role_admin_tab), Icons.Filled.Person)
                             )
 
                             roles.forEach { (r, label, icon) ->
@@ -384,13 +384,17 @@ fun ProfileScreen(
                             )
                             Column {
                                 Text(
-                                    text = "Idioma del sistema",
+                                    text = stringResource(R.string.profile_lang_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = BrandNavy
                                 )
                                 Text(
-                                    text = if (selectedLanguage == "ES") "Español (ES)" else "English (EN)",
+                                    text = if (selectedLanguage.equals("en", ignoreCase = true)) {
+                                        stringResource(R.string.profile_lang_en_label)
+                                    } else {
+                                        stringResource(R.string.profile_lang_es_label)
+                                    },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF64748B)
                                 )
@@ -398,10 +402,10 @@ fun ProfileScreen(
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            listOf("ES", "EN").forEach { lang ->
-                                val isSelected = selectedLanguage == lang
+                            listOf("es" to stringResource(R.string.lang_toggle_es), "en" to stringResource(R.string.lang_toggle_en)).forEach { (code, label) ->
+                                val isSelected = selectedLanguage.equals(code, ignoreCase = true)
                                 Surface(
-                                    modifier = Modifier.clickable { selectedLanguage = lang },
+                                    modifier = Modifier.clickable { onLanguageSelected(code) },
                                     shape = RoundedCornerShape(8.dp),
                                     color = if (isSelected) BrandNavy.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
                                     border = BorderStroke(
@@ -410,7 +414,7 @@ fun ProfileScreen(
                                     )
                                 ) {
                                     Text(
-                                        text = lang,
+                                        text = label,
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         color = if (isSelected) BrandNavy else MaterialTheme.colorScheme.onSurface,
@@ -450,13 +454,13 @@ fun ProfileScreen(
                             )
                             Column {
                                 Text(
-                                    text = "Planes y Suscripción",
+                                    text = stringResource(R.string.profile_sub_card_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = BrandNavy
                                 )
                                 Text(
-                                    text = "Plan Intermedio Activo · S/ 99.99/mes",
+                                    text = stringResource(R.string.profile_sub_card_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF64748B)
                                 )
@@ -475,7 +479,7 @@ fun ProfileScreen(
             // Caregivers Section (V-01 Carmen López recommendation & Cross-App Consistency)
             if (activeRole == Role.PARENT) {
                 item {
-                    SectionTitle(text = "Cuidadores Autorizados")
+                    SectionTitle(text = stringResource(R.string.profile_caregivers_section))
                     Spacer(modifier = Modifier.height(8.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -505,7 +509,7 @@ fun ProfileScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "Red Familiar",
+                                        text = stringResource(R.string.profile_family_network),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
@@ -516,7 +520,7 @@ fun ProfileScreen(
                                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                                 ) {
                                     Text(
-                                        text = "Alertas activas",
+                                        text = stringResource(R.string.profile_active_alerts_badge),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
@@ -525,7 +529,7 @@ fun ProfileScreen(
                                 }
                             }
                             Text(
-                                text = "Cuidadores autorizados para entrega, recepción y monitoreo en vivo con alertas:",
+                                text = stringResource(R.string.profile_caregivers_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -578,7 +582,7 @@ fun ProfileScreen(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Agregar cuidador autorizado")
+                                Text(stringResource(R.string.profile_caregiver_add_btn))
                             }
                         }
                     }
@@ -738,7 +742,7 @@ fun ProfileScreen(
                         tint = BrandNavy,
                         modifier = Modifier.size(24.dp)
                     )
-                    Text("Foto de Perfil", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.profile_photo_dialog_title), fontWeight = FontWeight.Bold)
                 }
             },
             text = {
@@ -747,7 +751,7 @@ fun ProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Elige una opción para actualizar tu foto de perfil:",
+                        text = stringResource(R.string.profile_photo_dialog_prompt),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -761,7 +765,7 @@ fun ProfileScreen(
                     ) {
                         Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Tomar foto con la cámara")
+                        Text(stringResource(R.string.profile_photo_camera_btn))
                     }
                     OutlinedButton(
                         onClick = {
@@ -773,7 +777,7 @@ fun ProfileScreen(
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Seleccionar de la galería o archivos")
+                        Text(stringResource(R.string.profile_photo_gallery_btn))
                     }
                     if (avatarBitmap != null) {
                         OutlinedButton(
@@ -787,7 +791,7 @@ fun ProfileScreen(
                         ) {
                             Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Eliminar foto / Restablecer iniciales")
+                            Text(stringResource(R.string.profile_photo_remove_btn))
                         }
                     }
                 }
@@ -795,22 +799,23 @@ fun ProfileScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showPhotoDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
     }
 
     if (showAddCaregiverDialog) {
+        val defaultRel = stringResource(R.string.profile_caregiver_default_rel)
         var nameInput by remember { mutableStateOf("") }
-        var relInput by remember { mutableStateOf("Familiar autorizado") }
+        var relInput by remember(defaultRel) { mutableStateOf(defaultRel) }
         var phoneInput by remember { mutableStateOf("") }
 
         AlertDialog(
             onDismissRequest = { showAddCaregiverDialog = false },
             title = {
                 Text(
-                    text = "Registrar cuidador autorizado",
+                    text = stringResource(R.string.profile_caregiver_dialog_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -818,28 +823,28 @@ fun ProfileScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "El familiar registrado recibirá notificaciones de abordaje y podrá monitorear los viajes.",
+                        text = stringResource(R.string.profile_caregiver_dialog_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     OutlinedTextField(
                         value = nameInput,
                         onValueChange = { nameInput = it },
-                        label = { Text("Nombre completo") },
+                        label = { Text(stringResource(R.string.label_full_name)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = relInput,
                         onValueChange = { relInput = it },
-                        label = { Text("Parentesco (ej. Abuela, Tío, Tutor)") },
+                        label = { Text(stringResource(R.string.profile_caregiver_rel_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = phoneInput,
                         onValueChange = { phoneInput = it },
-                        label = { Text("Teléfono móvil") },
+                        label = { Text(stringResource(R.string.profile_caregiver_phone_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -849,21 +854,21 @@ fun ProfileScreen(
                 TextButton(
                     onClick = {
                         if (nameInput.isNotBlank()) {
-                            caregivers = caregivers + Triple(
+                            customCaregivers = customCaregivers + Triple(
                                 nameInput.trim(),
-                                relInput.trim().ifBlank { "Familiar autorizado" },
+                                relInput.trim().ifBlank { defaultRel },
                                 phoneInput.trim().ifBlank { "987-654-321" }
                             )
                             showAddCaregiverDialog = false
                         }
                     }
                 ) {
-                    Text("Guardar cuidador", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.profile_caregiver_save_btn), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddCaregiverDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )

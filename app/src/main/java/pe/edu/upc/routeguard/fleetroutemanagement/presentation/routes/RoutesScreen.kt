@@ -32,10 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -67,7 +69,7 @@ fun RoutesScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Rutas Escolares")
+        ScreenHeader(title = stringResource(R.string.routes_title))
 
         if (state.isLoading && state.routes.isEmpty()) {
             LoadingBox()
@@ -93,7 +95,7 @@ fun RoutesScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "Crear Nueva Ruta",
+                            text = stringResource(R.string.routes_new_section),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = BrandNavy
@@ -101,10 +103,10 @@ fun RoutesScreen(
                         FormField(
                             value = state.newRouteName,
                             onValueChange = viewModel::onNewRouteNameChange,
-                            label = "Nombre descriptivo de la ruta"
+                            label = stringResource(R.string.routes_new_placeholder)
                         )
                         BigButton(
-                            text = "Definir ruta y paradas",
+                            text = stringResource(R.string.routes_define_btn),
                             onClick = viewModel::createRoute,
                             enabled = !state.isLoading,
                             containerColor = BrandNavy,
@@ -118,13 +120,13 @@ fun RoutesScreen(
                 FormField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = "Buscar ruta por nombre..."
+                    label = stringResource(R.string.routes_search_placeholder)
                 )
                 ErrorText(state.errorMessage)
             }
 
             item {
-                SectionTitle(text = "Rutas Registradas (${state.routes.size})")
+                SectionTitle(text = stringResource(R.string.routes_list_title, state.routes.size))
             }
 
             val filteredRoutes = if (searchQuery.isBlank()) state.routes else state.routes.filter {
@@ -143,9 +145,9 @@ fun RoutesScreen(
                     RouteStatus.INACTIVE -> Color(0xFF64748B)
                 }
                 val statusText = when (route.status) {
-                    RouteStatus.ACTIVE -> "Activa"
-                    RouteStatus.DRAFT -> "Borrador"
-                    RouteStatus.INACTIVE -> "Inactiva"
+                    RouteStatus.ACTIVE -> stringResource(R.string.routes_status_active)
+                    RouteStatus.DRAFT -> stringResource(R.string.routes_status_draft)
+                    RouteStatus.INACTIVE -> stringResource(R.string.routes_status_inactive)
                 }
 
                 Card(
@@ -183,15 +185,15 @@ fun RoutesScreen(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${route.stopCount} paradas · ${route.studentIds.size} estudiantes" +
-                                    (route.departureTime?.let { " · Salida $it" } ?: ""),
+                                text = stringResource(R.string.routes_summary_base, route.stopCount, route.studentIds.size) +
+                                    (route.departureTime?.let { stringResource(R.string.routes_summary_departure, it) } ?: ""),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF64748B)
                             )
                         }
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Ver detalles",
+                            contentDescription = stringResource(R.string.routes_view_details_cd),
                             tint = BrandNavy,
                             modifier = Modifier.padding(start = 8.dp)
                         )

@@ -1,5 +1,6 @@
 package pe.edu.upc.routeguard.stakeholderassetmanagement.presentation.home
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.GetDriversUseCase
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.GetGroupsUseCase
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.GetParentsUseCase
@@ -16,10 +19,10 @@ import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Group
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Parent
 import javax.inject.Inject
 
-enum class StakeholderTab(val label: String) {
-    DRIVERS("Conductores"),
-    PARENTS("Padres"),
-    GROUPS("Grupos")
+enum class StakeholderTab(@StringRes val labelRes: Int, val label: String) {
+    DRIVERS(R.string.stakeholders_tab_drivers, "Conductores"),
+    PARENTS(R.string.stakeholders_tab_parents, "Padres"),
+    GROUPS(R.string.stakeholders_tab_groups, "Grupos")
 }
 
 data class StakeholdersUiState(
@@ -35,7 +38,8 @@ data class StakeholdersUiState(
 class StakeholdersViewModel @Inject constructor(
     private val getDrivers: GetDriversUseCase,
     private val getParents: GetParentsUseCase,
-    private val getGroups: GetGroupsUseCase
+    private val getGroups: GetGroupsUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StakeholdersUiState())
@@ -58,7 +62,7 @@ class StakeholdersViewModel @Inject constructor(
                     parents = parents.getOrDefault(state.parents),
                     groups = groups.getOrDefault(state.groups),
                     errorMessage = listOf(drivers, parents, groups)
-                        .firstNotNullOfOrNull { it.exceptionOrNull()?.message }
+                        .firstNotNullOfOrNull { res -> res.exceptionOrNull()?.let { strings.resolveError(it, R.string.error_unexpected) } }
                 )
             }
         }

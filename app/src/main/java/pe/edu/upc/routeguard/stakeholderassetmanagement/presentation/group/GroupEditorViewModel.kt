@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.CreateGroupUseCase
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.FinalizeGroupUseCase
 import pe.edu.upc.routeguard.stakeholderassetmanagement.application.GetParentsUseCase
@@ -40,7 +42,8 @@ class GroupEditorViewModel @Inject constructor(
     private val getParents: GetParentsUseCase,
     private val createGroup: CreateGroupUseCase,
     private val includeStudents: IncludeLinkedStudentsUseCase,
-    private val finalizeGroup: FinalizeGroupUseCase
+    private val finalizeGroup: FinalizeGroupUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GroupEditorUiState())
@@ -72,7 +75,7 @@ class GroupEditorViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             createGroup(_state.value.name)
                 .onSuccess { group -> _state.update { it.copy(isLoading = false, group = group) } }
-                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 
@@ -83,7 +86,7 @@ class GroupEditorViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             includeStudents(group, s.selectedStudentIds)
                 .onSuccess { updated -> _state.update { it.copy(isLoading = false, group = updated) } }
-                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 
@@ -95,7 +98,7 @@ class GroupEditorViewModel @Inject constructor(
                 .onSuccess { updated ->
                     _state.update { it.copy(isLoading = false, group = updated, finalized = true) }
                 }
-                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 }
