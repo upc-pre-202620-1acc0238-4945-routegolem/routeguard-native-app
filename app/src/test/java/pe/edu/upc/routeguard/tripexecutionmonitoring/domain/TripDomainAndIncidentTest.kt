@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import pe.edu.upc.routeguard.core.di.NetworkModule
 import pe.edu.upc.routeguard.notificationscommunication.domain.Notification
 import pe.edu.upc.routeguard.notificationscommunication.domain.NotificationRepository
 import pe.edu.upc.routeguard.shared.domain.Coordinates
@@ -65,6 +66,18 @@ class TripDomainAndIncidentTest {
         assertEquals(TripStatus.CANCELLED, result.getOrNull()?.status)
         assertEquals(1, notifRepo.saved.size)
         assertTrue(notifRepo.saved.first().hasPanicAlert)
+    }
+
+    @Test
+    fun `network module resolveBaseUrl falls back safely on blank or slash ci values`() {
+        val fallback = "https://routeguard-web-services.onrender.com/api/v1/"
+        assertEquals(fallback, NetworkModule.resolveBaseUrl(""))
+        assertEquals(fallback, NetworkModule.resolveBaseUrl("/"))
+        assertEquals(fallback, NetworkModule.resolveBaseUrl("   /  "))
+        assertEquals(
+            "https://custom.api.example/v1/",
+            NetworkModule.resolveBaseUrl("https://custom.api.example/v1")
+        )
     }
 
     private class FakeTripRepository : TripRepository {
