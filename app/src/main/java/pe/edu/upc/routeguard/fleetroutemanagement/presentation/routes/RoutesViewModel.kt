@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.fleetroutemanagement.application.DefineRouteUseCase
 import pe.edu.upc.routeguard.fleetroutemanagement.application.GetRoutesUseCase
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.Route
@@ -24,7 +26,8 @@ data class RoutesUiState(
 @HiltViewModel
 class RoutesViewModel @Inject constructor(
     private val getRoutes: GetRoutesUseCase,
-    private val defineRoute: DefineRouteUseCase
+    private val defineRoute: DefineRouteUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoutesUiState())
@@ -35,7 +38,7 @@ class RoutesViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null, createdRouteId = null) }
             getRoutes()
                 .onSuccess { routes -> _uiState.update { it.copy(isLoading = false, routes = routes) } }
-                .onFailure { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 
@@ -50,7 +53,7 @@ class RoutesViewModel @Inject constructor(
                         it.copy(isLoading = false, newRouteName = "", createdRouteId = route.id.value)
                     }
                 }
-                .onFailure { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 

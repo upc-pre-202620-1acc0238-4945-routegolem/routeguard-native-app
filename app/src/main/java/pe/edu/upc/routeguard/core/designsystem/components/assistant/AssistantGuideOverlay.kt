@@ -232,7 +232,7 @@ fun RouteGuardMascotBadge(modifier: Modifier = Modifier) {
     ) {
         Image(
             painter = painterResource(R.drawable.brand_logo),
-            contentDescription = "Asistente Virtual RouteGuard",
+            contentDescription = stringResource(R.string.assistant_mascot_cd),
             modifier = Modifier
                 .size(34.dp)
                 .clip(CircleShape)

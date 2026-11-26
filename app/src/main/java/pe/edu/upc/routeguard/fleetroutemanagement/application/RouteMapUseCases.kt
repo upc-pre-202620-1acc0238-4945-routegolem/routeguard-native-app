@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.fleetroutemanagement.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.FleetRepository
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.Route
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.Waypoint
@@ -16,7 +18,7 @@ private const val MAX_OPTIMIZABLE_STOPS = 12
 class SearchAddressUseCase @Inject constructor(private val addressSearch: AddressSearch) {
     suspend operator fun invoke(query: String, near: Coordinates?): Result<List<Place>> {
         if (query.trim().length < 3) {
-            return Result.failure(IllegalArgumentException("Escribe al menos 3 letras de la dirección"))
+            return Result.failure(LocalizedException(R.string.fleet_error_search_min3, fallback = "Escribe al menos 3 letras de la dirección"))
         }
         return addressSearch.search(query.trim(), near)
     }
@@ -31,7 +33,7 @@ class ReverseGeocodeUseCase @Inject constructor(private val addressSearch: Addre
 class GetRoutePreviewUseCase @Inject constructor(private val planner: RoutePlanner) {
     suspend operator fun invoke(route: Route): Result<RoadRoute> {
         val points = route.waypoints.sortedBy { it.orderIndex }.map { it.coordinates }
-        if (points.size < 2) return Result.failure(IllegalStateException("La ruta necesita al menos 2 paradas"))
+        if (points.size < 2) return Result.failure(LocalizedException(R.string.fleet_error_min_2_stops, fallback = "La ruta necesita al menos 2 paradas"))
         return planner.roadRoute(points.take(MAX_PATH_POINTS))
     }
 }
@@ -40,18 +42,20 @@ class GetRoutePreviewUseCase @Inject constructor(private val planner: RoutePlann
 class SuggestStopOrderUseCase @Inject constructor(private val planner: RoutePlanner) {
     suspend operator fun invoke(route: Route): Result<List<Waypoint>> {
         if (!route.isEditable) {
-            return Result.failure(IllegalStateException("Solo se puede reordenar una ruta en borrador"))
+            return Result.failure(LocalizedException(R.string.fleet_error_reorder_draft_only, fallback = "Solo se puede reordenar una ruta en borrador"))
         }
         val stops = route.waypoints.sortedBy { it.orderIndex }
         if (stops.size < MIN_OPTIMIZABLE_STOPS) {
-            return Result.failure(IllegalStateException("Se necesitan al menos $MIN_OPTIMIZABLE_STOPS paradas"))
+            return Result.failure(LocalizedException(R.string.fleet_error_optimize_min, listOf(MIN_OPTIMIZABLE_STOPS), fallback = "Se necesitan al menos $MIN_OPTIMIZABLE_STOPS paradas"))
         }
         if (stops.size > MAX_OPTIMIZABLE_STOPS) {
-            return Result.failure(IllegalStateException("Se pueden ordenar hasta $MAX_OPTIMIZABLE_STOPS paradas"))
+            return Result.failure(LocalizedException(R.string.fleet_error_optimize_max, listOf(MAX_OPTIMIZABLE_STOPS), fallback = "Se pueden ordenar hasta $MAX_OPTIMIZABLE_STOPS paradas"))
         }
         return planner.optimalOrder(stops.map { it.coordinates }).mapCatching { order ->
             val proposal = order.map { stops[it] }
-            if (proposal.map { it.id } == stops.map { it.id }) error("Las paradas ya están en el mejor orden")
+            if (proposal.map { it.id } == stops.map { it.id }) {
+                throw LocalizedException(R.string.fleet_error_already_optimal, fallback = "Las paradas ya están en el mejor orden")
+            }
             proposal
         }
     }
@@ -64,7 +68,7 @@ class SuggestStopOrderUseCase @Inject constructor(private val planner: RoutePlan
 class ApplyStopOrderUseCase @Inject constructor(private val repository: FleetRepository) {
     suspend operator fun invoke(route: Route, newOrder: List<Waypoint>): Result<Route> {
         if (!route.isEditable) {
-            return Result.failure(IllegalStateException("Solo se puede reordenar una ruta en borrador"))
+            return Result.failure(LocalizedException(R.string.fleet_error_reorder_draft_only, fallback = "Solo se puede reordenar una ruta en borrador"))
         }
         var current = route
         for (stop in newOrder) {

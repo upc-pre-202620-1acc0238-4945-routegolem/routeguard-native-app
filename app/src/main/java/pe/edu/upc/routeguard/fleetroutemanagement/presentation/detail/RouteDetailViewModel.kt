@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.fleetroutemanagement.application.ActivateRouteUseCase
 import pe.edu.upc.routeguard.fleetroutemanagement.application.ApplyStopOrderUseCase
 import pe.edu.upc.routeguard.fleetroutemanagement.application.AssignStudentsToRouteUseCase
@@ -88,7 +90,8 @@ class RouteDetailViewModel @Inject constructor(
     private val applyStopOrder: ApplyStopOrderUseCase,
     private val getDrivers: GetDriversUseCase,
     private val getGroups: GetGroupsUseCase,
-    private val getChildren: GetChildrenUseCase
+    private val getChildren: GetChildrenUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RouteDetailUiState())
@@ -184,11 +187,11 @@ class RouteDetailViewModel @Inject constructor(
                         it.copy(
                             isSearching = false,
                             searchResults = places,
-                            errorMessage = if (places.isEmpty()) "No se encontraron resultados" else null
+                            errorMessage = if (places.isEmpty()) strings.getString(R.string.route_error_no_search_results) else null
                         )
                     }
                 }
-                .onFailure { e -> _state.update { it.copy(isSearching = false, errorMessage = e.message) } }
+                .onFailure { e -> _state.update { it.copy(isSearching = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 
@@ -208,7 +211,7 @@ class RouteDetailViewModel @Inject constructor(
     fun addWaypoint() {
         val s = _state.value
         val route = s.route ?: return
-        execute("Parada agregada", onSuccess = {
+        execute(strings.getString(R.string.route_msg_waypoint_added), onSuccess = {
             _state.update { st -> st.copy(waypointName = "", latitude = "", longitude = "", suggestedOrder = null) }
         }) {
             pickWaypoint(route.id, s.waypointName, s.latitude, s.longitude)
@@ -222,7 +225,7 @@ class RouteDetailViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, message = null, errorMessage = null) }
             suggestStopOrder(route)
                 .onSuccess { proposal -> _state.update { it.copy(isLoading = false, suggestedOrder = proposal) } }
-                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 
@@ -230,7 +233,7 @@ class RouteDetailViewModel @Inject constructor(
         val s = _state.value
         val route = s.route ?: return
         val proposal = s.suggestedOrder ?: return
-        execute("Orden de paradas actualizado", onSuccess = {
+        execute(strings.getString(R.string.route_msg_order_updated), onSuccess = {
             _state.update { it.copy(suggestedOrder = null) }
         }) { applyStopOrder(route, proposal) }
     }
@@ -240,31 +243,31 @@ class RouteDetailViewModel @Inject constructor(
     fun saveStudents() {
         val s = _state.value
         val route = s.route ?: return
-        execute("Estudiantes asignados") { assignStudents(route, s.selectedStudentIds) }
+        execute(strings.getString(R.string.route_msg_students_assigned)) { assignStudents(route, s.selectedStudentIds) }
     }
 
     fun saveVehicle() {
         val s = _state.value
         val route = s.route ?: return
         val vehicle = s.vehicles.firstOrNull { it.id == s.selectedVehicleId }
-        execute("Vehículo y conductor asignados") { selectVehicle(route.id, vehicle!!, s.selectedDriverId!!) }
+        execute(strings.getString(R.string.route_msg_vehicle_saved)) { selectVehicle(route.id, vehicle!!, s.selectedDriverId!!) }
     }
 
     fun saveServiceDays() {
         val s = _state.value
         val route = s.route ?: return
-        execute("Días de servicio definidos") { defineServiceDays(route.id, s.selectedDays) }
+        execute(strings.getString(R.string.route_msg_days_saved)) { defineServiceDays(route.id, s.selectedDays) }
     }
 
     fun saveDepartureTime() {
         val s = _state.value
         val route = s.route ?: return
-        execute("Hora de salida definida") { setDepartureTime(route.id, s.departureTime) }
+        execute(strings.getString(R.string.route_msg_departure_saved)) { setDepartureTime(route.id, s.departureTime) }
     }
 
     fun activate() {
         val route = _state.value.route ?: return
-        execute("Ruta activada") { activateRoute(route) }
+        execute(strings.getString(R.string.route_msg_activated)) { activateRoute(route) }
     }
 
     /** Path along the roads through the current stops; straight lines if Mapbox does not answer. */
@@ -287,7 +290,7 @@ class RouteDetailViewModel @Inject constructor(
                     refreshRoadPath(route)
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, errorMessage = e.message) }
+                    _state.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
         }
     }

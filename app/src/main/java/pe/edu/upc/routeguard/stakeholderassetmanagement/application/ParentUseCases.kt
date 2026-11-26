@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.stakeholderassetmanagement.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Child
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.Parent
 import pe.edu.upc.routeguard.stakeholderassetmanagement.domain.ParentRepository
@@ -30,10 +32,10 @@ class RegisterParentUseCase @Inject constructor(private val repository: ParentRe
         email: String
     ): Result<Provisioned<Parent>> {
         if (firstName.isBlank() || lastName.isBlank() || email.isBlank()) {
-            return Result.failure(IllegalArgumentException("Nombres, apellidos y correo son obligatorios"))
+            return Result.failure(LocalizedException(R.string.error_parent_fields_req, fallback = "Nombres, apellidos y correo son obligatorios"))
         }
         if (phone.isBlank()) {
-            return Result.failure(IllegalArgumentException("El teléfono es obligatorio"))
+            return Result.failure(LocalizedException(R.string.error_phone_req, fallback = "El teléfono es obligatorio"))
         }
         return repository.registerParent(firstName.trim(), lastName.trim(), Phone(phone.trim()), Email(email.trim()))
     }
@@ -49,14 +51,14 @@ class RegisterChildUseCase @Inject constructor(private val repository: ParentRep
         age: String
     ): Result<Child> {
         if (parentId == null || parentId.value.isBlank()) {
-            return Result.failure(IllegalArgumentException("Selecciona un padre ya registrado"))
+            return Result.failure(LocalizedException(R.string.error_child_parent_req, fallback = "Selecciona un padre ya registrado"))
         }
         if (firstName.isBlank() || lastName.isBlank()) {
-            return Result.failure(IllegalArgumentException("Nombres y apellidos del estudiante son obligatorios"))
+            return Result.failure(LocalizedException(R.string.error_child_name_req, fallback = "Nombres y apellidos del estudiante son obligatorios"))
         }
         val parsedAge = age.trim().toIntOrNull()
         if (parsedAge == null || parsedAge !in 3..18) {
-            return Result.failure(IllegalArgumentException("La edad debe estar entre 3 y 18 años"))
+            return Result.failure(LocalizedException(R.string.error_child_age_range, fallback = "La edad debe estar entre 3 y 18 años"))
         }
         return repository.registerChild(parentId, firstName.trim(), lastName.trim(), parsedAge)
     }

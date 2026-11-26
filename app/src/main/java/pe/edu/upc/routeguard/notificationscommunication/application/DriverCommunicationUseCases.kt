@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.notificationscommunication.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.notificationscommunication.domain.NotificationRepository
 import javax.inject.Inject
 
@@ -7,7 +9,7 @@ import javax.inject.Inject
 class TriggerPanicAlertUseCase @Inject constructor(private val repository: NotificationRepository) {
     suspend operator fun invoke(tripId: String?): Result<Int> {
         if (tripId.isNullOrBlank()) {
-            return Result.failure(IllegalStateException("Inicia un viaje para enviar una alerta"))
+            return Result.failure(LocalizedException(R.string.notif_error_start_trip_alert, fallback = "Inicia un viaje para enviar una alerta"))
         }
         return repository.triggerPanicAlert(tripId)
     }
@@ -17,9 +19,9 @@ class TriggerPanicAlertUseCase @Inject constructor(private val repository: Notif
 class PostBroadcastMessageUseCase @Inject constructor(private val repository: NotificationRepository) {
     suspend operator fun invoke(tripId: String?, message: String): Result<Int> {
         if (tripId.isNullOrBlank()) {
-            return Result.failure(IllegalStateException("Inicia un viaje para enviar un aviso"))
+            return Result.failure(LocalizedException(R.string.notif_error_start_trip_notice, fallback = "Inicia un viaje para enviar un aviso"))
         }
-        if (message.isBlank()) return Result.failure(IllegalArgumentException("Escribe un mensaje"))
+        if (message.isBlank()) return Result.failure(LocalizedException(R.string.notif_error_empty_msg, fallback = "Escribe un mensaje"))
         return repository.postBroadcastMessage(tripId, message.trim())
     }
 }

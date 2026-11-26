@@ -9,14 +9,24 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pe.edu.upc.routeguard.core.designsystem.theme.RouteGuardTheme
+import pe.edu.upc.routeguard.core.localization.LocaleHelper
 import pe.edu.upc.routeguard.core.session.SessionManager
 import pe.edu.upc.routeguard.identityaccessmanagement.presentation.navigation.IamNavGraphRoute
 import pe.edu.upc.routeguard.navigation.AppNavHost
 import pe.edu.upc.routeguard.navigation.MainShellRoute
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -35,10 +45,24 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            RouteGuardTheme(dynamicColor = false) {
-                // Paints the theme background so dark mode does not show the light window color
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    AppNavHost(navController, startDestination)
+            val activeLanguage by sessionManager.languageFlow.collectAsStateWithLifecycle()
+            val localizedContext = remember(activeLanguage) {
+                LocaleHelper.localizedContext(this, activeLanguage)
+            }
+            SideEffect {
+                Locale.setDefault(LocaleHelper.localeFor(activeLanguage))
+            }
+
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                LocalConfiguration provides localizedContext.resources.configuration,
+                LocalResources provides localizedContext.resources
+            ) {
+                RouteGuardTheme(dynamicColor = false) {
+                    // Paints the theme background so dark mode does not show the light window color
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        AppNavHost(navController, startDestination)
+                    }
                 }
             }
         }

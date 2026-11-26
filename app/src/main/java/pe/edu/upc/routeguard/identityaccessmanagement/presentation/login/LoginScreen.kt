@@ -128,21 +128,21 @@ fun LoginScreen(
             shape = RoundedCornerShape(20.dp),
             title = {
                 Text(
-                    text = "Términos y Condiciones de RouteGuard",
+                    text = stringResource(R.string.terms_dialog_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    text = "RouteGuard garantiza la confidencialidad y protección de los datos de menores, padres de familia y conductores conforme a las leyes de protección de datos personales. Al utilizar este servicio, aceptas el monitoreo GPS pasivo de las unidades vehiculares exclusivamente durante el horario escolar para garantizar la seguridad del traslado.",
+                    text = stringResource(R.string.terms_dialog_content),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF475569)
                 )
             },
             confirmButton = {
                 TextButton(onClick = { showTermsDialog = false }) {
-                    Text("Entendido", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_accept), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -155,6 +155,8 @@ fun LoginScreen(
         var regRole by remember { mutableStateOf("PARENT") }
         var acceptedTerms by remember { mutableStateOf(false) }
         var registerError by remember { mutableStateOf<String?>(null) }
+        val errInvalidFields = stringResource(R.string.error_register_invalid_fields)
+        val errAcceptTerms = stringResource(R.string.error_register_accept_terms)
 
         AlertDialog(
             onDismissRequest = { showRegisterModal = false },
@@ -172,7 +174,7 @@ fun LoginScreen(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Crear cuenta en RouteGuard",
+                        text = stringResource(R.string.login_register_modal_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = BrandNavy
@@ -197,7 +199,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = regName,
                         onValueChange = { regName = it },
-                        label = { Text("Nombre completo") },
+                        label = { Text(stringResource(R.string.label_full_name)) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -205,7 +207,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = regEmail,
                         onValueChange = { regEmail = it },
-                        label = { Text("Correo electrónico") },
+                        label = { Text(stringResource(R.string.label_email)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         shape = RoundedCornerShape(12.dp),
@@ -214,19 +216,23 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = regPassword,
                         onValueChange = { regPassword = it },
-                        label = { Text("Contraseña (mínimo 6 caracteres)") },
+                        label = { Text(stringResource(R.string.label_password_min6)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Text("Selecciona tu rol:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.label_select_role), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        listOf("PARENT" to "Apoderado", "DRIVER" to "Conductor", "ADMIN" to "Administrador").forEach { (r, label) ->
+                        listOf(
+                            "PARENT" to stringResource(R.string.role_parent_short),
+                            "DRIVER" to stringResource(R.string.role_driver_short),
+                            "ADMIN" to stringResource(R.string.role_admin_short)
+                        ).forEach { (r, label) ->
                             FilterChip(
                                 selected = regRole == r,
                                 onClick = { regRole = r },
@@ -248,7 +254,7 @@ fun LoginScreen(
                             onCheckedChange = { acceptedTerms = it }
                         )
                         Text(
-                            text = "Acepto los Términos y Condiciones",
+                            text = stringResource(R.string.terms_accept_checkbox),
                             style = MaterialTheme.typography.bodySmall,
                             color = BrandNavy,
                             fontWeight = FontWeight.SemiBold,
@@ -261,11 +267,11 @@ fun LoginScreen(
                 TextButton(
                     onClick = {
                         if (regName.isBlank() || regEmail.isBlank() || !regEmail.contains("@") || regPassword.length < 6) {
-                            registerError = "Completa todos los campos válidos."
+                            registerError = errInvalidFields
                             return@TextButton
                         }
                         if (!acceptedTerms) {
-                            registerError = "Debes aceptar los términos y condiciones."
+                            registerError = errAcceptTerms
                             return@TextButton
                         }
                         viewModel.onEmailChange(regEmail.trim())
@@ -274,12 +280,12 @@ fun LoginScreen(
                         viewModel.login()
                     }
                 ) {
-                    Text("Registrar y Entrar", fontWeight = FontWeight.Bold, color = BrandNavy)
+                    Text(stringResource(R.string.btn_register_and_enter), fontWeight = FontWeight.Bold, color = BrandNavy)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRegisterModal = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -313,7 +319,7 @@ fun LoginScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Acceso Rápido Demo (3 Roles):",
+                        text = stringResource(R.string.login_quick_demo_title),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = BrandNavy
@@ -329,7 +335,7 @@ fun LoginScreen(
                                 viewModel.onEmailChange("parent@routeguard.pe")
                                 viewModel.onPasswordChange("parent123")
                             },
-                            label = { Text("Apoderado", style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(stringResource(R.string.role_parent_short), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {
                                 Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = BrandNavy, modifier = Modifier.size(16.dp))
                             },
@@ -343,7 +349,7 @@ fun LoginScreen(
                                 viewModel.onEmailChange("driver@routeguard.pe")
                                 viewModel.onPasswordChange("driver123")
                             },
-                            label = { Text("Conductor", style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(stringResource(R.string.role_driver_short), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {
                                 Icon(Icons.Filled.Place, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(16.dp))
                             },
@@ -357,7 +363,7 @@ fun LoginScreen(
                                 viewModel.onEmailChange("admin@routeguard.pe")
                                 viewModel.onPasswordChange("admin123")
                             },
-                            label = { Text("Administrador", style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(stringResource(R.string.role_admin_short), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {
                                 Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFF4338CA), modifier = Modifier.size(16.dp))
                             },
@@ -385,13 +391,13 @@ fun LoginScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Iniciar Sesión",
+                            text = stringResource(R.string.login_heading),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = BrandNavy
                         )
                         Text(
-                            text = "Ingresa con tu cuenta de apoderado o institucional",
+                            text = stringResource(R.string.login_subheading),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B)
                         )
@@ -431,7 +437,7 @@ fun LoginScreen(
                             IconButton(onClick = viewModel::togglePasswordVisibility) {
                                 Icon(
                                     imageVector = if (state.isPasswordHidden) visibilityOff else visibility,
-                                    contentDescription = "Mostrar u ocultar contraseña"
+                                    contentDescription = stringResource(R.string.toggle_password_visibility)
                                 )
                             }
                         },
@@ -485,12 +491,12 @@ fun LoginScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "¿No tienes cuenta? ",
+                            text = stringResource(R.string.login_no_account_prefix),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B)
                         )
                         Text(
-                            text = "Crear cuenta",
+                            text = stringResource(R.string.btn_create_account),
                             style = MaterialTheme.typography.bodySmall,
                             color = BrandNavy,
                             fontWeight = FontWeight.Bold,

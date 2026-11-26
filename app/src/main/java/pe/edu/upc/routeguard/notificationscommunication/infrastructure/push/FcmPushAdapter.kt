@@ -7,6 +7,9 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.session.SessionManager
+import pe.edu.upc.routeguard.core.localization.LocaleHelper
 import pe.edu.upc.routeguard.notificationscommunication.domain.Notification
 import pe.edu.upc.routeguard.notificationscommunication.domain.PushNotificationAdapter
 import javax.inject.Inject
@@ -16,7 +19,8 @@ import javax.inject.Inject
  * needs the Firebase SDK + google-services.json and a service that calls HandlePushMessageUseCase.
  */
 class FcmPushAdapter @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val sessionManager: SessionManager
 ) : PushNotificationAdapter {
 
     override fun show(notification: Notification) {
@@ -47,12 +51,13 @@ class FcmPushAdapter @Inject constructor(
 
     private fun createChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val localized = LocaleHelper.localizedContext(context, sessionManager.language())
             val system = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             system.createNotificationChannel(
-                NotificationChannel(CHANNEL_DEFAULT, "Avisos del viaje", NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationChannel(CHANNEL_DEFAULT, localized.getString(R.string.channel_default_name), NotificationManager.IMPORTANCE_DEFAULT)
             )
             system.createNotificationChannel(
-                NotificationChannel(CHANNEL_HIGH, "Alertas de alta prioridad", NotificationManager.IMPORTANCE_HIGH)
+                NotificationChannel(CHANNEL_HIGH, localized.getString(R.string.channel_high_name), NotificationManager.IMPORTANCE_HIGH)
             )
         }
     }

@@ -2,10 +2,14 @@ package pe.edu.upc.routeguard.core.session
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import pe.edu.upc.routeguard.core.localization.LocaleHelper
+import javax.inject.Inject
 import javax.inject.Singleton
 
 /** Keeps the active session (JWT + role + tenant) in private shared preferences. */
@@ -18,6 +22,21 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
 
     /** Emits when the server rejects the JWT of the active session (expired or no longer valid). */
     val sessionRejected: SharedFlow<Unit> = _sessionRejected.asSharedFlow()
+
+    private val _languageFlow = MutableStateFlow(
+        LocaleHelper.normalize(prefs.getString(KEY_LANGUAGE, LocaleHelper.LANG_ES) ?: LocaleHelper.LANG_ES)
+    )
+
+    /** Active UI language code ("es" or "en"), persisted across sign-out. */
+    val languageFlow: StateFlow<String> = _languageFlow.asStateFlow()
+
+    fun language(): String = _languageFlow.value
+
+    fun setLanguage(code: String) {
+        val normalized = LocaleHelper.normalize(code)
+        prefs.edit().putString(KEY_LANGUAGE, normalized).apply()
+        _languageFlow.value = normalized
+    }
 
     fun save(session: UserSession) {
         prefs.edit()
@@ -52,11 +71,15 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
 
     fun profileId(): String? = prefs.getString(KEY_PROFILE_ID, null)
 
-    /** Signing out keeps [cacheOwner]: it is how the next sign-in knows whether the local cache is someone else's. */
+    /** Signing out keeps [cacheOwner] and the user's chosen language across sessions. */
     fun clear() {
         val owner = cacheOwner()
+        val lang = language()
         prefs.edit().clear().apply()
-        if (owner != null) prefs.edit().putString(KEY_CACHE_OWNER, owner).apply()
+        prefs.edit().apply {
+            if (owner != null) putString(KEY_CACHE_OWNER, owner)
+            putString(KEY_LANGUAGE, lang)
+        }.apply()
     }
 
     /** Id of the user whose data is cached on this device (notifications, ...). */
@@ -90,5 +113,6 @@ class SessionManager @Inject constructor(@ApplicationContext context: Context) {
         const val KEY_PROFILE_ID = "profile_id"
         const val KEY_CACHE_OWNER = "cache_owner"
         const val KEY_TUTORIAL_SEEN_PREFIX = "tutorial_seen_"
+        const val KEY_LANGUAGE = "app_language"
     }
 }

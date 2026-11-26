@@ -15,10 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -47,22 +49,22 @@ fun RegisterChildScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = "Registrar estudiante", onBack = onBack)
+        ScreenHeader(title = stringResource(R.string.register_child_title), onBack = onBack)
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FormField(state.firstName, viewModel::onFirstNameChange, "Nombres")
-            FormField(state.lastName, viewModel::onLastNameChange, "Apellidos")
-            FormField(state.age, viewModel::onAgeChange, "Edad", keyboardType = KeyboardType.Number)
+            FormField(state.firstName, viewModel::onFirstNameChange, stringResource(R.string.label_first_name))
+            FormField(state.lastName, viewModel::onLastNameChange, stringResource(R.string.label_last_name))
+            FormField(state.age, viewModel::onAgeChange, stringResource(R.string.register_child_age_label), keyboardType = KeyboardType.Number)
 
-            SectionTitle("Vincular a un padre registrado")
+            SectionTitle(stringResource(R.string.register_child_link_parent))
             FormField(
                 value = parentSearchQuery,
                 onValueChange = { parentSearchQuery = it },
-                label = "Buscar padre por nombre o correo..."
+                label = stringResource(R.string.register_child_search_parent)
             )
             filteredParents.forEach { parent ->
                 SelectableRow(
@@ -77,7 +79,7 @@ fun RegisterChildScreen(
             if (state.isLoading) {
                 CircularProgressIndicator()
             } else {
-                BigButton(text = "Registrar estudiante", onClick = viewModel::register)
+                BigButton(text = stringResource(R.string.register_child_title), onClick = viewModel::register)
             }
         }
     }

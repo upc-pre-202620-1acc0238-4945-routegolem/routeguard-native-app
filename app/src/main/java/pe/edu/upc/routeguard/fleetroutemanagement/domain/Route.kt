@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.fleetroutemanagement.domain
 
+import androidx.annotation.StringRes
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.valueobject.DriverId
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.valueobject.Plate
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.valueobject.RouteId
@@ -10,14 +12,14 @@ import pe.edu.upc.routeguard.shared.domain.AggregateRoot
 import pe.edu.upc.routeguard.shared.domain.BaseEntity
 import pe.edu.upc.routeguard.shared.domain.Coordinates
 
-enum class ServiceDay(val label: String) {
-    MONDAY("Lun"),
-    TUESDAY("Mar"),
-    WEDNESDAY("Mié"),
-    THURSDAY("Jue"),
-    FRIDAY("Vie"),
-    SATURDAY("Sáb"),
-    SUNDAY("Dom")
+enum class ServiceDay(@StringRes val shortRes: Int, val label: String) {
+    MONDAY(R.string.day_mon, "Lun"),
+    TUESDAY(R.string.day_tue, "Mar"),
+    WEDNESDAY(R.string.day_wed, "Mié"),
+    THURSDAY(R.string.day_thu, "Jue"),
+    FRIDAY(R.string.day_fri, "Vie"),
+    SATURDAY(R.string.day_sat, "Sáb"),
+    SUNDAY(R.string.day_sun, "Dom")
 }
 
 enum class RouteStatus {
@@ -76,5 +78,15 @@ data class Route(
             if (driverId == null || driverId.value.isBlank()) add("un conductor")
             if (serviceDays.isEmpty()) add("días de servicio")
             if (departureTime.isNullOrBlank()) add("la hora de salida")
+        }
+
+    /** Resource IDs of missing prerequisites before activation, for localized UI display. */
+    val missingActivationRes: List<Int>
+        get() = buildList {
+            if (waypoints.isEmpty()) add(R.string.missing_waypoint)
+            if (vehicle == null) add(R.string.missing_vehicle)
+            if (driverId == null || driverId.value.isBlank()) add(R.string.missing_driver)
+            if (serviceDays.isEmpty()) add(R.string.missing_service_days)
+            if (departureTime.isNullOrBlank()) add(R.string.missing_departure_time)
         }
 }

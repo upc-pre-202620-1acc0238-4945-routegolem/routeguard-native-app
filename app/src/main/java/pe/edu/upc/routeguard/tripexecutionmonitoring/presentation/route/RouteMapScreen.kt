@@ -54,12 +54,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
@@ -86,7 +88,7 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Trip
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripStatus
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Waypoint
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.StudentId
-import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.progressText
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedProgressText
 
 private const val LOCATION_REFRESH_MS = 5_000L
 private val Red = Color(0xFFBA1A1A)
@@ -139,7 +141,7 @@ fun RouteMapScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        ScreenHeader(title = trip?.routeName?.ifBlank { null } ?: "Mi ruta")
+        ScreenHeader(title = trip?.routeName?.ifBlank { null } ?: stringResource(R.string.route_map_title))
 
         if (state.isLoading && trip == null && state.assignedRoutes.isEmpty()) {
             LoadingBox()
@@ -158,18 +160,18 @@ fun RouteMapScreen(
             }
 
             if (trip == null) {
-                item { SectionTitle("Elige la ruta de hoy") }
+                item { SectionTitle(stringResource(R.string.route_map_pick_route)) }
                 if (state.assignedRoutes.isEmpty()) {
-                    item { Text("No tienes rutas activas asignadas.") }
+                    item { Text(stringResource(R.string.route_map_no_routes)) }
                 }
                 items(state.assignedRoutes, key = { it.routeId.value }) { route ->
                     InfoCard(
                         title = route.name,
-                        subtitle = "${route.stopCount} paradas · ${route.studentCount} estudiantes" +
-                            (route.departureTime?.let { " · sale $it" } ?: "")
+                        subtitle = stringResource(R.string.route_map_stops_students, route.stopCount, route.studentCount) +
+                            (route.departureTime?.let { stringResource(R.string.route_map_departure_inline, it) } ?: "")
                     ) {
                         BigButton(
-                            text = "Iniciar viaje",
+                            text = stringResource(R.string.route_map_start_trip),
                             onClick = { viewModel.onStartTrip(route.routeId) },
                             enabled = !state.isLoading,
                             containerColor = BrandNavy
@@ -194,7 +196,7 @@ fun RouteMapScreen(
             }
 
             item {
-                SecondaryButton(text = "Alertas y avisos", onClick = onOpenAlerts)
+                SecondaryButton(text = stringResource(R.string.route_map_alerts_notices_btn), onClick = onOpenAlerts)
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -236,16 +238,16 @@ private fun LazyListScope.tripContent(
                 ) {
                     Text(
                         text = when (trip.status) {
-                            TripStatus.PENDING -> "Viaje pendiente"
-                            TripStatus.IN_PROGRESS -> "Viaje en curso"
-                            TripStatus.COMPLETED -> "Viaje finalizado"
+                            TripStatus.PENDING -> stringResource(R.string.route_map_trip_pending)
+                            TripStatus.IN_PROGRESS -> stringResource(R.string.route_map_trip_in_progress)
+                            TripStatus.COMPLETED -> stringResource(R.string.route_map_trip_completed)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = BrandNavy
                     )
                     StatusChip(
-                        text = if (trip.isActive) "En movimiento" else "Finalizado",
+                        text = if (trip.isActive) stringResource(R.string.route_map_moving) else stringResource(R.string.route_map_finished_chip),
                         containerColor = if (trip.isActive) Color(0xFFD1FAE5) else Color(0xFFF1F5F9),
                         contentColor = if (trip.isActive) Color(0xFF064E3B) else Color(0xFF64748B),
                         icon = if (trip.isActive) Icons.Filled.Check else null
@@ -258,19 +260,19 @@ private fun LazyListScope.tripContent(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         StatusChip(
-                            text = "${trip.boardedCount} a bordo",
+                            text = stringResource(R.string.route_map_boarded_chip, trip.boardedCount),
                             containerColor = Color(0xFFD1FAE5),
                             contentColor = Color(0xFF064E3B),
                             icon = Icons.Filled.Check
                         )
                         StatusChip(
-                            text = "${trip.absentCount} ausentes",
+                            text = stringResource(R.string.route_map_omitted_chip, trip.absentCount),
                             containerColor = Color(0xFFFFDAD6),
                             contentColor = Color(0xFFBA1A1A),
                             icon = Icons.Filled.Close
                         )
                         StatusChip(
-                            text = "${trip.waypoints.size} en total",
+                            text = stringResource(R.string.route_map_total_chip, trip.waypoints.size),
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             icon = Icons.Filled.Place
@@ -282,11 +284,12 @@ private fun LazyListScope.tripContent(
     }
 
     item {
+        val meLabel = stringResource(R.string.route_map_me_marker)
         RouteGuardMap(
             stops = trip.stops.map {
                 MapStop(it.name, it.coordinates, it.order, it.order in visitedStops, it.order == nextStop?.order)
             },
-            vehicles = currentLocation?.let { listOf(MapVehicle("me", "Yo", it)) }.orEmpty(),
+            vehicles = currentLocation?.let { listOf(MapVehicle("me", meLabel, it)) }.orEmpty(),
             followVehicleId = "me",
             routePath = roadPath,
             fitKey = trip.id.value
@@ -297,7 +300,7 @@ private fun LazyListScope.tripContent(
 
     if (trip.stops.isNotEmpty()) {
         item {
-            InfoCard(title = "Paradas de la ruta") {
+            InfoCard(title = stringResource(R.string.route_map_stops_title)) {
                 trip.stops.forEach {
                     Text(
                         text = "${it.order}. ${it.name}",
@@ -311,7 +314,7 @@ private fun LazyListScope.tripContent(
 
     item {
         BigButton(
-            text = "Llegada al colegio (Descenso general)",
+            text = stringResource(R.string.route_map_arrived_school_btn),
             onClick = onArriveAtSchool,
             enabled = enabled && trip.isActive,
             containerColor = BrandEmeraldDark
@@ -319,7 +322,7 @@ private fun LazyListScope.tripContent(
     }
 
     item {
-        SectionTitle(text = "Checklist de Pasajeros (${trip.waypoints.size})")
+        SectionTitle(text = stringResource(R.string.route_map_checklist_section, trip.waypoints.size))
     }
 
     items(trip.waypoints, key = { it.id.value }) { waypoint ->
@@ -340,21 +343,21 @@ private fun LazyListScope.tripContent(
                     .padding(vertical = 4.dp)
             ) {
                 Text(
-                    text = "Hay $pendingRecords registros pendientes de sincronizar con el servidor",
+                    text = stringResource(R.string.route_map_pending_sync_title, pendingRecords),
                     color = Color(0xFF92400E),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(12.dp)
                 )
             }
         }
-        SecondaryButton(text = "Sincronizar ahora", onClick = onSync)
+        SecondaryButton(text = stringResource(R.string.route_map_sync_now), onClick = onSync)
     }
 
     item { IncidentButton(onReportIncident) }
 
     item {
         BigButton(
-            text = "Finalizar ruta",
+            text = stringResource(R.string.route_map_finish_btn),
             onClick = onFinish,
             enabled = enabled && trip.isActive,
             containerColor = Red
@@ -366,12 +369,18 @@ private fun LazyListScope.tripContent(
 private fun NextStopCard(nextStop: NextStop?) {
     val context = LocalContext.current
     if (nextStop == null) {
-        InfoCard(title = "Recorrido completo", subtitle = "Ya pasaste por todas las paradas.")
+        InfoCard(
+            title = stringResource(R.string.route_map_completed_title),
+            subtitle = stringResource(R.string.route_map_completed_sub)
+        )
         return
     }
-    InfoCard(title = "Próxima parada: ${nextStop.name}", subtitle = nextStop.progressText()) {
+    InfoCard(
+        title = stringResource(R.string.route_map_next_stop_title, nextStop.name),
+        subtitle = nextStop.localizedProgressText()
+    ) {
         Spacer(modifier = Modifier.height(4.dp))
-        SecondaryButton(text = "Navegar con Google Maps", onClick = { openNavigation(context, nextStop) })
+        SecondaryButton(text = stringResource(R.string.route_map_navigate_maps), onClick = { openNavigation(context, nextStop) })
     }
 }
 
@@ -421,9 +430,9 @@ private fun WaypointCard(
     }
 
     val statusText = when (waypoint.status) {
-        BoardingState.BOARDED -> "A bordo"
-        BoardingState.OMITTED -> "No asistió"
-        BoardingState.MISSING -> "Pendiente"
+        BoardingState.BOARDED -> stringResource(R.string.route_map_boarding_boarded_chip)
+        BoardingState.OMITTED -> stringResource(R.string.route_map_boarding_omitted)
+        BoardingState.MISSING -> stringResource(R.string.route_map_boarding_missing)
     }
 
     val statusIcon = when (waypoint.status) {
@@ -482,7 +491,7 @@ private fun WaypointCard(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Parada de recojo escolar",
+                        text = stringResource(R.string.route_map_pickup_stop_sub),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF64748B)
                     )
@@ -511,7 +520,7 @@ private fun WaypointCard(
                         ) {
                             Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Subió", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.route_map_boarding_boarded), fontWeight = FontWeight.Bold)
                         }
                         OutlinedButton(
                             onClick = { onBoardingStatus(waypoint.studentId, BoardingState.OMITTED) },
@@ -522,7 +531,7 @@ private fun WaypointCard(
                         ) {
                             Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF64748B))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("No asistió", color = Color(0xFF475569), fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.route_map_boarding_omitted), color = Color(0xFF475569), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -536,7 +545,7 @@ private fun WaypointCard(
                             onClick = { onBoardingStatus(waypoint.studentId, BoardingState.MISSING) },
                             enabled = canRecord
                         ) {
-                            Text("Deshacer: Volver a Pendiente", color = Color(0xFF64748B), style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.route_map_undo_from_omitted), color = Color(0xFF64748B), style = MaterialTheme.typography.bodySmall)
                         }
                         Spacer(modifier = Modifier.width(4.dp))
                         TextButton(
@@ -545,7 +554,7 @@ private fun WaypointCard(
                         ) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = BrandEmeraldDark, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Rectificar: Subió", color = BrandEmeraldDark, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.route_map_rectify_boarded), color = BrandEmeraldDark, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -560,7 +569,7 @@ private fun WaypointCard(
                             enabled = canRecord
                         ) {
                             Text(
-                                text = "Deshacer abordaje (volver a Pendiente)",
+                                text = stringResource(R.string.route_map_undo_from_boarded),
                                 color = Color(0xFF64748B),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -578,22 +587,22 @@ private fun IncidentButton(onReportIncident: (IncidentType, String) -> Unit) {
     var type by remember { mutableStateOf(IncidentType.TRAFFIC) }
     var description by remember { mutableStateOf("") }
 
-    SecondaryButton(text = "Reportar incidencia", onClick = { showDialog = true })
+    SecondaryButton(text = stringResource(R.string.route_map_incident_btn), onClick = { showDialog = true })
 
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Reportar incidencia", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.route_map_incident_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     IncidentType.entries.forEach { option ->
                         FilterChip(
                             selected = type == option,
                             onClick = { type = option },
-                            label = { Text(option.label) }
+                            label = { Text(stringResource(option.labelRes)) }
                         )
                     }
-                    FormField(description, { description = it }, "Detalle", singleLine = false)
+                    FormField(description, { description = it }, stringResource(R.string.route_map_incident_detail_label), singleLine = false)
                 }
             },
             confirmButton = {
@@ -601,10 +610,10 @@ private fun IncidentButton(onReportIncident: (IncidentType, String) -> Unit) {
                     onReportIncident(type, description)
                     description = ""
                     showDialog = false
-                }) { Text("Enviar", fontWeight = FontWeight.Bold, color = BrandNavy) }
+                }) { Text(stringResource(R.string.route_map_send), fontWeight = FontWeight.Bold, color = BrandNavy) }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.btn_cancel)) }
             }
         )
     }

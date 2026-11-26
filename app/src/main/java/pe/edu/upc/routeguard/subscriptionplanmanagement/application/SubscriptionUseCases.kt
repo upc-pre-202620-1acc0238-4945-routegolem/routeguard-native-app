@@ -1,5 +1,7 @@
 package pe.edu.upc.routeguard.subscriptionplanmanagement.application
 
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.AccountSubscription
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.Plan
 import pe.edu.upc.routeguard.subscriptionplanmanagement.domain.SubscriptionRepository
@@ -38,7 +40,7 @@ class UpgradePlanUseCase @Inject constructor(private val repository: Subscriptio
         target: Plan
     ): Result<AccountSubscription> {
         if (!current.isActive) {
-            return Result.failure(IllegalStateException("Tu suscripción no está activa"))
+            return Result.failure(LocalizedException(R.string.plans_error_sub_inactive, fallback = "Tu suscripción no está activa"))
         }
         return repository.upgradePlan(current.id, target.id)
     }

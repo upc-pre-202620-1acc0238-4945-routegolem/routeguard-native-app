@@ -3,6 +3,7 @@ package pe.edu.upc.routeguard.core.network.mapbox
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.LocalizedException
 import pe.edu.upc.routeguard.core.network.safeApiCall
 import pe.edu.upc.routeguard.shared.domain.Coordinates
 import pe.edu.upc.routeguard.shared.domain.Place
@@ -25,27 +26,27 @@ class MapboxClient @Inject constructor(
     val isConfigured: Boolean get() = token.startsWith("pk.")
 
     private fun notConfigured() =
-        Result.failure<Nothing>(IllegalStateException("Mapbox no está configurado (falta MAPBOX_ACCESS_TOKEN)"))
+        Result.failure<Nothing>(LocalizedException(R.string.error_mapbox_not_configured, fallback = "Mapbox no está configurado (falta MAPBOX_ACCESS_TOKEN)"))
 
     private fun List<Coordinates>.asPath(): String = joinToString(";") { "${it.longitude},${it.latitude}" }
 
     suspend fun roadRoute(points: List<Coordinates>): Result<RoadRoute> {
         if (!isConfigured) return notConfigured()
         if (points.size !in 2..MAX_DIRECTIONS_POINTS) {
-            return Result.failure(IllegalArgumentException("Se necesitan entre 2 y $MAX_DIRECTIONS_POINTS puntos"))
+            return Result.failure(LocalizedException(R.string.error_mapbox_directions_points, listOf(MAX_DIRECTIONS_POINTS), fallback = "Se necesitan entre 2 y $MAX_DIRECTIONS_POINTS puntos"))
         }
         return safeApiCall { api.directions(points.asPath(), accessToken = token) }
-            .mapCatching { MapboxMapper.toRoadRoute(it) ?: error("Mapbox no encontró una ruta por calles") }
+            .mapCatching { MapboxMapper.toRoadRoute(it) ?: throw LocalizedException(R.string.error_mapbox_no_road_route, fallback = "Mapbox no encontró una ruta por calles") }
     }
 
     /** Visiting order (input indexes) with the first and the last point fixed. */
     suspend fun optimalOrder(points: List<Coordinates>): Result<List<Int>> {
         if (!isConfigured) return notConfigured()
         if (points.size !in 3..MAX_OPTIMIZATION_POINTS) {
-            return Result.failure(IllegalArgumentException("Se necesitan entre 3 y $MAX_OPTIMIZATION_POINTS paradas"))
+            return Result.failure(LocalizedException(R.string.error_mapbox_optimization_points, listOf(MAX_OPTIMIZATION_POINTS), fallback = "Se necesitan entre 3 y $MAX_OPTIMIZATION_POINTS paradas"))
         }
         return safeApiCall { api.optimize(points.asPath(), accessToken = token) }
-            .mapCatching { MapboxMapper.toVisitOrder(it) ?: error("Mapbox no pudo ordenar las paradas") }
+            .mapCatching { MapboxMapper.toVisitOrder(it) ?: throw LocalizedException(R.string.error_mapbox_order_failed, fallback = "Mapbox no pudo ordenar las paradas") }
     }
 
     suspend fun search(query: String, near: Coordinates?): Result<List<Place>> {

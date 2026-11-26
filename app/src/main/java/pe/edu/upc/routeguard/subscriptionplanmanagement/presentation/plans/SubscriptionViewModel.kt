@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.subscriptionplanmanagement.application.CreatePaymentIntentUseCase
 import pe.edu.upc.routeguard.subscriptionplanmanagement.application.GetCurrentSubscriptionUseCase
 import pe.edu.upc.routeguard.subscriptionplanmanagement.application.GetPlansUseCase
@@ -40,7 +42,8 @@ class SubscriptionViewModel @Inject constructor(
     private val getCurrentSubscription: GetCurrentSubscriptionUseCase,
     private val createPaymentIntent: CreatePaymentIntentUseCase,
     private val selectPlan: SelectPlanUseCase,
-    private val upgradePlan: UpgradePlanUseCase
+    private val upgradePlan: UpgradePlanUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SubscriptionUiState())
@@ -90,7 +93,7 @@ class SubscriptionViewModel @Inject constructor(
         val state = _uiState.value
         val current = state.current
         if (current == null) {
-            _uiState.update { it.copy(errorMessage = "No tienes una suscripción activa") }
+            _uiState.update { it.copy(errorMessage = strings.getString(R.string.plans_error_no_active_sub)) }
             return
         }
         viewModelScope.launch {
@@ -125,35 +128,37 @@ class SubscriptionViewModel @Inject constructor(
             if (pending.isUpgrade) {
                 val current = _uiState.value.current
                 if (current == null) {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "No tienes una suscripción activa") }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = strings.getString(R.string.plans_error_no_active_sub)) }
                     return@launch
                 }
                 upgradePlan(current, _uiState.value.currentPlan, plan)
                     .onSuccess { subscription ->
+                        val tierLabel = strings.getString(plan.tier.labelRes)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 current = subscription,
-                                message = "Pago con Stripe confirmado: plan mejorado a ${plan.tier.label}"
+                                message = strings.getString(R.string.plans_msg_upgraded, tierLabel)
                             )
                         }
                     }
                     .onFailure { e ->
-                        _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                        _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.plans_error_payment)) }
                     }
             } else {
                 selectPlan(plan)
                     .onSuccess { subscription ->
+                        val tierLabel = strings.getString(plan.tier.labelRes)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 current = subscription,
-                                message = "Pago con Stripe confirmado: plan ${plan.tier.label} activo"
+                                message = strings.getString(R.string.plans_msg_activated, tierLabel)
                             )
                         }
                     }
                     .onFailure { e ->
-                        _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                        _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.plans_error_payment)) }
                     }
             }
         }
@@ -164,7 +169,7 @@ class SubscriptionViewModel @Inject constructor(
             it.copy(
                 isLoading = false,
                 pendingStripePayment = null,
-                message = "Proceso de pago cancelado."
+                message = strings.getString(R.string.plans_msg_canceled)
             )
         }
     }
@@ -174,7 +179,7 @@ class SubscriptionViewModel @Inject constructor(
             it.copy(
                 isLoading = false,
                 pendingStripePayment = null,
-                errorMessage = error ?: "Error al procesar el pago con Stripe."
+                errorMessage = error ?: strings.getString(R.string.plans_error_payment)
             )
         }
     }

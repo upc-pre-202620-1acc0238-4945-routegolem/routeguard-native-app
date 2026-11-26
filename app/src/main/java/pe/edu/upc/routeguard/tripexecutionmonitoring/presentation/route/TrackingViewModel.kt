@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.BoardStudentUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.CountPendingRecordsUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.FinishTripUseCase
@@ -39,7 +41,8 @@ class TrackingViewModel @Inject constructor(
     private val countPendingRecords: CountPendingRecordsUseCase,
     private val getLastKnownLocation: GetLastKnownLocationUseCase,
     private val routeTrackingService: RouteTrackingService,
-    private val roadGuidance: RoadGuidance
+    private val roadGuidance: RoadGuidance,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TrackingUiState())
@@ -100,7 +103,7 @@ class TrackingViewModel @Inject constructor(
 
     /** Select Route Card + Start Trip. */
     fun onStartTrip(routeId: RouteId) {
-        execute("Viaje iniciado") { startTrip(routeId) }
+        execute(strings.getString(R.string.tracking_msg_started)) { startTrip(routeId) }
     }
 
     fun onBoardingStatus(studentId: StudentId, state: BoardingState) {
@@ -135,7 +138,7 @@ class TrackingViewModel @Inject constructor(
                 it.copy(
                     isLoading = false,
                     trip = updated ?: trip,
-                    message = "Llegada al colegio confirmada: todos los estudiantes entregados",
+                    message = strings.getString(R.string.tracking_msg_arrived_school),
                     pendingRecords = updated?.let { t -> countPendingRecords(t.id) } ?: 0
                 )
             }
@@ -146,8 +149,8 @@ class TrackingViewModel @Inject constructor(
         val trip = _uiState.value.trip ?: return
         viewModelScope.launch {
             reportIncident(trip, type, description)
-                .onSuccess { _uiState.update { it.copy(message = "Incidencia reportada", errorMessage = null) } }
-                .onFailure { e -> _uiState.update { it.copy(errorMessage = e.message) } }
+                .onSuccess { _uiState.update { it.copy(message = strings.getString(R.string.tracking_msg_incident_reported), errorMessage = null) } }
+                .onFailure { e -> _uiState.update { it.copy(errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 
@@ -157,10 +160,10 @@ class TrackingViewModel @Inject constructor(
             syncOfflineRecords(trip.id)
                 .onSuccess { event ->
                     _uiState.update {
-                        it.copy(message = "${event.total} registros sincronizados", errorMessage = null)
+                        it.copy(message = strings.getString(R.string.tracking_msg_synced_count, event.total), errorMessage = null)
                     }
                 }
-                .onFailure { _uiState.update { it.copy(errorMessage = "Sin señal: se enviarán al reconectar") } }
+                .onFailure { _uiState.update { it.copy(errorMessage = strings.getString(R.string.tracking_msg_offline_queued)) } }
             _uiState.update { it.copy(pendingRecords = countPendingRecords(trip.id)) }
         }
     }
@@ -172,11 +175,11 @@ class TrackingViewModel @Inject constructor(
             finishTrip(trip)
                 .onSuccess {
                     routeTrackingService.stop()
-                    _uiState.update { it.copy(message = "Ruta finalizada") }
+                    _uiState.update { it.copy(message = strings.getString(R.string.tracking_msg_finished)) }
                     refresh()
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
         }
     }
@@ -205,7 +208,7 @@ class TrackingViewModel @Inject constructor(
                         )
                     }
                 }
-                .onFailure { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                .onFailure { e -> _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) } }
         }
     }
 }

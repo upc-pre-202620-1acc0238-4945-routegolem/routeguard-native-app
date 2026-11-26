@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.edu.upc.routeguard.R
+import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.identityaccessmanagement.application.RegisterAdministratorUseCase
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Account
 import javax.inject.Inject
@@ -26,7 +28,8 @@ data class RegisterAdministratorUiState(
 
 @HiltViewModel
 class RegisterAdministratorViewModel @Inject constructor(
-    private val registerAdministrator: RegisterAdministratorUseCase
+    private val registerAdministrator: RegisterAdministratorUseCase,
+    private val strings: AppStringsProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterAdministratorUiState())
@@ -42,7 +45,7 @@ class RegisterAdministratorViewModel @Inject constructor(
     fun register() {
         val s = _state.value
         if (!s.acceptedTerms) {
-            _state.update { it.copy(errorMessage = "Debes aceptar los Términos y Condiciones") }
+            _state.update { it.copy(errorMessage = strings.getString(R.string.error_accept_terms)) }
             return
         }
         viewModelScope.launch {
@@ -53,7 +56,7 @@ class RegisterAdministratorViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _state.update {
-                        it.copy(isLoading = false, errorMessage = e.message ?: "No se pudo registrar")
+                        it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_register_failed))
                     }
                 }
         }
