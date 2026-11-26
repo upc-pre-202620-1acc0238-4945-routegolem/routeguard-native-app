@@ -28,6 +28,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +55,9 @@ import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsDialog
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsStatusBadges
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocumentation
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandBorder
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
@@ -69,6 +73,14 @@ fun StakeholdersScreen(
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
     var searchQuery by remember { mutableStateOf("") }
+    var selectedDriverDocs by remember { mutableStateOf<VehicleDocumentation?>(null) }
+
+    if (selectedDriverDocs != null) {
+        VehicleDocsDialog(
+            docs = selectedDriverDocs!!,
+            onDismiss = { selectedDriverDocs = null }
+        )
+    }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
 
@@ -151,29 +163,48 @@ fun StakeholdersScreen(
                             elevation = CardDefaults.cardElevation(2.dp),
                             border = BorderStroke(1.dp, BrandBorder)
                         ) {
-                            Row(
+                            Column(
                                 modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .clip(CircleShape)
-                                        .background(BrandNavy.copy(alpha = 0.1f)),
-                                    contentAlignment = Alignment.Center
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(46.dp)
+                                            .clip(CircleShape)
+                                            .background(BrandNavy.copy(alpha = 0.1f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(initials, fontWeight = FontWeight.Bold, color = BrandNavy)
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(driver.fullName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = BrandNavy)
+                                        Text(
+                                            stringResource(R.string.stakeholders_driver_sub, driver.licenseNumber.toString(), driver.phone.toString()),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF64748B)
+                                        )
+                                    }
+                                    StatusChip(text = stringResource(R.string.stakeholders_badge_enabled), containerColor = Color(0xFFD1FAE5), contentColor = Color(0xFF064E3B))
+                                }
+
+                                VehicleDocsStatusBadges(
+                                    licenseCode = driver.licenseNumber.toString().ifBlank { "A-IIIa" }
+                                )
+
+                                OutlinedButton(
+                                    onClick = {
+                                        selectedDriverDocs = VehicleDocumentation(
+                                            driverName = driver.fullName,
+                                            licenseNumber = driver.licenseNumber.toString().ifBlank { "A-IIIa" }
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp)
                                 ) {
-                                    Text(initials, fontWeight = FontWeight.Bold, color = BrandNavy)
+                                    Text(stringResource(R.string.docs_view_verify_btn), fontWeight = FontWeight.SemiBold, color = BrandNavy)
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(driver.fullName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = BrandNavy)
-                                    Text(
-                                        stringResource(R.string.stakeholders_driver_sub, driver.licenseNumber.toString(), driver.phone.toString()),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFF64748B)
-                                    )
-                                }
-                                StatusChip(text = stringResource(R.string.stakeholders_badge_enabled), containerColor = Color(0xFFD1FAE5), contentColor = Color(0xFF064E3B))
                             }
                         }
                     }
