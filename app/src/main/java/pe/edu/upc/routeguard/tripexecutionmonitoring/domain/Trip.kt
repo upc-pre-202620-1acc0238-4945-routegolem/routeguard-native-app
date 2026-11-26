@@ -10,7 +10,7 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.TripId
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.WaypointId
 
 enum class TripStatus {
-    PENDING, IN_PROGRESS, COMPLETED;
+    PENDING, IN_PROGRESS, COMPLETED, CANCELLED;
 
     companion object {
         fun from(value: String): TripStatus =
@@ -93,6 +93,7 @@ data class LocationRecord(
 ) : BaseEntity<LocationRecordId>
 
 enum class IncidentType(@androidx.annotation.StringRes val labelRes: Int, val label: String) {
+    ROADBLOCK(pe.edu.upc.routeguard.R.string.incident_roadblock, "Bloqueo de vía"),
     TRAFFIC(pe.edu.upc.routeguard.R.string.incident_traffic, "Tráfico"),
     MECHANICAL(pe.edu.upc.routeguard.R.string.incident_mechanical, "Falla mecánica"),
     MEDICAL(pe.edu.upc.routeguard.R.string.incident_medical, "Emergencia médica"),
@@ -107,3 +108,16 @@ data class Incident(
     /** The backend keeps a single free-text description (10 to 500 characters). */
     val text: String get() = "${type.label}: $description"
 }
+
+/** Historical record of a completed or cancelled trip (US-15). */
+data class TripHistoryItem(
+    val id: TripId,
+    val routeName: String,
+    val driverName: String,
+    val dateLabel: String,
+    val status: TripStatus,
+    val boardedCount: Int,
+    val totalStudents: Int,
+    val durationMinutes: Int,
+    val note: String? = null
+)

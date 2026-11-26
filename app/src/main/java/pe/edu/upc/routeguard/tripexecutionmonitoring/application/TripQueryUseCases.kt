@@ -31,3 +31,8 @@ class GetLastKnownLocationUseCase @Inject constructor(private val repository: Tr
 class CountPendingRecordsUseCase @Inject constructor(private val repository: TripRepository) {
     suspend operator fun invoke(tripId: TripId) = repository.pendingRecordsCount(tripId)
 }
+
+/** Past completed/cancelled trips for history dialog (US-15). */
+class GetTripHistoryUseCase @Inject constructor(private val repository: TripRepository) {
+    suspend operator fun invoke() = repository.getTripHistory()
+}

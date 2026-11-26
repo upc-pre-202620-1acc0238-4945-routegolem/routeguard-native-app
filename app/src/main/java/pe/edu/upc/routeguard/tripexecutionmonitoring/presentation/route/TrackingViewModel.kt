@@ -11,11 +11,13 @@ import kotlinx.coroutines.launch
 import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.BoardStudentUseCase
+import pe.edu.upc.routeguard.tripexecutionmonitoring.application.CancelTripUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.CountPendingRecordsUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.FinishTripUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetActiveTripUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetAssignedRoutesUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetLastKnownLocationUseCase
+import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetTripHistoryUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.ReportIncidentUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.RouteTrackingService
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.StartTripUseCase
@@ -33,10 +35,12 @@ import javax.inject.Inject
 class TrackingViewModel @Inject constructor(
     private val getAssignedRoutes: GetAssignedRoutesUseCase,
     private val getActiveTrip: GetActiveTripUseCase,
+    private val getTripHistory: GetTripHistoryUseCase,
     private val startTrip: StartTripUseCase,
     private val boardStudent: BoardStudentUseCase,
     private val reportIncident: ReportIncidentUseCase,
     private val finishTrip: FinishTripUseCase,
+    private val cancelTrip: CancelTripUseCase,
     private val syncOfflineRecords: SyncOfflineRecordsUseCase,
     private val countPendingRecords: CountPendingRecordsUseCase,
     private val getLastKnownLocation: GetLastKnownLocationUseCase,
@@ -180,6 +184,42 @@ class TrackingViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
+                }
+        }
+    }
+
+    fun onCancelTrip(reason: String) {
+        val trip = _uiState.value.trip ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            cancelTrip(trip, reason)
+                .onSuccess { cancelled ->
+                    routeTrackingService.stop()
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            trip = cancelled,
+                            cancellationReason = reason,
+                            message = strings.getString(R.string.tracking_msg_cancelled),
+                            errorMessage = null
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
+                }
+        }
+    }
+
+    fun loadTripHistory() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isHistoryLoading = true) }
+            getTripHistory()
+                .onSuccess { history ->
+                    _uiState.update { it.copy(tripHistory = history, isHistoryLoading = false) }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isHistoryLoading = false) }
                 }
         }
     }

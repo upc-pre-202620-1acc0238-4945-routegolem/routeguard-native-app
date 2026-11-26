@@ -35,4 +35,18 @@ interface TripRepository {
 
     /** Last point recorded by the background GPS for the trip, or null if there is none yet. */
     suspend fun lastKnownLocation(tripId: TripId): Coordinates?
+
+    /** Completed or cancelled trips for Trip History (US-15). */
+    suspend fun getTripHistory(): Result<List<TripHistoryItem>>
+
+    /** Cancels an active trip due to force majeure (US-21). */
+    suspend fun cancelTrip(tripId: TripId, reason: String): Result<Trip>
+
+    /** Logs a parent's early absence report for today (US-09). */
+    suspend fun reportEarlyAbsence(
+        tripId: TripId?,
+        studentId: StudentId,
+        studentName: String,
+        reason: String
+    ): Result<Unit>
 }

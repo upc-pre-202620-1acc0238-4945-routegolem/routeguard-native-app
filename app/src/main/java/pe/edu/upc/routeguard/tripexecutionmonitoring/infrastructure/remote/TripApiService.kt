@@ -21,6 +21,9 @@ interface TripApiService {
     @GET("trips/live")
     suspend fun getLiveTrips(): Response<List<LiveTripDto>>
 
+    @GET("trips")
+    suspend fun getTrips(@Query("organizationId") organizationId: String): Response<List<TripDto>>
+
     /** 204 when none of the children of the parent is riding a trip in progress. */
     @GET("parents/{parentId}/active-trip")
     suspend fun getParentActiveTrip(@Path("parentId") parentId: String): Response<LiveTripDto>
@@ -45,6 +48,12 @@ interface TripApiService {
 
     @POST("trips/{tripId}/complete")
     suspend fun completeTrip(@Path("tripId") tripId: String): Response<TripDto>
+
+    @POST("trips/{tripId}/cancel")
+    suspend fun cancelTrip(
+        @Path("tripId") tripId: String,
+        @Body request: CancelTripRequestDto
+    ): Response<TripDto>
 
     @POST("trips/{tripId}/locations")
     suspend fun sendLocationUpdate(

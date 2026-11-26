@@ -11,14 +11,32 @@ import kotlinx.coroutines.launch
 import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.localization.AppStringsProvider
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.FollowChildTripUseCase
+import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetTripHistoryUseCase
+import pe.edu.upc.routeguard.tripexecutionmonitoring.application.ReportEarlyAbsenceUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.ArrivalEstimate
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.LiveTrip
+import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripHistoryItem
+import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.StudentId
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.RoadGuidance
 import pe.edu.upc.routeguard.shared.domain.Coordinates
 import javax.inject.Inject
 
+data class EarlyAbsenceRecord(
+    val studentName: String,
+    val reason: String
+)
+
+data class ServiceRating(
+    val stars: Int,
+    val comment: String
+)
+
 data class FollowTripUiState(
     val trip: LiveTrip? = null,
+    val tripHistory: List<TripHistoryItem> = emptyList(),
+    val isHistoryLoading: Boolean = false,
+    val reportedAbsence: EarlyAbsenceRecord? = null,
+    val serviceRating: ServiceRating? = null,
     /** True once the first answer arrived, to tell "loading" apart from "no trip in progress". */
     val hasLoaded: Boolean = false,
     val roadPath: List<Coordinates>? = null,
@@ -29,6 +47,8 @@ data class FollowTripUiState(
 @HiltViewModel
 class FollowTripViewModel @Inject constructor(
     private val followChildTrip: FollowChildTripUseCase,
+    private val getTripHistory: GetTripHistoryUseCase,
+    private val reportEarlyAbsence: ReportEarlyAbsenceUseCase,
     private val roadGuidance: RoadGuidance,
     private val strings: AppStringsProvider
 ) : ViewModel() {
@@ -46,6 +66,37 @@ class FollowTripViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.update { it.copy(hasLoaded = true, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
                 }
+        }
+    }
+
+    fun loadTripHistory() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isHistoryLoading = true) }
+            getTripHistory()
+                .onSuccess { history ->
+                    _uiState.update { it.copy(tripHistory = history, isHistoryLoading = false) }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isHistoryLoading = false) }
+                }
+        }
+    }
+
+    fun onReportEarlyAbsence(studentId: StudentId, studentName: String, reason: String) {
+        val activeTripId = _uiState.value.trip?.tripId
+        viewModelScope.launch {
+            reportEarlyAbsence(activeTripId, studentId, studentName, reason)
+            _uiState.update {
+                it.copy(reportedAbsence = EarlyAbsenceRecord(studentName = studentName, reason = reason))
+            }
+            refresh()
+        }
+    }
+
+    fun onSubmitRating(stars: Int, comment: String) {
+        val clamped = stars.coerceIn(1, 5)
+        _uiState.update {
+            it.copy(serviceRating = ServiceRating(stars = clamped, comment = comment.trim()))
         }
     }
 
