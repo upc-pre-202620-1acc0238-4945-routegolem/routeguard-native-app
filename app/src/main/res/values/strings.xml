@@ -515,4 +515,126 @@
     <string name="fleet_error_optimize_min">Se necesitan al menos %1$d paradas</string>
     <string name="fleet_error_optimize_max">Se pueden ordenar hasta %1$d paradas</string>
     <string name="fleet_error_already_optimal">Las paradas ya están en el mejor orden</string>
+
+    <!-- US-19: Forgot Password Interactive Recovery -->
+    <string name="forgot_password_desc">Ingresa el correo electrónico registrado para enviarte un enlace seguro de restablecimiento de contraseña.</string>
+    <string name="forgot_password_email_label">Correo electrónico</string>
+    <string name="forgot_password_invalid_email">Ingresa un correo electrónico válido (ejemplo@dominio.com).</string>
+    <string name="forgot_password_sent">Se envió un enlace de recuperación a %1$s. Revisa tu bandeja de entrada.</string>
+    <string name="forgot_password_send_btn">Enviar enlace</string>
+
+    <!-- US-18 & US-23: Help Center (FAQ) & Support Tickets -->
+    <string name="profile_help_center_title">Centro de Ayuda y Soporte</string>
+    <string name="profile_help_center_desc">Preguntas frecuentes y envío de tickets de atención</string>
+    <string name="profile_faq_btn">Preguntas frecuentes (FAQ)</string>
+    <string name="profile_support_ticket_btn">Enviar ticket de soporte</string>
+    <string name="faq_dialog_title">Preguntas Frecuentes</string>
+    <string name="faq_q1">¿Cómo funciona la telemetría GPS en tiempo real?</string>
+    <string name="faq_a1">La unidad escolar transmite su ubicación, velocidad y progreso de paradas cada pocos segundos mientras el viaje está en curso, permitiéndote monitorear la ruta en vivo.</string>
+    <string name="faq_q2">¿Qué ocurre si el vehículo pierde señal durante el abordaje?</string>
+    <string name="faq_a2">RouteGuard guarda los registros de abordaje y ubicaciones en la base local Room del dispositivo y los sincroniza automáticamente cuando vuelve la cobertura móvil.</string>
+    <string name="faq_q3">¿Cómo gestiono la red de cuidadores autorizados?</string>
+    <string name="faq_a3">En tu perfil de apoderado puedes agregar familiares o tutores autorizados para recibir alertas de abordaje y hacer seguimiento del traslado escolar.</string>
+    <string name="faq_q4">¿Cómo funcionan los planes y pagos con Stripe?</string>
+    <string name="faq_a4">Los administradores escolares pueden activar, mejorar o renovar planes institucionales (Básico, Intermedio o Completo) mediante Stripe Checkout seguro.</string>
+    <string name="faq_q5">¿Cómo verifico el SOAT y la licencia del conductor?</string>
+    <string name="faq_a5">En la tarjeta de Vehículo y Seguridad puedes consultar la póliza SOAT vigente, revisión técnica y licencia de conducir habilitada (ej. A-IIIa).</string>
+    <string name="support_dialog_title">Enviar Ticket de Soporte</string>
+    <string name="support_category_label">Categoría</string>
+    <string name="support_cat_technical">Técnico</string>
+    <string name="support_cat_billing">Facturación</string>
+    <string name="support_cat_safety">Seguridad</string>
+    <string name="support_cat_route">Ruta</string>
+    <string name="support_cat_other">Otro</string>
+    <string name="support_subject_label">Asunto</string>
+    <string name="support_description_label">Describe tu consulta o incidente</string>
+    <string name="support_submit_btn">Enviar ticket</string>
+    <string name="support_error_required">Completa el asunto y la descripción del ticket.</string>
+    <string name="support_confirmation_title">Ticket registrado: %1$s</string>
+    <string name="support_confirmation_body">Tu solicitud en la categoría %1$s ha sido enviada al equipo de soporte RouteGuard. Te responderemos a la brevedad.</string>
+
+    <!-- US-15: Trip History -->
+    <string name="trip_history_btn">Historial de viajes</string>
+    <string name="trip_history_title">Historial de Viajes</string>
+    <string name="trip_history_empty">No hay viajes finalizados registrados.</string>
+    <string name="trip_history_status_completed">Finalizado</string>
+    <string name="trip_history_status_cancelled">Cancelado</string>
+    <string name="trip_history_meta">%1$s · %2$d/%3$d a bordo · %4$d min</string>
+    <string name="trip_history_driver_fmt">Conductor: %1$s</string>
+
+    <!-- US-12: SOAT & Driver License Documentation -->
+    <string name="docs_soat_badge_valid">SOAT Vigente</string>
+    <string name="docs_license_badge">Licencia %1$s</string>
+    <string name="docs_soat_policy_summary">Póliza SOAT N.° %1$s · Vence: %2$s</string>
+    <string name="docs_view_verify_btn">Ver / Verificar Documentos</string>
+    <string name="docs_dialog_title">Documentación Oficial Verificada</string>
+    <string name="docs_vehicle_section">Unidad Vehicular</string>
+    <string name="docs_vehicle_plate_label">Placa</string>
+    <string name="docs_soat_policy_label">Póliza SOAT</string>
+    <string name="docs_soat_insurer_label">Aseguradora</string>
+    <string name="docs_soat_expiry_label">Vigencia SOAT</string>
+    <string name="docs_tech_review_label">Revisión Técnica</string>
+    <string name="docs_tech_review_val">Vigente (CITV-2026-4410)</string>
+    <string name="docs_driver_section">Conductor Habilitado</string>
+    <string name="docs_driver_name_label">Conductor</string>
+    <string name="docs_driver_license_label">Licencia de Conducir</string>
+    <string name="docs_driver_license_expiry_label">Vigencia Licencia</string>
+    <string name="docs_status_valid">Vigente</string>
+    <string name="docs_verified_note">Documentación validada en el registro institucional de RouteGuard.</string>
+
+    <!-- US-09: Early Absence Report -->
+    <string name="absence_report_btn">Reportar ausencia hoy</string>
+    <string name="absence_dialog_title">Reportar Ausencia Temprana</string>
+    <string name="absence_child_label">Estudiante</string>
+    <string name="absence_reason_label">Motivo</string>
+    <string name="absence_reason_illness">Enfermedad</string>
+    <string name="absence_reason_travel">Viaje familiar</string>
+    <string name="absence_reason_medical">Cita médica</string>
+    <string name="absence_reason_personal">Motivo personal</string>
+    <string name="absence_note_label">Nota adicional (opcional)</string>
+    <string name="absence_confirm_btn">Confirmar ausencia</string>
+    <string name="absence_banner_title">Ausencia reportada hoy</string>
+    <string name="absence_banner_body">%1$s · Motivo: %2$s. El conductor fue notificado.</string>
+
+    <!-- US-14: Service Rating -->
+    <string name="rate_service_btn">Calificar servicio</string>
+    <string name="rate_dialog_title">Calificar el Servicio</string>
+    <string name="rate_dialog_subtitle">¿Cómo calificarías el traslado con %1$s?</string>
+    <string name="rate_stars_label">Puntuación: %1$d de 5 estrellas</string>
+    <string name="rate_comment_label">Comentario (opcional)</string>
+    <string name="rate_submit_btn">Enviar calificación</string>
+    <string name="rate_badge_rated">Calificado: %1$d/5 ★</string>
+    <string name="rate_update_btn">Editar calificación</string>
+
+    <!-- US-29 & US-21: Roadblock Incident & Force Majeure Cancellation -->
+    <string name="incident_roadblock">Bloqueo de vía</string>
+    <string name="incident_delay_label">Demora estimada</string>
+    <string name="incident_delay_option">%1$d min</string>
+    <string name="route_map_trip_cancelled">Viaje cancelado</string>
+    <string name="route_map_cancelled_chip">Cancelado</string>
+    <string name="cancel_trip_btn">Cancelar por fuerza mayor</string>
+    <string name="cancel_trip_dialog_title">Cancelar Viaje por Fuerza Mayor</string>
+    <string name="cancel_trip_dialog_warning">Esta acción finalizará el recorrido de inmediato, deshabilitará el registro de abordaje y enviará una alerta crítica a los padres.</string>
+    <string name="cancel_trip_reason_label">Motivo de fuerza mayor</string>
+    <string name="cancel_reason_weather">Clima extremo</string>
+    <string name="cancel_reason_mechanical">Falla mecánica grave</string>
+    <string name="cancel_reason_road_closure">Cierre total de vía</string>
+    <string name="cancel_reason_security">Emergencia de seguridad</string>
+    <string name="cancel_trip_notes_label">Detalle adicional (opcional)</string>
+    <string name="cancel_trip_confirm_btn">Confirmar cancelación</string>
+    <string name="cancel_trip_banner_title">Viaje cancelado por fuerza mayor</string>
+    <string name="cancel_trip_banner_body">Motivo: %1$s. Se envió alerta crítica y se deshabilitó el abordaje.</string>
+    <string name="tracking_msg_cancelled">Viaje cancelado por fuerza mayor y alerta crítica enviada</string>
+
+    <!-- US-17: Attendance Report -->
+    <string name="attendance_report_btn">Reporte de Asistencia</string>
+    <string name="attendance_dialog_title">Reporte de Asistencia</string>
+    <string name="attendance_stat_total">Total</string>
+    <string name="attendance_stat_boarded">A bordo</string>
+    <string name="attendance_stat_absent">Ausentes</string>
+    <string name="attendance_stat_pending">Pendientes</string>
+    <string name="attendance_stat_rate">Asistencia</string>
+    <string name="attendance_copy_csv">Copiar CSV</string>
+    <string name="attendance_csv_copied">CSV copiado al portapapeles</string>
+    <string name="attendance_students_section">Detalle por estudiante</string>
 </resources>

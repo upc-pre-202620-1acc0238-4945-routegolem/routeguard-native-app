@@ -515,4 +515,126 @@
     <string name="fleet_error_optimize_min">At least %1$d stops are required</string>
     <string name="fleet_error_optimize_max">Up to %1$d stops can be reordered</string>
     <string name="fleet_error_already_optimal">Stops are already in the best order</string>
+
+    <!-- US-19: Forgot Password Interactive Recovery -->
+    <string name="forgot_password_desc">Enter your registered email address to receive a secure password reset link.</string>
+    <string name="forgot_password_email_label">Email address</string>
+    <string name="forgot_password_invalid_email">Enter a valid email address (example@domain.com).</string>
+    <string name="forgot_password_sent">A recovery link has been sent to %1$s. Please check your inbox.</string>
+    <string name="forgot_password_send_btn">Send link</string>
+
+    <!-- US-18 & US-23: Help Center (FAQ) & Support Tickets -->
+    <string name="profile_help_center_title">Help &amp; Support Center</string>
+    <string name="profile_help_center_desc">Frequently asked questions and support tickets</string>
+    <string name="profile_faq_btn">Frequently Asked Questions (FAQ)</string>
+    <string name="profile_support_ticket_btn">Submit support ticket</string>
+    <string name="faq_dialog_title">Frequently Asked Questions</string>
+    <string name="faq_q1">How does real-time GPS telemetry work?</string>
+    <string name="faq_a1">The school vehicle transmits its location, speed, and stop progress every few seconds while a trip is active, allowing live route monitoring.</string>
+    <string name="faq_q2">What happens if the vehicle loses signal during boarding?</string>
+    <string name="faq_a2">RouteGuard stores boarding records and GPS points in the local Room database and automatically syncs them once mobile signal returns.</string>
+    <string name="faq_q3">How do I manage the authorized caregiver network?</string>
+    <string name="faq_a3">From your parent profile you can add authorized relatives or guardians to receive boarding alerts and monitor active trips.</string>
+    <string name="faq_q4">How do Stripe subscription plans and payments work?</string>
+    <string name="faq_a4">School administrators can activate, upgrade, or renew institutional plans (Basic, Intermediate, or Complete) via secure Stripe Checkout.</string>
+    <string name="faq_q5">How do I verify the driver\'s SOAT insurance and license?</string>
+    <string name="faq_a5">In the Vehicle &amp; Safety card you can view the valid SOAT policy, technical inspection, and verified driver license (e.g., A-IIIa).</string>
+    <string name="support_dialog_title">Submit Support Ticket</string>
+    <string name="support_category_label">Category</string>
+    <string name="support_cat_technical">Technical</string>
+    <string name="support_cat_billing">Billing</string>
+    <string name="support_cat_safety">Safety</string>
+    <string name="support_cat_route">Route</string>
+    <string name="support_cat_other">Other</string>
+    <string name="support_subject_label">Subject</string>
+    <string name="support_description_label">Describe your question or issue</string>
+    <string name="support_submit_btn">Submit ticket</string>
+    <string name="support_error_required">Please enter both subject and description.</string>
+    <string name="support_confirmation_title">Ticket registered: %1$s</string>
+    <string name="support_confirmation_body">Your request under %1$s has been submitted to the RouteGuard support team. We will reply shortly.</string>
+
+    <!-- US-15: Trip History -->
+    <string name="trip_history_btn">Trip History</string>
+    <string name="trip_history_title">Trip History</string>
+    <string name="trip_history_empty">No completed trips recorded.</string>
+    <string name="trip_history_status_completed">Completed</string>
+    <string name="trip_history_status_cancelled">Cancelled</string>
+    <string name="trip_history_meta">%1$s · %2$d/%3$d boarded · %4$d min</string>
+    <string name="trip_history_driver_fmt">Driver: %1$s</string>
+
+    <!-- US-12: SOAT & Driver License Documentation -->
+    <string name="docs_soat_badge_valid">SOAT Valid</string>
+    <string name="docs_license_badge">License %1$s</string>
+    <string name="docs_soat_policy_summary">SOAT Policy #%1$s · Expires: %2$s</string>
+    <string name="docs_view_verify_btn">View / Verify Docs</string>
+    <string name="docs_dialog_title">Verified Official Documents</string>
+    <string name="docs_vehicle_section">Vehicle Unit</string>
+    <string name="docs_vehicle_plate_label">Plate</string>
+    <string name="docs_soat_policy_label">SOAT Policy</string>
+    <string name="docs_soat_insurer_label">Insurer</string>
+    <string name="docs_soat_expiry_label">SOAT Expiry</string>
+    <string name="docs_tech_review_label">Technical Inspection</string>
+    <string name="docs_tech_review_val">Valid (CITV-2026-4410)</string>
+    <string name="docs_driver_section">Authorized Driver</string>
+    <string name="docs_driver_name_label">Driver</string>
+    <string name="docs_driver_license_label">Driver License</string>
+    <string name="docs_driver_license_expiry_label">License Expiry</string>
+    <string name="docs_status_valid">Valid</string>
+    <string name="docs_verified_note">Documentation verified in the RouteGuard institutional registry.</string>
+
+    <!-- US-09: Early Absence Report -->
+    <string name="absence_report_btn">Report Early Absence</string>
+    <string name="absence_dialog_title">Report Early Absence</string>
+    <string name="absence_child_label">Student</string>
+    <string name="absence_reason_label">Reason</string>
+    <string name="absence_reason_illness">Illness</string>
+    <string name="absence_reason_travel">Family travel</string>
+    <string name="absence_reason_medical">Medical appointment</string>
+    <string name="absence_reason_personal">Personal</string>
+    <string name="absence_note_label">Additional note (optional)</string>
+    <string name="absence_confirm_btn">Confirm absence</string>
+    <string name="absence_banner_title">Absence reported for today</string>
+    <string name="absence_banner_body">%1$s · Reason: %2$s. The driver has been notified.</string>
+
+    <!-- US-14: Service Rating -->
+    <string name="rate_service_btn">Rate Service</string>
+    <string name="rate_dialog_title">Rate Service</string>
+    <string name="rate_dialog_subtitle">How was the commute experience with %1$s?</string>
+    <string name="rate_stars_label">Rating: %1$d out of 5 stars</string>
+    <string name="rate_comment_label">Comment (optional)</string>
+    <string name="rate_submit_btn">Submit rating</string>
+    <string name="rate_badge_rated">Rated: %1$d/5 ★</string>
+    <string name="rate_update_btn">Edit rating</string>
+
+    <!-- US-29 & US-21: Roadblock Incident & Force Majeure Cancellation -->
+    <string name="incident_roadblock">Roadblock</string>
+    <string name="incident_delay_label">Estimated delay</string>
+    <string name="incident_delay_option">%1$d min</string>
+    <string name="route_map_trip_cancelled">Trip cancelled</string>
+    <string name="route_map_cancelled_chip">Cancelled</string>
+    <string name="cancel_trip_btn">Cancel Trip (Force Majeure)</string>
+    <string name="cancel_trip_dialog_title">Cancel Trip (Force Majeure)</string>
+    <string name="cancel_trip_dialog_warning">This action will immediately end the trip, disable boarding check-in, and dispatch a critical alert to parents.</string>
+    <string name="cancel_trip_reason_label">Force majeure reason</string>
+    <string name="cancel_reason_weather">Extreme weather</string>
+    <string name="cancel_reason_mechanical">Severe mechanical failure</string>
+    <string name="cancel_reason_road_closure">Total road closure</string>
+    <string name="cancel_reason_security">Security emergency</string>
+    <string name="cancel_trip_notes_label">Additional details (optional)</string>
+    <string name="cancel_trip_confirm_btn">Confirm cancellation</string>
+    <string name="cancel_trip_banner_title">Trip cancelled (Force Majeure)</string>
+    <string name="cancel_trip_banner_body">Reason: %1$s. A critical alert was dispatched and boarding is disabled.</string>
+    <string name="tracking_msg_cancelled">Trip cancelled due to force majeure and critical alert sent</string>
+
+    <!-- US-17: Attendance Report -->
+    <string name="attendance_report_btn">Attendance Report</string>
+    <string name="attendance_dialog_title">Attendance Report</string>
+    <string name="attendance_stat_total">Total</string>
+    <string name="attendance_stat_boarded">Boarded</string>
+    <string name="attendance_stat_absent">Absent</string>
+    <string name="attendance_stat_pending">Pending</string>
+    <string name="attendance_stat_rate">Attendance</string>
+    <string name="attendance_copy_csv">Copy CSV</string>
+    <string name="attendance_csv_copied">CSV copied to clipboard</string>
+    <string name="attendance_students_section">Per-student breakdown</string>
 </resources>
