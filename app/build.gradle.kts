@@ -9,29 +9,33 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
+fun resolveConfigValue(key: String, defaultValue: String = ""): String {
+    return localProperties.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() }
+        ?: System.getenv(key)?.trim()?.takeIf { it.isNotEmpty() }
+        ?: defaultValue
+}
+
 // Public Mapbox token (pk.*): put MAPBOX_ACCESS_TOKEN=pk... in local.properties (never commit it).
-val mapboxAccessToken: String = rootProject.file("local.properties")
-    .takeIf { it.exists() }
-    ?.inputStream()?.use { Properties().apply { load(it) } }
-    ?.getProperty("MAPBOX_ACCESS_TOKEN")
-    ?: System.getenv("MAPBOX_ACCESS_TOKEN")
-    ?: ""
+val mapboxAccessToken: String = resolveConfigValue("MAPBOX_ACCESS_TOKEN")
 
-// Backend URL. Defaults to the deployed API on Azure; to use a backend running on this PC add
+// Backend URL. Defaults to the deployed API on Render; to use a backend running on this PC add
 // API_BASE_URL=http://localhost:8080/api/v1/ to local.properties (never committed) and run `adb reverse tcp:8080 tcp:8080`.
-val apiBaseUrl: String = rootProject.file("local.properties")
-    .takeIf { it.exists() }
-    ?.inputStream()?.use { Properties().apply { load(it) } }
-    ?.getProperty("API_BASE_URL")
-    ?: System.getenv("API_BASE_URL")
-    ?: "https://routeguard-web-services.onrender.com/api/v1/"
+val apiBaseUrl: String = resolveConfigValue(
+    key = "API_BASE_URL",
+    defaultValue = "https://routeguard-web-services.onrender.com/api/v1/"
+)
 
-val stripePublishableKey: String = rootProject.file("local.properties")
-    .takeIf { it.exists() }
-    ?.inputStream()?.use { Properties().apply { load(it) } }
-    ?.getProperty("STRIPE_PUBLISHABLE_KEY")
-    ?: System.getenv("STRIPE_PUBLISHABLE_KEY")
-    ?: "pk_test_51UPqsJ2cXM5Q72HKBRhXS93oFgiLy5s4YpkEuoEY7EXcgl7cRnxSJwkqNOwHw2PioQ5p5jucV2FgtKdnMdk0rvUR00D9Goup5m"
+val stripePublishableKey: String = resolveConfigValue(
+    key = "STRIPE_PUBLISHABLE_KEY",
+    defaultValue = "pk_test_51UPqsJ2cXM5Q72HKBRhXS93oFgiLy5s4YpkEuoEY7EXcgl7cRnxSJwkqNOwHw2PioQ5p5jucV2FgtKdnMdk0rvUR00D9Goup5m"
+)
 
 android {
     namespace = "pe.edu.upc.routeguard"
@@ -43,10 +47,14 @@ android {
         applicationId = "pe.edu.upc.routeguard"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
-        buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl.trimEnd('/')}/\"")
+        val normalizedApiBaseUrl = apiBaseUrl
+            .takeIf { it.startsWith("http://") || it.startsWith("https://") }
+            ?: "https://routeguard-web-services.onrender.com/api/v1/"
+
+        buildConfigField("String", "API_BASE_URL", "\"${normalizedApiBaseUrl.trimEnd('/')}/\"")
         buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"$stripePublishableKey\"")
         resValue("string", "mapbox_access_token", mapboxAccessToken.ifBlank { "MISSING_MAPBOX_TOKEN" })
 

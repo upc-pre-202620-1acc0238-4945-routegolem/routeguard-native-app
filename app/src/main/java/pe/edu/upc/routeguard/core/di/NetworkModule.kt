@@ -16,10 +16,18 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // Render backend in production, or API_BASE_URL override if present
-    private val BASE_URL: String = BuildConfig.API_BASE_URL.ifBlank {
-        "https://routeguard-web-services.onrender.com/api/v1/"
+    private const val DEFAULT_BASE_URL = "https://routeguard-web-services.onrender.com/api/v1/"
+
+    // Guard against blank or relative BuildConfig values when CI env secrets are unset
+    internal fun resolveBaseUrl(configured: String): String {
+        val candidate = configured.trim()
+        val valid = candidate.takeIf {
+            it.startsWith("http://") || it.startsWith("https://")
+        } ?: DEFAULT_BASE_URL
+        return valid.trimEnd('/') + "/"
     }
+
+    private val BASE_URL: String = resolveBaseUrl(BuildConfig.API_BASE_URL)
 
     @Provides
     @Singleton
