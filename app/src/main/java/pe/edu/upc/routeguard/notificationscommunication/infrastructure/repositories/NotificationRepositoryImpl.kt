@@ -57,7 +57,7 @@ class NotificationRepositoryImpl @Inject constructor(
                 type = pe.edu.upc.routeguard.notificationscommunication.domain.NotificationType.GEOFENCE_BREACHED,
                 status = NotificationStatus.DELIVERED,
                 title = "Unidad próxima",
-                body = "La van ABC-789 está a 500 metros del destino.",
+                body = "La van ABC-123 está a 500 metros del destino.",
                 createdAt = System.currentTimeMillis() - 5 * 60 * 1000,
                 hasPanicAlert = false
             )

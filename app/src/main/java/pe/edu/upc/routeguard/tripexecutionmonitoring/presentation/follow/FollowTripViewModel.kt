@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.edu.upc.routeguard.R
 import pe.edu.upc.routeguard.core.localization.AppStringsProvider
+import pe.edu.upc.routeguard.core.network.PlatformFeaturesRepository
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.FollowChildTripUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.GetTripHistoryUseCase
 import pe.edu.upc.routeguard.tripexecutionmonitoring.application.ReportEarlyAbsenceUseCase
@@ -49,6 +50,7 @@ class FollowTripViewModel @Inject constructor(
     private val followChildTrip: FollowChildTripUseCase,
     private val getTripHistory: GetTripHistoryUseCase,
     private val reportEarlyAbsence: ReportEarlyAbsenceUseCase,
+    private val platformRepo: PlatformFeaturesRepository,
     private val roadGuidance: RoadGuidance,
     private val strings: AppStringsProvider
 ) : ViewModel() {
@@ -60,7 +62,15 @@ class FollowTripViewModel @Inject constructor(
         viewModelScope.launch {
             followChildTrip()
                 .onSuccess { trip ->
-                    _uiState.update { it.copy(trip = trip, hasLoaded = true, errorMessage = null) }
+                    val savedRating = trip?.let { platformRepo.getTripRating(it.tripId.value) }
+                    _uiState.update {
+                        it.copy(
+                            trip = trip,
+                            hasLoaded = true,
+                            errorMessage = null,
+                            serviceRating = savedRating?.let { r -> ServiceRating(r.stars, r.comment) } ?: it.serviceRating
+                        )
+                    }
                     if (trip != null) enrichWithRoads(trip)
                 }
                 .onFailure { e ->
@@ -95,8 +105,14 @@ class FollowTripViewModel @Inject constructor(
 
     fun onSubmitRating(stars: Int, comment: String) {
         val clamped = stars.coerceIn(1, 5)
+        val tripId = _uiState.value.trip?.tripId?.value
         _uiState.update {
             it.copy(serviceRating = ServiceRating(stars = clamped, comment = comment.trim()))
+        }
+        if (tripId != null) {
+            viewModelScope.launch {
+                platformRepo.rateTrip(tripId, clamped, comment)
+            }
         }
     }
 

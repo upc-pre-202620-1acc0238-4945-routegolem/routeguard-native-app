@@ -129,5 +129,14 @@ data class LiveTripDto(
     val totalChildren: Int,
     val location: LiveLocationDto?,
     val stops: List<LiveStopDto>?,
-    val children: List<LiveChildDto>?
+    val children: List<LiveChildDto>?,
+    val vehiclePlate: String? = null,
+    val vehicleModel: String? = null,
+    val driverPhone: String? = null,
+    val driverLicense: String? = null,
+    val driverLicenseCategory: String? = null,
+    val soatPolicy: String? = null,
+    val soatInsurer: String? = null,
+    val soatExpiresAt: String? = null,
+    val soatValid: Boolean? = null
 )

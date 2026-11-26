@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import pe.edu.upc.routeguard.core.database.AppDatabase
+import pe.edu.upc.routeguard.core.database.PlatformCacheDao
 import javax.inject.Singleton
 
 @Module
@@ -18,6 +19,10 @@ object LocalModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(context, AppDatabase::class.java, "routeguard.db")
+            .fallbackToDestructiveMigration()
             .build()
     }
+
+    @Provides
+    fun providePlatformCacheDao(db: AppDatabase): PlatformCacheDao = db.platformCacheDao()
 }

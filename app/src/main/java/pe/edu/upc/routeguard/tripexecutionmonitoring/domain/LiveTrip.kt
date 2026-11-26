@@ -37,7 +37,16 @@ data class LiveTrip(
     val location: LiveLocation?,
     val stops: List<LiveStop>,
     /** Only the children of the signed-in parent (empty for the administrator). */
-    val children: List<LiveChild>
+    val children: List<LiveChild>,
+    val vehiclePlate: String? = null,
+    val vehicleModel: String? = null,
+    val driverPhone: String? = null,
+    val driverLicense: String? = null,
+    val driverLicenseCategory: String? = null,
+    val soatPolicy: String? = null,
+    val soatInsurer: String? = null,
+    val soatExpiresAt: String? = null,
+    val soatValid: Boolean = true
 ) {
     val nextStop: NextStop?
         get() = RouteProgress.nextStop(

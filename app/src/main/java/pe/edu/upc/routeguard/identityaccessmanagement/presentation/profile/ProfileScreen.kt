@@ -53,6 +53,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -60,10 +61,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.upc.routeguard.core.presentation.PlatformFeaturesViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,17 +93,31 @@ fun ProfileScreen(
     onLanguageSelected: (String) -> Unit = {},
     onSignOut: () -> Unit,
     onLaunchTutorial: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    platformViewModel: PlatformFeaturesViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val platformState by platformViewModel.uiState.collectAsStateWithLifecycle()
     var activeRole by remember { mutableStateOf(account.role) }
     var avatarBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var showPhotoDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(account.id.value) {
+        platformViewModel.refreshProfileAndDocs()
+    }
+
+    val decodedRemotePhoto = remember(platformState.photoData) {
+        PlatformFeaturesViewModel.decodeBase64Bitmap(platformState.photoData)
+    }
+    val displayedAvatar = avatarBitmap ?: decodedRemotePhoto
+
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bmp ->
-        if (bmp != null) avatarBitmap = bmp
+        if (bmp != null) {
+            avatarBitmap = bmp
+            platformViewModel.uploadBitmapPhoto(bmp)
+        }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -107,7 +126,10 @@ fun ProfileScreen(
         if (uri != null) {
             try {
                 context.contentResolver.openInputStream(uri)?.use { stream ->
-                    avatarBitmap = BitmapFactory.decodeStream(stream)
+                    BitmapFactory.decodeStream(stream)?.let { bmp ->
+                        avatarBitmap = bmp
+                        platformViewModel.uploadBitmapPhoto(bmp)
+                    }
                 }
             } catch (_: Exception) { }
         }
@@ -139,13 +161,7 @@ fun ProfileScreen(
         Role.PARENT -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 
-    val caregiverRel1 = stringResource(R.string.profile_caregiver_demo_rel1)
-    val caregiverRel2 = stringResource(R.string.profile_caregiver_demo_rel2)
-    var customCaregivers by remember { mutableStateOf(emptyList<Triple<String, String, String>>()) }
-    val caregivers = listOf(
-        Triple("Carmen López de Aljovín", caregiverRel1, "987-123-456"),
-        Triple("Laura Gómez", caregiverRel2, "999-888-777")
-    ) + customCaregivers
+    val caregivers = platformState.caregivers
     var showAddCaregiverDialog by remember { mutableStateOf(false) }
     var showFaqDialog by remember { mutableStateOf(false) }
     var showSupportTicketDialog by remember { mutableStateOf(false) }
@@ -183,9 +199,9 @@ fun ProfileScreen(
                                 .clickable { showPhotoDialog = true },
                             contentAlignment = Alignment.Center
                         ) {
-                            if (avatarBitmap != null) {
+                            if (displayedAvatar != null) {
                                 Image(
-                                    bitmap = avatarBitmap!!.asImageBitmap(),
+                                    bitmap = displayedAvatar.asImageBitmap(),
                                     contentDescription = stringResource(R.string.profile_photo_cd),
                                     modifier = Modifier
                                         .size(80.dp)
@@ -545,38 +561,54 @@ fun ProfileScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
-                            caregivers.forEach { (name, relation, phone) ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Surface(
-                                        modifier = Modifier.size(36.dp),
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            if (caregivers.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.profile_caregivers_empty),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                caregivers.forEach { caregiver ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Default.Person,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(20.dp)
+                                        Surface(
+                                            modifier = Modifier.size(36.dp),
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Person,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = caregiver.fullName,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "${caregiver.relationship} · ${caregiver.phoneNumber}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
-                                    }
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = name,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "$relation · $phone",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        IconButton(onClick = { platformViewModel.deleteCaregiver(caregiver.id) }) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Delete,
+                                                contentDescription = null,
+                                                tint = Color(0xFF94A3B8),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -927,10 +959,10 @@ fun ProfileScreen(
                 TextButton(
                     onClick = {
                         if (nameInput.isNotBlank()) {
-                            customCaregivers = customCaregivers + Triple(
-                                nameInput.trim(),
-                                relInput.trim().ifBlank { defaultRel },
-                                phoneInput.trim().ifBlank { "987-654-321" }
+                            platformViewModel.addCaregiver(
+                                fullName = nameInput.trim(),
+                                relationship = relInput.trim().ifBlank { defaultRel },
+                                phone = phoneInput.trim().ifBlank { "987-654-321" }
                             )
                             showAddCaregiverDialog = false
                         }
@@ -952,7 +984,12 @@ fun ProfileScreen(
     }
 
     if (showSupportTicketDialog) {
-        SupportTicketDialog(onDismiss = { showSupportTicketDialog = false })
+        SupportTicketDialog(
+            onSubmit = { category, subject, message ->
+                platformViewModel.submitTicket(category, subject, message)
+            },
+            onDismiss = { showSupportTicketDialog = false }
+        )
     }
 }
 
@@ -1045,7 +1082,10 @@ private fun FaqDialog(onDismiss: () -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SupportTicketDialog(onDismiss: () -> Unit) {
+private fun SupportTicketDialog(
+    onSubmit: (category: String, subject: String, message: String) -> Unit,
+    onDismiss: () -> Unit
+) {
     val categories = listOf(
         R.string.support_cat_technical,
         R.string.support_cat_billing,
@@ -1173,6 +1213,7 @@ private fun SupportTicketDialog(onDismiss: () -> Unit) {
                         if (subject.isBlank() || description.isBlank()) {
                             errorText = requiredMsg
                         } else {
+                            onSubmit(selectedCategoryLabel, subject.trim(), description.trim())
                             val code = (1000..9999).random()
                             createdTicketId = "#RG-$code"
                         }

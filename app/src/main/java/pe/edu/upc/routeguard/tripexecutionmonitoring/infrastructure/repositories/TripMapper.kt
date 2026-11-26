@@ -117,7 +117,16 @@ object TripMapper {
         stops = dto.stops.orEmpty()
             .sortedBy { it.order }
             .map { LiveStop(it.name, Coordinates(it.latitude, it.longitude), it.order, it.reached) },
-        children = dto.children.orEmpty().map { LiveChild(StudentId(it.childId), it.name, BoardingState.from(it.boardingState)) }
+        children = dto.children.orEmpty().map { LiveChild(StudentId(it.childId), it.name, BoardingState.from(it.boardingState)) },
+        vehiclePlate = dto.vehiclePlate,
+        vehicleModel = dto.vehicleModel,
+        driverPhone = dto.driverPhone,
+        driverLicense = dto.driverLicense,
+        driverLicenseCategory = dto.driverLicenseCategory,
+        soatPolicy = dto.soatPolicy,
+        soatInsurer = dto.soatInsurer,
+        soatExpiresAt = dto.soatExpiresAt,
+        soatValid = dto.soatValid ?: true
     )
 
     fun toRequest(entity: LocationRecordEntity) = LocationUpdateRequestDto(

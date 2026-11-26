@@ -45,7 +45,7 @@ class FleetRepositoryImpl @Inject constructor(
                             Waypoint(WaypointId("wp_03"), "Parada Parque de la Familia", Coordinates(-12.102, -77.042), 3)
                         ),
                         studentIds = listOf(StudentId("stu_01")),
-                        vehicle = Vehicle(VehicleId("veh_01"), Plate("ABC-789"), "Sprinter 2023", "Mercedes-Benz", 16),
+                        vehicle = Vehicle(VehicleId("veh_01"), Plate("ABC-123"), "Sprinter 416", "Mercedes-Benz", 20),
                         driverId = DriverId("d0000000-0000-0000-0000-000000000001"),
                         serviceDays = setOf(ServiceDay.MONDAY, ServiceDay.TUESDAY, ServiceDay.WEDNESDAY, ServiceDay.THURSDAY, ServiceDay.FRIDAY),
                         departureTime = "06:50 AM"
@@ -80,7 +80,7 @@ class FleetRepositoryImpl @Inject constructor(
             .map { list -> list.map { it.toDomain() } }
             .recoverCatching {
                 listOf(
-                    Vehicle(VehicleId("veh_01"), Plate("ABC-789"), "Sprinter 2023", "Mercedes-Benz", 16),
+                    Vehicle(VehicleId("veh_01"), Plate("ABC-123"), "Sprinter 416", "Mercedes-Benz", 20),
                     Vehicle(VehicleId("veh_02"), Plate("XYZ-456"), "HiAce 2022", "Toyota", 14)
                 )
             }

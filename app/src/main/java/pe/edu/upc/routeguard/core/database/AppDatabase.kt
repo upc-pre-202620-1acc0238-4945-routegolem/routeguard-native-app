@@ -16,12 +16,24 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.local.Waypoi
         WaypointEntity::class,
         LocationRecordEntity::class,
         BoardingRecordEntity::class,
-        NotificationEntity::class
+        NotificationEntity::class,
+        UserAvatarCacheEntity::class,
+        VehicleDocsCacheEntity::class,
+        AuthorizedCaregiverEntity::class,
+        SupportTicketEntity::class,
+        TripRatingEntity::class,
+        AbsenceReportEntity::class,
+        VehicleMaintenanceEntity::class,
+        OperationalExpenseEntity::class,
+        RouteAnnouncementEntity::class,
+        PickupChangeEntity::class,
+        ChatMessageEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun tripDao(): TripDao
     abstract fun notificationDao(): NotificationDao
+    abstract fun platformCacheDao(): PlatformCacheDao
 }
