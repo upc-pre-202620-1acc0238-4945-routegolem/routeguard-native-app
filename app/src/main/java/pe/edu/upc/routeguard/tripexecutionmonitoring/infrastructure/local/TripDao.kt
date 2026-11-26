@@ -19,6 +19,9 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE status = 'IN_PROGRESS' ORDER BY started_at DESC LIMIT 1")
     suspend fun fetchActiveTrip(): TripEntity?
 
+    @Query("SELECT * FROM trips WHERE status IN ('COMPLETED', 'CANCELLED') ORDER BY completed_at DESC")
+    suspend fun fetchPastTrips(): List<TripEntity>
+
     @Query("SELECT * FROM trips WHERE id = :tripId")
     suspend fun fetchTripById(tripId: String): TripEntity?
 

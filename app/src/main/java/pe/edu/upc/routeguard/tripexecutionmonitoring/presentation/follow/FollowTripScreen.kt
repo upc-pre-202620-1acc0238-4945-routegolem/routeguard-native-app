@@ -4,9 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,19 +26,34 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +73,9 @@ import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsDialog
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsStatusBadges
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocumentation
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapVehicle
 import pe.edu.upc.routeguard.core.designsystem.components.map.RouteGuardMap
@@ -63,7 +84,10 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmerald
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmeraldDark
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
+import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.LiveChild
+import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.StudentId
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.withEstimate
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.TripHistoryDialog
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedFormatAge
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedParentLabel
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedProgressText
@@ -80,6 +104,11 @@ fun FollowTripScreen(
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
+    var showTripHistoryDialog by remember { mutableStateOf(false) }
+    var showDocsDialog by remember { mutableStateOf(false) }
+    var showAbsenceDialog by remember { mutableStateOf(false) }
+    var showRateDialog by remember { mutableStateOf(false) }
+    val trip = state.trip
 
     // Polls while the screen is visible.
     LaunchedEffect(Unit) {
@@ -92,17 +121,31 @@ fun FollowTripScreen(
     Column(modifier = modifier.fillMaxSize()) {
         ScreenHeader(title = stringResource(R.string.follow_title))
 
-        val trip = state.trip
         when {
             !state.hasLoaded -> LoadingBox()
 
             trip == null -> Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ErrorText(state.errorMessage)
+
+                // US-09: Absence reported status banner
+                if (state.reportedAbsence != null) {
+                    AbsenceReportedBanner(
+                        studentName = state.reportedAbsence.studentName,
+                        reason = state.reportedAbsence.reason
+                    )
+                }
+                if (state.reportedAbsence != null) {
+                    AbsenceReportedBanner(
+                        studentName = state.reportedAbsence.studentName,
+                        reason = state.reportedAbsence.reason
+                    )
+                }
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -137,6 +180,29 @@ fun FollowTripScreen(
                         )
                     }
                 }
+                SecondaryButton(
+                    text = stringResource(R.string.absence_report_btn),
+                    onClick = { showAbsenceDialog = true },
+                    icon = Icons.Filled.Info
+                )
+                SecondaryButton(
+                    text = stringResource(R.string.trip_history_btn),
+                    onClick = {
+                        viewModel.loadTripHistory()
+                        showTripHistoryDialog = true
+                    },
+                    icon = Icons.Filled.DateRange
+                )
+                if (state.serviceRating != null) {
+                    RatedServiceBanner(stars = state.serviceRating.stars, comment = state.serviceRating.comment)
+                }
+                SecondaryButton(
+                    text = stringResource(
+                        if (state.serviceRating == null) R.string.rate_service_btn else R.string.rate_update_btn
+                    ),
+                    onClick = { showRateDialog = true },
+                    icon = Icons.Filled.Star
+                )
             }
 
             else -> Column(
@@ -162,6 +228,14 @@ fun FollowTripScreen(
                 )
 
                 ErrorText(state.errorMessage)
+
+                // US-09: Absence reported status banner
+                if (state.reportedAbsence != null) {
+                    AbsenceReportedBanner(
+                        studentName = state.reportedAbsence.studentName,
+                        reason = state.reportedAbsence.reason
+                    )
+                }
 
                 // Live Vehicle Telemetry Card
                 Card(
@@ -309,17 +383,13 @@ fun FollowTripScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B)
                         )
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFD1FAE5)
+                        VehicleDocsStatusBadges(licenseCode = "A-IIIa")
+                        OutlinedButton(
+                            onClick = { showDocsDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.follow_vehicle_soat_status),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF064E3B),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
+                            Text(stringResource(R.string.docs_view_verify_btn), fontWeight = FontWeight.SemiBold, color = BrandNavy)
                         }
                     }
                 }
@@ -422,6 +492,38 @@ fun FollowTripScreen(
                     }
                 }
 
+                // US-09: Report Early Absence button
+                SecondaryButton(
+                    text = stringResource(R.string.absence_report_btn),
+                    onClick = { showAbsenceDialog = true },
+                    icon = Icons.Filled.Info
+                )
+
+                // US-15: Trip History button
+                SecondaryButton(
+                    text = stringResource(R.string.trip_history_btn),
+                    onClick = {
+                        viewModel.loadTripHistory()
+                        showTripHistoryDialog = true
+                    },
+                    icon = Icons.Filled.DateRange
+                )
+
+                // US-14: Service Rating badge & action
+                if (state.serviceRating != null) {
+                    RatedServiceBanner(
+                        stars = state.serviceRating.stars,
+                        comment = state.serviceRating.comment
+                    )
+                }
+                SecondaryButton(
+                    text = stringResource(
+                        if (state.serviceRating == null) R.string.rate_service_btn else R.string.rate_update_btn
+                    ),
+                    onClick = { showRateDialog = true },
+                    icon = Icons.Filled.Star
+                )
+
                 // SOS / Llamada directa al conductor (RuwaLabs #12, Miriam V-03)
                 BigButton(
                     text = stringResource(
@@ -439,4 +541,309 @@ fun FollowTripScreen(
             }
         }
     }
+
+    if (showTripHistoryDialog) {
+        TripHistoryDialog(
+            trips = state.tripHistory,
+            isLoading = state.isHistoryLoading,
+            onDismiss = { showTripHistoryDialog = false }
+        )
+    }
+
+    if (showDocsDialog) {
+        val driverDisplay = trip?.driverName?.ifBlank { null }
+            ?: stringResource(R.string.follow_driver_authorized_fallback)
+        VehicleDocsDialog(
+            docs = VehicleDocumentation(driverName = driverDisplay),
+            onDismiss = { showDocsDialog = false }
+        )
+    }
+
+    if (showAbsenceDialog) {
+        val childOptions = trip?.children?.takeIf { it.isNotEmpty() }
+            ?: listOf(
+                LiveChild(
+                    id = StudentId("stu_01"),
+                    name = "Mateo Quispe",
+                    state = pe.edu.upc.routeguard.tripexecutionmonitoring.domain.BoardingState.BOARDED
+                )
+            )
+        EarlyAbsenceDialog(
+            children = childOptions,
+            onDismiss = { showAbsenceDialog = false },
+            onConfirm = { child, reason ->
+                viewModel.onReportEarlyAbsence(child.id, child.name, reason)
+                showAbsenceDialog = false
+            }
+        )
+    }
+
+    if (showRateDialog) {
+        val driverDisplay = trip?.driverName?.ifBlank { null }
+            ?: stringResource(R.string.follow_driver_authorized_fallback)
+        RateServiceDialog(
+            driverName = driverDisplay,
+            initialStars = state.serviceRating?.stars ?: 5,
+            initialComment = state.serviceRating?.comment.orEmpty(),
+            onDismiss = { showRateDialog = false },
+            onSubmit = { stars, comment ->
+                viewModel.onSubmitRating(stars, comment)
+                showRateDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun AbsenceReportedBanner(studentName: String, reason: String) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = Color(0xFFFEF3C7),
+        border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF92400E), modifier = Modifier.size(20.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.absence_banner_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF92400E)
+                )
+                Text(
+                    text = stringResource(R.string.absence_banner_body, studentName, reason),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF92400E)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RatedServiceBanner(stars: Int, comment: String) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = Color(0xFFD1FAE5),
+        border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
+                Text(
+                    text = stringResource(R.string.rate_badge_rated, stars),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF064E3B)
+                )
+            }
+            if (comment.isNotBlank()) {
+                Text(
+                    text = "\"$comment\"",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF064E3B)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EarlyAbsenceDialog(
+    children: List<LiveChild>,
+    onDismiss: () -> Unit,
+    onConfirm: (LiveChild, String) -> Unit
+) {
+    val reasonResList = listOf(
+        R.string.absence_reason_illness,
+        R.string.absence_reason_travel,
+        R.string.absence_reason_medical,
+        R.string.absence_reason_personal
+    )
+    var selectedChild by remember { mutableStateOf(children.first()) }
+    var selectedReasonRes by remember { mutableIntStateOf(reasonResList.first()) }
+    var note by remember { mutableStateOf("") }
+    val selectedReasonLabel = stringResource(selectedReasonRes)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text(
+                text = stringResource(R.string.absence_dialog_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = BrandNavy
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.absence_child_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandNavy
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    children.forEach { child ->
+                        FilterChip(
+                            selected = selectedChild.id == child.id,
+                            onClick = { selectedChild = child },
+                            label = { Text(child.name, style = MaterialTheme.typography.labelSmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BrandNavy,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = stringResource(R.string.absence_reason_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandNavy
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    reasonResList.forEach { resId ->
+                        FilterChip(
+                            selected = selectedReasonRes == resId,
+                            onClick = { selectedReasonRes = resId },
+                            label = { Text(stringResource(resId), style = MaterialTheme.typography.labelSmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BrandNavy,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text(stringResource(R.string.absence_note_label)) },
+                    singleLine = false,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val fullReason = if (note.isBlank()) selectedReasonLabel else "$selectedReasonLabel - ${note.trim()}"
+                    onConfirm(selectedChild, fullReason)
+                }
+            ) {
+                Text(stringResource(R.string.absence_confirm_btn), fontWeight = FontWeight.Bold, color = BrandNavy)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun RateServiceDialog(
+    driverName: String,
+    initialStars: Int,
+    initialComment: String,
+    onDismiss: () -> Unit,
+    onSubmit: (Int, String) -> Unit
+) {
+    var stars by remember { mutableIntStateOf(initialStars.coerceIn(1, 5)) }
+    var comment by remember { mutableStateOf(initialComment) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFD97706))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.rate_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = BrandNavy
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.rate_dialog_subtitle, driverName),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF475569)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    (1..5).forEach { value ->
+                        IconButton(onClick = { stars = value }) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "$value",
+                                tint = if (value <= stars) Color(0xFFD97706) else Color(0xFFCBD5E1),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.rate_stars_label, stars),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandNavy,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text(stringResource(R.string.rate_comment_label)) },
+                    minLines = 2,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSubmit(stars, comment) }) {
+                Text(stringResource(R.string.rate_submit_btn), fontWeight = FontWeight.Bold, color = BrandNavy)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_cancel))
+            }
+        }
+    )
 }

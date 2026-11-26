@@ -5,12 +5,16 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.ArrivalEstimate
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.NextStop
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.RouteProgress
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Trip
+import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripHistoryItem
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.withEstimate
 import pe.edu.upc.routeguard.shared.domain.Coordinates
 
 data class TrackingUiState(
     val assignedRoutes: List<AssignedRoute> = emptyList(),
     val trip: Trip? = null,
+    val tripHistory: List<TripHistoryItem> = emptyList(),
+    val isHistoryLoading: Boolean = false,
+    val cancellationReason: String? = null,
     val pendingRecords: Int = 0,
     val currentLocation: Coordinates? = null,
     /** Stops (by order) the vehicle already got close to during this trip. */

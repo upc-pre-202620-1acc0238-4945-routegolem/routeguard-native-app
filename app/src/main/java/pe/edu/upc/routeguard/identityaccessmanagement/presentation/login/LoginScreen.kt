@@ -93,6 +93,11 @@ fun LoginScreen(
     }
 
     if (showForgotPasswordDialog) {
+        var recoveryEmail by remember { mutableStateOf(state.email.trim()) }
+        var recoveryError by remember { mutableStateOf<String?>(null) }
+        var recoverySentTo by remember { mutableStateOf<String?>(null) }
+        val invalidEmailMsg = stringResource(R.string.forgot_password_invalid_email)
+
         AlertDialog(
             onDismissRequest = { showForgotPasswordDialog = false },
             shape = RoundedCornerShape(20.dp),
@@ -103,22 +108,89 @@ fun LoginScreen(
                     Text(
                         text = stringResource(R.string.forgot_password_title),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = BrandNavy
                     )
                 }
             },
             text = {
-                Text(
-                    text = stringResource(R.string.forgot_password_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF475569)
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (recoverySentTo != null) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFD1FAE5),
+                            border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = stringResource(R.string.forgot_password_sent, recoverySentTo!!),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF064E3B),
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.forgot_password_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF475569)
+                        )
+                        OutlinedTextField(
+                            value = recoveryEmail,
+                            onValueChange = {
+                                recoveryEmail = it
+                                recoveryError = null
+                            },
+                            label = { Text(stringResource(R.string.forgot_password_email_label)) },
+                            leadingIcon = {
+                                Icon(Icons.Filled.Email, contentDescription = null, tint = BrandNavy)
+                            },
+                            singleLine = true,
+                            isError = recoveryError != null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (recoveryError != null) {
+                            Text(
+                                text = recoveryError!!,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
             },
             confirmButton = {
-                TextButton(onClick = { showForgotPasswordDialog = false }) {
-                    Text(stringResource(R.string.btn_accept), fontWeight = FontWeight.Bold)
+                if (recoverySentTo != null) {
+                    TextButton(onClick = { showForgotPasswordDialog = false }) {
+                        Text(stringResource(R.string.btn_accept), fontWeight = FontWeight.Bold, color = BrandNavy)
+                    }
+                } else {
+                    TextButton(
+                        onClick = {
+                            val trimmed = recoveryEmail.trim()
+                            val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+                            if (trimmed.isBlank() || !emailRegex.matches(trimmed)) {
+                                recoveryError = invalidEmailMsg
+                            } else {
+                                recoveryError = null
+                                recoverySentTo = trimmed
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.forgot_password_send_btn), fontWeight = FontWeight.Bold, color = BrandNavy)
+                    }
                 }
-            }
+            },
+            dismissButton = if (recoverySentTo == null) {
+                {
+                    TextButton(onClick = { showForgotPasswordDialog = false }) {
+                        Text(stringResource(R.string.btn_cancel))
+                    }
+                }
+            } else null
         )
     }
 

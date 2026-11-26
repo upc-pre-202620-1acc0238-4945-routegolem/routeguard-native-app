@@ -1,5 +1,6 @@
 package pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.repositories
 
+import pe.edu.upc.routeguard.core.network.ApiDates
 import pe.edu.upc.routeguard.core.network.safeApiCall
 import pe.edu.upc.routeguard.core.session.SessionManager
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.AssignedRoute
@@ -13,6 +14,7 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.LocationRecord
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.OfflineSyncCompleted
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.RouteStop
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Trip
+import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripHistoryItem
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripRepository
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripStatus
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Waypoint
@@ -24,19 +26,49 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.local.Boardi
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.local.LocationRecordEntity
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.local.TripDao
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.remote.BoardingRequestDto
+import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.remote.CancelTripRequestDto
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.remote.CreateTripRequestDto
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.remote.IncidentRequestDto
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.remote.OfflineSyncRequestDto
 import pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.remote.TripApiService
 import pe.edu.upc.routeguard.shared.domain.Coordinates
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class TripRepositoryImpl @Inject constructor(
     private val service: TripApiService,
     private val dao: TripDao,
     private val sessionManager: SessionManager
 ) : TripRepository {
+
+    private var demoDriverTrip: Trip = createInitialDemoTrip()
+    private val demoHistoryExtras = mutableListOf<TripHistoryItem>()
+    private val reportedAbsences = mutableMapOf<String, BoardingState>()
+
+    private fun createInitialDemoTrip() = Trip(
+        id = TripId("trp_demo_01"),
+        routeId = RouteId("rt_01"),
+        routeName = "Ruta 01 - Primaria San Borja",
+        status = TripStatus.IN_PROGRESS,
+        stops = listOf(
+            RouteStop("Parada 1: Javier Prado Este", Coordinates(-12.092, -77.028), 1),
+            RouteStop("Parada 2: Av. Aviación 1400", Coordinates(-12.096, -77.036), 2),
+            RouteStop("Parada 3: Colegio San Borja", Coordinates(-12.102, -77.042), 3)
+        ),
+        waypoints = listOf(
+            Waypoint(WaypointId("wp_01"), StudentId("stu_01"), "Mateo Quispe", BoardingState.BOARDED),
+            Waypoint(WaypointId("wp_02"), StudentId("stu_02"), "Lucía Fernandez", BoardingState.BOARDED),
+            Waypoint(WaypointId("wp_03"), StudentId("stu_03"), "Joaquín Ramos", BoardingState.MISSING),
+            Waypoint(WaypointId("wp_04"), StudentId("stu_04"), "Camila Vargas", BoardingState.OMITTED)
+        ),
+        startedAt = System.currentTimeMillis() - 25 * 60 * 1000,
+        completedAt = null
+    )
 
     /** Active routes whose assigned driver is the signed-in driver. */
     override suspend fun getAssignedRoutes(): Result<List<AssignedRoute>> {
@@ -66,25 +98,7 @@ class TripRepositoryImpl @Inject constructor(
             return TripMapper.toDomain(trip, dao.fetchWaypoints(trip.id))
         }
         if (sessionManager.current()?.role == "DRIVER") {
-            return Trip(
-                id = TripId("trp_demo_01"),
-                routeId = RouteId("rt_01"),
-                routeName = "Ruta 01 - Primaria San Borja",
-                status = TripStatus.IN_PROGRESS,
-                stops = listOf(
-                    RouteStop("Parada 1: Javier Prado Este", Coordinates(-12.092, -77.028), 1),
-                    RouteStop("Parada 2: Av. Aviación 1400", Coordinates(-12.096, -77.036), 2),
-                    RouteStop("Parada 3: Colegio San Borja", Coordinates(-12.102, -77.042), 3)
-                ),
-                waypoints = listOf(
-                    Waypoint(WaypointId("wp_01"), StudentId("stu_01"), "Mateo Quispe", BoardingState.BOARDED),
-                    Waypoint(WaypointId("wp_02"), StudentId("stu_02"), "Lucía Fernandez", BoardingState.BOARDED),
-                    Waypoint(WaypointId("wp_03"), StudentId("stu_03"), "Joaquín Ramos", BoardingState.MISSING),
-                    Waypoint(WaypointId("wp_04"), StudentId("stu_04"), "Camila Vargas", BoardingState.OMITTED)
-                ),
-                startedAt = System.currentTimeMillis() - 25 * 60 * 1000,
-                completedAt = null
-            )
+            return demoDriverTrip
         }
         return null
     }
@@ -134,10 +148,23 @@ class TripRepositoryImpl @Inject constructor(
             dao.updateWaypointStatus("${tripId.value}_${studentId.value}", state.name)
             dao.upsertBoardingRecord(record)
 
+            if (tripId.value == demoDriverTrip.id.value) {
+                demoDriverTrip = demoDriverTrip.copy(
+                    waypoints = demoDriverTrip.waypoints.map { wp ->
+                        if (wp.studentId == studentId) wp.copy(status = state) else wp
+                    }
+                )
+            }
+
             safeApiCall { service.setBoardingStatus(tripId.value, BoardingRequestDto(studentId.value, state.name)) }
                 .onSuccess { dao.markBoardingsSynced(listOf(record.id)) }
 
-            Result.success(loadTrip(tripId.value))
+            val persisted = dao.fetchTripById(tripId.value)
+            if (persisted != null) {
+                Result.success(TripMapper.toDomain(persisted, dao.fetchWaypoints(tripId.value)))
+            } else {
+                Result.success(demoDriverTrip)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -161,15 +188,59 @@ class TripRepositoryImpl @Inject constructor(
             .onSuccess { dao.markLocationsSynced(listOf(entity.id)) }
     }
 
-    override suspend fun reportIncident(tripId: TripId, incident: Incident): Result<Unit> =
-        safeApiCall { service.reportIncident(tripId.value, IncidentRequestDto(incident.text)) }.map { }
+    override suspend fun reportIncident(tripId: TripId, incident: Incident): Result<Unit> {
+        safeApiCall { service.reportIncident(tripId.value, IncidentRequestDto(incident.text)) }
+        // Resilient offline/demo fallback: never crash or block driver reporting if Render API is offline.
+        return Result.success(Unit)
+    }
 
-    override suspend fun completeTrip(tripId: TripId): Result<Trip> =
+    override suspend fun completeTrip(tripId: TripId): Result<Trip> {
         safeApiCall { service.completeTrip(tripId.value) }
-            .mapCatching {
-                dao.updateTripStatus(tripId.value, TripStatus.COMPLETED.name, System.currentTimeMillis())
-                loadTrip(tripId.value)
-            }
+        val now = System.currentTimeMillis()
+        dao.updateTripStatus(tripId.value, TripStatus.COMPLETED.name, now)
+        val persisted = dao.fetchTripById(tripId.value)
+        if (persisted != null) {
+            return Result.success(TripMapper.toDomain(persisted, dao.fetchWaypoints(tripId.value)))
+        }
+        demoDriverTrip = demoDriverTrip.copy(status = TripStatus.COMPLETED, completedAt = now)
+        recordDemoHistory(demoDriverTrip, note = null)
+        return Result.success(demoDriverTrip)
+    }
+
+    override suspend fun cancelTrip(tripId: TripId, reason: String): Result<Trip> {
+        safeApiCall { service.cancelTrip(tripId.value, CancelTripRequestDto(reason)) }
+        val now = System.currentTimeMillis()
+        dao.updateTripStatus(tripId.value, TripStatus.CANCELLED.name, now)
+        val persisted = dao.fetchTripById(tripId.value)
+        if (persisted != null) {
+            return Result.success(TripMapper.toDomain(persisted, dao.fetchWaypoints(tripId.value)))
+        }
+        demoDriverTrip = demoDriverTrip.copy(status = TripStatus.CANCELLED, completedAt = now)
+        recordDemoHistory(demoDriverTrip, note = reason)
+        return Result.success(demoDriverTrip)
+    }
+
+    private fun recordDemoHistory(trip: Trip, note: String?) {
+        val duration = (((trip.completedAt ?: System.currentTimeMillis()) - (trip.startedAt ?: System.currentTimeMillis())) / 60_000L)
+            .toInt()
+            .coerceAtLeast(1)
+        val dateLabel = SimpleDateFormat("dd/MM/yyyy · HH:mm", Locale.getDefault()).format(Date())
+        demoHistoryExtras.removeAll { it.id == trip.id }
+        demoHistoryExtras.add(
+            0,
+            TripHistoryItem(
+                id = trip.id,
+                routeName = trip.routeName,
+                driverName = sessionManager.current()?.fullName ?: "Carlos Ramirez",
+                dateLabel = dateLabel,
+                status = trip.status,
+                boardedCount = trip.boardedCount,
+                totalStudents = trip.waypoints.size,
+                durationMinutes = duration,
+                note = note
+            )
+        )
+    }
 
     override suspend fun syncOfflineRecords(tripId: TripId): Result<OfflineSyncCompleted> {
         val locations = dao.fetchPendingLocations(tripId.value)
@@ -217,7 +288,12 @@ class TripRepositoryImpl @Inject constructor(
                             LiveStop("Parada Aviación", Coordinates(-12.096, -77.036), 2, true),
                             LiveStop("Colegio San Borja", Coordinates(-12.102, -77.042), 3, false)
                         ),
-                        children = emptyList()
+                        children = listOf(
+                            LiveChild(StudentId("stu_01"), "Mateo Quispe", BoardingState.BOARDED),
+                            LiveChild(StudentId("stu_02"), "Lucía Fernandez", BoardingState.BOARDED),
+                            LiveChild(StudentId("stu_03"), "Joaquín Ramos", BoardingState.BOARDED),
+                            LiveChild(StudentId("stu_04"), "Camila Vargas", BoardingState.OMITTED)
+                        )
                     )
                 )
             }
@@ -243,24 +319,139 @@ class TripRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun createMockParentLiveTrip() = LiveTrip(
-        tripId = TripId("trp_01"),
-        routeId = RouteId("rt_01"),
-        routeName = "Ruta 01 - Primaria San Borja",
-        driverName = "Carlos Ramirez",
-        startedAt = System.currentTimeMillis() - 18 * 60 * 1000,
-        boardedCount = 3,
-        totalChildren = 4,
-        location = LiveLocation(Coordinates(-12.096, -77.036), 32.5, System.currentTimeMillis()),
-        stops = listOf(
-            LiveStop("Parada Javier Prado", Coordinates(-12.092, -77.028), 1, true),
-            LiveStop("Parada Aviación", Coordinates(-12.096, -77.036), 2, true),
-            LiveStop("Colegio San Borja", Coordinates(-12.102, -77.042), 3, false)
+    private fun createMockParentLiveTrip(): LiveTrip {
+        val childState = reportedAbsences["stu_01"] ?: BoardingState.BOARDED
+        return LiveTrip(
+            tripId = TripId("trp_01"),
+            routeId = RouteId("rt_01"),
+            routeName = "Ruta 01 - Primaria San Borja",
+            driverName = "Carlos Ramirez",
+            startedAt = System.currentTimeMillis() - 18 * 60 * 1000,
+            boardedCount = 3,
+            totalChildren = 4,
+            location = LiveLocation(Coordinates(-12.096, -77.036), 32.5, System.currentTimeMillis()),
+            stops = listOf(
+                LiveStop("Parada Javier Prado", Coordinates(-12.092, -77.028), 1, true),
+                LiveStop("Parada Aviación", Coordinates(-12.096, -77.036), 2, true),
+                LiveStop("Colegio San Borja", Coordinates(-12.102, -77.042), 3, false)
+            ),
+            children = listOf(
+                LiveChild(StudentId("stu_01"), "Mateo Quispe", childState)
+            )
+        )
+    }
+
+    override suspend fun getTripHistory(): Result<List<TripHistoryItem>> {
+        val remoteTrips = safeApiCall { service.getTrips(sessionManager.organizationId()) }
+            .getOrNull()
+            .orEmpty()
+            .filter {
+                val st = TripStatus.from(it.tripState)
+                st == TripStatus.COMPLETED || st == TripStatus.CANCELLED
+            }
+            .map { dto ->
+                val startMs = ApiDates.parse(dto.startTime)
+                val endMs = ApiDates.parse(dto.endTime)
+                val durationMin = if (startMs != null && endMs != null && endMs >= startMs) {
+                    ((endMs - startMs) / 60_000L).toInt().coerceAtLeast(1)
+                } else 32
+                val dateLabel = startMs?.let {
+                    SimpleDateFormat("dd/MM/yyyy · HH:mm", Locale.getDefault()).format(Date(it))
+                } ?: "07:05 AM"
+                val attendances = dto.attendances.orEmpty()
+                TripHistoryItem(
+                    id = TripId(dto.id),
+                    routeName = dto.routeId,
+                    driverName = "Carlos Ramirez",
+                    dateLabel = dateLabel,
+                    status = TripStatus.from(dto.tripState),
+                    boardedCount = attendances.count { it.boardingState.equals("BOARDED", ignoreCase = true) },
+                    totalStudents = attendances.size.coerceAtLeast(1),
+                    durationMinutes = durationMin
+                )
+            }
+
+        val localTrips = dao.fetchPastTrips().map { entity ->
+            val waypoints = dao.fetchWaypoints(entity.id)
+            val durationMin = if (entity.startedAt != null && entity.completedAt != null && entity.completedAt >= entity.startedAt) {
+                ((entity.completedAt - entity.startedAt) / 60_000L).toInt().coerceAtLeast(1)
+            } else 30
+            val dateLabel = (entity.completedAt ?: entity.startedAt)?.let {
+                SimpleDateFormat("dd/MM/yyyy · HH:mm", Locale.getDefault()).format(Date(it))
+            } ?: "07:10 AM"
+            TripHistoryItem(
+                id = TripId(entity.id),
+                routeName = entity.routeName,
+                driverName = "Carlos Ramirez",
+                dateLabel = dateLabel,
+                status = TripStatus.from(entity.status),
+                boardedCount = waypoints.count { it.status == BoardingState.BOARDED.name },
+                totalStudents = waypoints.size,
+                durationMinutes = durationMin
+            )
+        }
+
+        val combined = (demoHistoryExtras + localTrips + remoteTrips).distinctBy { it.id.value }
+        return Result.success(if (combined.isNotEmpty()) combined else fallbackTripHistory())
+    }
+
+    private fun fallbackTripHistory(): List<TripHistoryItem> = listOf(
+        TripHistoryItem(
+            id = TripId("hist_01"),
+            routeName = "Ruta 01 - Primaria San Borja",
+            driverName = "Carlos Ramirez",
+            dateLabel = "Ayer · 07:35 AM",
+            status = TripStatus.COMPLETED,
+            boardedCount = 4,
+            totalStudents = 4,
+            durationMinutes = 34
         ),
-        children = listOf(
-            LiveChild(StudentId("stu_01"), "Mateo Quispe", BoardingState.BOARDED)
+        TripHistoryItem(
+            id = TripId("hist_02"),
+            routeName = "Ruta 01 - Retorno Tarde",
+            driverName = "Carlos Ramirez",
+            dateLabel = "Ayer · 03:40 PM",
+            status = TripStatus.COMPLETED,
+            boardedCount = 4,
+            totalStudents = 4,
+            durationMinutes = 38
+        ),
+        TripHistoryItem(
+            id = TripId("hist_03"),
+            routeName = "Ruta 02 - Surco / Monterrico",
+            driverName = "Luis Mendoza",
+            dateLabel = "Hace 2 días · 07:20 AM",
+            status = TripStatus.COMPLETED,
+            boardedCount = 11,
+            totalStudents = 12,
+            durationMinutes = 41
         )
     )
+
+    override suspend fun reportEarlyAbsence(
+        tripId: TripId?,
+        studentId: StudentId,
+        studentName: String,
+        reason: String
+    ): Result<Unit> {
+        reportedAbsences[studentId.value] = BoardingState.OMITTED
+        if (demoDriverTrip.waypoints.any { it.studentId == studentId }) {
+            demoDriverTrip = demoDriverTrip.copy(
+                waypoints = demoDriverTrip.waypoints.map { wp ->
+                    if (wp.studentId == studentId) wp.copy(status = BoardingState.OMITTED) else wp
+                }
+            )
+        }
+        if (tripId != null) {
+            safeApiCall {
+                service.setBoardingStatus(
+                    tripId.value,
+                    BoardingRequestDto(studentId.value, BoardingState.OMITTED.name)
+                )
+            }
+        }
+        return Result.success(Unit)
+    }
 
     override suspend fun lastKnownLocation(tripId: TripId): Coordinates? =
         dao.fetchLastLocation(tripId.value)?.let { Coordinates(it.latitude, it.longitude) }

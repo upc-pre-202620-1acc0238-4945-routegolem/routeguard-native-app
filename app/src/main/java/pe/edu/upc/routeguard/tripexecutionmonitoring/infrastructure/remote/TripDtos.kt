@@ -68,6 +68,8 @@ data class BoardingRequestDto(
 
 data class IncidentRequestDto(val description: String)
 
+data class CancelTripRequestDto(val reason: String)
+
 data class LocationUpdateRequestDto(
     val id: String,
     val latitude: Double,

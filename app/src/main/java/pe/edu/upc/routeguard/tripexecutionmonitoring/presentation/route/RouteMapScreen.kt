@@ -14,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,18 +27,24 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -46,6 +54,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -72,6 +81,9 @@ import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.SectionTitle
 import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsDialog
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsStatusBadges
+import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocumentation
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapVehicle
 import pe.edu.upc.routeguard.core.designsystem.components.map.RouteGuardMap
@@ -88,6 +100,9 @@ import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Trip
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.TripStatus
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.Waypoint
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.valueobject.StudentId
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.AttendanceReportDialog
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.AttendanceReportFormatter
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.TripHistoryDialog
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedProgressText
 
 private const val LOCATION_REFRESH_MS = 5_000L
@@ -103,6 +118,10 @@ fun RouteMapScreen(
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
     val trip = state.trip
+    var showTripHistoryDialog by remember { mutableStateOf(false) }
+    var showDocsDialog by remember { mutableStateOf(false) }
+    var showAttendanceDialog by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -181,6 +200,7 @@ fun RouteMapScreen(
             } else {
                 tripContent(
                     trip = trip,
+                    cancellationReason = state.cancellationReason,
                     pendingRecords = state.pendingRecords,
                     currentLocation = state.currentLocation,
                     visitedStops = state.visitedStops,
@@ -191,7 +211,21 @@ fun RouteMapScreen(
                     onArriveAtSchool = viewModel::onArriveAtSchool,
                     onSync = viewModel::onSyncOffline,
                     onReportIncident = viewModel::onReportIncident,
+                    onOpenAttendanceReport = { showAttendanceDialog = true },
+                    onOpenDocs = { showDocsDialog = true },
+                    onOpenCancelTrip = { showCancelDialog = true },
                     onFinish = viewModel::onFinishTrip
+                )
+            }
+
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.trip_history_btn),
+                    onClick = {
+                        viewModel.loadTripHistory()
+                        showTripHistoryDialog = true
+                    },
+                    icon = Icons.Filled.DateRange
                 )
             }
 
@@ -201,10 +235,44 @@ fun RouteMapScreen(
             }
         }
     }
+
+    if (showTripHistoryDialog) {
+        TripHistoryDialog(
+            trips = state.tripHistory,
+            isLoading = state.isHistoryLoading,
+            onDismiss = { showTripHistoryDialog = false }
+        )
+    }
+
+    if (showDocsDialog) {
+        VehicleDocsDialog(
+            docs = VehicleDocumentation(),
+            onDismiss = { showDocsDialog = false }
+        )
+    }
+
+    if (showAttendanceDialog && trip != null) {
+        AttendanceReportDialog(
+            routeName = trip.routeName,
+            summary = AttendanceReportFormatter.fromTrip(trip),
+            onDismiss = { showAttendanceDialog = false }
+        )
+    }
+
+    if (showCancelDialog && trip != null) {
+        ForceMajeureCancelDialog(
+            onDismiss = { showCancelDialog = false },
+            onConfirm = { reason ->
+                viewModel.onCancelTrip(reason)
+                showCancelDialog = false
+            }
+        )
+    }
 }
 
 private fun LazyListScope.tripContent(
     trip: Trip,
+    cancellationReason: String?,
     pendingRecords: Int,
     currentLocation: Coordinates?,
     visitedStops: Set<Int>,
@@ -215,8 +283,46 @@ private fun LazyListScope.tripContent(
     onArriveAtSchool: () -> Unit,
     onSync: () -> Unit,
     onReportIncident: (IncidentType, String) -> Unit,
+    onOpenAttendanceReport: () -> Unit,
+    onOpenDocs: () -> Unit,
+    onOpenCancelTrip: () -> Unit,
     onFinish: () -> Unit
 ) {
+    if (trip.status == TripStatus.CANCELLED) {
+        item {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xFFFFDAD6),
+                border = BorderStroke(1.dp, Red.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = Red, modifier = Modifier.size(22.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.cancel_trip_banner_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Red
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.cancel_trip_banner_body,
+                                cancellationReason ?: stringResource(R.string.cancel_reason_road_closure)
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF410002)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     item {
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -241,16 +347,33 @@ private fun LazyListScope.tripContent(
                             TripStatus.PENDING -> stringResource(R.string.route_map_trip_pending)
                             TripStatus.IN_PROGRESS -> stringResource(R.string.route_map_trip_in_progress)
                             TripStatus.COMPLETED -> stringResource(R.string.route_map_trip_completed)
+                            TripStatus.CANCELLED -> stringResource(R.string.route_map_trip_cancelled)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = BrandNavy
                     )
                     StatusChip(
-                        text = if (trip.isActive) stringResource(R.string.route_map_moving) else stringResource(R.string.route_map_finished_chip),
-                        containerColor = if (trip.isActive) Color(0xFFD1FAE5) else Color(0xFFF1F5F9),
-                        contentColor = if (trip.isActive) Color(0xFF064E3B) else Color(0xFF64748B),
-                        icon = if (trip.isActive) Icons.Filled.Check else null
+                        text = when (trip.status) {
+                            TripStatus.IN_PROGRESS -> stringResource(R.string.route_map_moving)
+                            TripStatus.CANCELLED -> stringResource(R.string.route_map_cancelled_chip)
+                            else -> stringResource(R.string.route_map_finished_chip)
+                        },
+                        containerColor = when (trip.status) {
+                            TripStatus.IN_PROGRESS -> Color(0xFFD1FAE5)
+                            TripStatus.CANCELLED -> Color(0xFFFFDAD6)
+                            else -> Color(0xFFF1F5F9)
+                        },
+                        contentColor = when (trip.status) {
+                            TripStatus.IN_PROGRESS -> Color(0xFF064E3B)
+                            TripStatus.CANCELLED -> Red
+                            else -> Color(0xFF64748B)
+                        },
+                        icon = when (trip.status) {
+                            TripStatus.IN_PROGRESS -> Icons.Filled.Check
+                            TripStatus.CANCELLED -> Icons.Filled.Close
+                            else -> null
+                        }
                     )
                 }
 
@@ -353,7 +476,51 @@ private fun LazyListScope.tripContent(
         SecondaryButton(text = stringResource(R.string.route_map_sync_now), onClick = onSync)
     }
 
-    item { IncidentButton(onReportIncident) }
+    item { IncidentButton(enabled = enabled && trip.isActive, onReportIncident = onReportIncident) }
+
+    // US-17: Attendance Report button
+    item {
+        SecondaryButton(
+            text = stringResource(R.string.attendance_report_btn),
+            onClick = onOpenAttendanceReport,
+            icon = Icons.Filled.List
+        )
+    }
+
+    // US-12: Driver & Vehicle SOAT / License documentation card
+    item {
+        InfoCard(title = stringResource(R.string.follow_vehicle_card_title)) {
+            VehicleDocsStatusBadges(licenseCode = "A-IIIa")
+            OutlinedButton(
+                onClick = onOpenDocs,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(stringResource(R.string.docs_view_verify_btn), fontWeight = FontWeight.SemiBold, color = BrandNavy)
+            }
+        }
+    }
+
+    // US-21: Force Majeure Cancellation
+    if (trip.isActive) {
+        item {
+            OutlinedButton(
+                onClick = onOpenCancelTrip,
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.5.dp, Red)
+            ) {
+                Icon(Icons.Filled.Warning, contentDescription = null, tint = Red, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.cancel_trip_btn),
+                    color = Red,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
 
     item {
         BigButton(
@@ -581,35 +748,128 @@ private fun WaypointCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun IncidentButton(onReportIncident: (IncidentType, String) -> Unit) {
+private fun IncidentButton(
+    enabled: Boolean,
+    onReportIncident: (IncidentType, String) -> Unit
+) {
     var showDialog by remember { mutableStateOf(false) }
-    var type by remember { mutableStateOf(IncidentType.TRAFFIC) }
+    var type by remember { mutableStateOf(IncidentType.ROADBLOCK) }
+    var delayMinutes by remember { mutableIntStateOf(15) }
     var description by remember { mutableStateOf("") }
+    var localError by remember { mutableStateOf<String?>(null) }
+    val shortErrorMsg = stringResource(R.string.tracking_error_incident_short)
 
-    SecondaryButton(text = stringResource(R.string.route_map_incident_btn), onClick = { showDialog = true })
+    SecondaryButton(
+        text = stringResource(R.string.route_map_incident_btn),
+        onClick = { showDialog = true },
+        enabled = enabled,
+        icon = Icons.Filled.Warning
+    )
 
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(stringResource(R.string.route_map_incident_title), fontWeight = FontWeight.Bold) },
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFD97706))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.route_map_incident_title), fontWeight = FontWeight.Bold, color = BrandNavy)
+                }
+            },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IncidentType.entries.forEach { option ->
-                        FilterChip(
-                            selected = type == option,
-                            onClick = { type = option },
-                            label = { Text(stringResource(option.labelRes)) }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IncidentType.entries.forEach { option ->
+                            val isRoadblock = option == IncidentType.ROADBLOCK
+                            FilterChip(
+                                selected = type == option,
+                                onClick = { type = option },
+                                leadingIcon = if (isRoadblock) {
+                                    {
+                                        Icon(
+                                            Icons.Filled.Warning,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = if (type == option) Color.White else Color(0xFFD97706)
+                                        )
+                                    }
+                                } else null,
+                                label = {
+                                    Text(
+                                        stringResource(option.labelRes),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isRoadblock) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = if (isRoadblock) Color(0xFFD97706) else BrandNavy,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = stringResource(R.string.incident_delay_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = BrandNavy
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(15, 30, 45).forEach { mins ->
+                            FilterChip(
+                                selected = delayMinutes == mins,
+                                onClick = { delayMinutes = mins },
+                                label = { Text(stringResource(R.string.incident_delay_option, mins), style = MaterialTheme.typography.labelSmall) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = BrandNavy,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+
+                    FormField(
+                        value = description,
+                        onValueChange = {
+                            description = it
+                            localError = null
+                        },
+                        label = stringResource(R.string.route_map_incident_desc_label),
+                        singleLine = false
+                    )
+                    if (localError != null) {
+                        Text(
+                            text = localError!!,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
-                    FormField(description, { description = it }, stringResource(R.string.route_map_incident_detail_label), singleLine = false)
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    onReportIncident(type, description)
-                    description = ""
-                    showDialog = false
+                    val trimmed = description.trim()
+                    val fullDesc = "[+$delayMinutes min] $trimmed".trim()
+                    if ("${type.label}: $fullDesc".length < 10 || trimmed.isBlank()) {
+                        localError = shortErrorMsg
+                    } else {
+                        onReportIncident(type, fullDesc)
+                        description = ""
+                        localError = null
+                        showDialog = false
+                    }
                 }) { Text(stringResource(R.string.route_map_send), fontWeight = FontWeight.Bold, color = BrandNavy) }
             },
             dismissButton = {
@@ -617,4 +877,105 @@ private fun IncidentButton(onReportIncident: (IncidentType, String) -> Unit) {
             }
         )
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ForceMajeureCancelDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    val reasonResList = listOf(
+        R.string.cancel_reason_weather,
+        R.string.cancel_reason_mechanical,
+        R.string.cancel_reason_road_closure,
+        R.string.cancel_reason_security
+    )
+    var selectedReasonRes by remember { mutableIntStateOf(reasonResList.first()) }
+    var extraDetails by remember { mutableStateOf("") }
+    val selectedReasonLabel = stringResource(selectedReasonRes)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = null, tint = Red)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.cancel_trip_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Red
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFFFFDAD6),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel_trip_dialog_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF410002),
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.cancel_trip_reason_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandNavy
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    reasonResList.forEach { resId ->
+                        FilterChip(
+                            selected = selectedReasonRes == resId,
+                            onClick = { selectedReasonRes = resId },
+                            label = { Text(stringResource(resId), style = MaterialTheme.typography.labelSmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Red,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+
+                FormField(
+                    value = extraDetails,
+                    onValueChange = { extraDetails = it },
+                    label = stringResource(R.string.cancel_trip_notes_label),
+                    singleLine = false
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val reason = if (extraDetails.isBlank()) selectedReasonLabel
+                    else "$selectedReasonLabel: ${extraDetails.trim()}"
+                    onConfirm(reason)
+                }
+            ) {
+                Text(stringResource(R.string.cancel_trip_confirm_btn), fontWeight = FontWeight.Bold, color = Red)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_cancel))
+            }
+        }
+    )
 }

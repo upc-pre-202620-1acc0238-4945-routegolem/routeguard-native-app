@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
@@ -32,6 +33,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +52,7 @@ import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
+import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.SectionTitle
 import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
@@ -57,6 +63,8 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmerald
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.withEstimate
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.AttendanceReportDialog
+import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.AttendanceReportFormatter
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedFormatAge
 import pe.edu.upc.routeguard.tripexecutionmonitoring.presentation.localizedProgressText
 
@@ -69,6 +77,7 @@ fun LiveMonitorScreen(
     viewModel: LiveMonitorViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    var showAttendanceReport by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -308,7 +317,25 @@ fun LiveMonitorScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // US-17: Attendance Report button for selected fleet unit
+            SecondaryButton(
+                text = stringResource(R.string.attendance_report_btn),
+                onClick = { showAttendanceReport = true },
+                icon = Icons.Filled.List
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    val selectedTrip = state.selectedTrip
+    if (showAttendanceReport && selectedTrip != null) {
+        AttendanceReportDialog(
+            routeName = selectedTrip.routeName,
+            summary = AttendanceReportFormatter.fromLiveTrip(selectedTrip),
+            onDismiss = { showAttendanceReport = false }
+        )
     }
 }
