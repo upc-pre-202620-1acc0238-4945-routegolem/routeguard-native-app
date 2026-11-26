@@ -77,6 +77,11 @@ import pe.edu.upc.routeguard.core.designsystem.components.FormField
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
 import pe.edu.upc.routeguard.core.designsystem.components.InfoText
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
+import pe.edu.upc.routeguard.core.designsystem.components.MaintenanceHistoryDialog
+import pe.edu.upc.routeguard.core.designsystem.components.OperationalExpensesDialog
+import pe.edu.upc.routeguard.core.designsystem.components.PickupAndOptimizationDialog
+import pe.edu.upc.routeguard.core.designsystem.components.RouteAnnouncementsDialog
+import pe.edu.upc.routeguard.core.designsystem.components.RouteChatDialog
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.SectionTitle
@@ -84,6 +89,7 @@ import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
 import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsDialog
 import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsStatusBadges
 import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocumentation
+import pe.edu.upc.routeguard.core.presentation.PlatformFeaturesViewModel
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapVehicle
 import pe.edu.upc.routeguard.core.designsystem.components.map.RouteGuardMap
@@ -113,15 +119,22 @@ private val Red = Color(0xFFBA1A1A)
 fun RouteMapScreen(
     modifier: Modifier = Modifier,
     viewModel: TrackingViewModel = hiltViewModel(),
+    platformViewModel: PlatformFeaturesViewModel = hiltViewModel(),
     onOpenAlerts: () -> Unit = {}
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    val platformState = platformViewModel.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
     val trip = state.trip
     var showTripHistoryDialog by remember { mutableStateOf(false) }
     var showDocsDialog by remember { mutableStateOf(false) }
     var showAttendanceDialog by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
+    var showAnnouncementsDialog by remember { mutableStateOf(false) }
+    var showChatDialog by remember { mutableStateOf(false) }
+    var showMaintenanceDialog by remember { mutableStateOf(false) }
+    var showExpensesDialog by remember { mutableStateOf(false) }
+    var showOptimizationDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -129,7 +142,11 @@ fun RouteMapScreen(
         viewModel.onLocationPermissionResult(result[Manifest.permission.ACCESS_FINE_LOCATION] == true)
     }
 
-    LaunchedEffect(Unit) { viewModel.refresh() }
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+        platformViewModel.refreshProfileAndDocs()
+        platformViewModel.refreshOperations()
+    }
 
     // Live position of the driver: polls the last point saved by the background GPS.
     LaunchedEffect(trip?.id, trip?.status) {
@@ -230,6 +247,61 @@ fun RouteMapScreen(
             }
 
             item {
+                SecondaryButton(
+                    text = stringResource(R.string.announcements_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations(trip?.routeId?.value ?: "f0000000-0000-0000-0000-000000000001")
+                        showAnnouncementsDialog = true
+                    },
+                    icon = Icons.Filled.List
+                )
+            }
+
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.chat_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations(trip?.routeId?.value ?: "f0000000-0000-0000-0000-000000000001")
+                        showChatDialog = true
+                    },
+                    icon = Icons.Filled.Place
+                )
+            }
+
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.pickup_opt_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations(trip?.routeId?.value ?: "f0000000-0000-0000-0000-000000000001")
+                        showOptimizationDialog = true
+                    },
+                    icon = Icons.Filled.List
+                )
+            }
+
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.maintenances_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations()
+                        showMaintenanceDialog = true
+                    },
+                    icon = Icons.Filled.List
+                )
+            }
+
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.expenses_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations()
+                        showExpensesDialog = true
+                    },
+                    icon = Icons.Filled.List
+                )
+            }
+
+            item {
                 SecondaryButton(text = stringResource(R.string.route_map_alerts_notices_btn), onClick = onOpenAlerts)
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -245,9 +317,72 @@ fun RouteMapScreen(
     }
 
     if (showDocsDialog) {
+        val vCache = platformState.primaryVehicleDocs
         VehicleDocsDialog(
-            docs = VehicleDocumentation(),
+            docs = VehicleDocumentation(
+                plate = vCache?.plate ?: "ABC-123",
+                unitModel = vCache?.model ?: "Mercedes-Benz Sprinter 416",
+                soatPolicy = vCache?.soatPolicy ?: "SOAT-2026-88412",
+                soatInsurer = vCache?.soatInsurer ?: stringResource(R.string.docs_default_insurer),
+                soatExpiry = vCache?.soatExpiresAt ?: "2026-12-15"
+            ),
             onDismiss = { showDocsDialog = false }
+        )
+    }
+
+    if (showAnnouncementsDialog) {
+        RouteAnnouncementsDialog(
+            announcements = platformState.announcements,
+            canPublish = true,
+            onPublish = { title, msg, prio ->
+                platformViewModel.publishAnnouncement(trip?.routeId?.value, title, msg, prio)
+            },
+            onDismiss = { showAnnouncementsDialog = false }
+        )
+    }
+
+    if (showChatDialog) {
+        RouteChatDialog(
+            messages = platformState.chatMessages,
+            currentUserId = "",
+            onSend = { msg -> platformViewModel.sendChatMessage(trip?.routeId?.value, msg) },
+            onDismiss = { showChatDialog = false }
+        )
+    }
+
+    if (showOptimizationDialog) {
+        PickupAndOptimizationDialog(
+            canRequestChange = false,
+            canApproveChanges = true,
+            defaultChildName = "",
+            pickupChanges = platformState.pickupChanges,
+            optimizedRoute = platformState.optimizedRoute,
+            onRequestChange = { _, _, _, _ -> },
+            onReviewChange = { id, status -> platformViewModel.reviewPickupChange(id, status) },
+            onDismiss = { showOptimizationDialog = false }
+        )
+    }
+
+    if (showMaintenanceDialog) {
+        MaintenanceHistoryDialog(
+            maintenances = platformState.maintenances,
+            canAdd = true,
+            defaultPlate = platformState.primaryVehicleDocs?.plate ?: "ABC-123",
+            onAdd = { plate, type, desc, shop, cost, km ->
+                platformViewModel.addMaintenance(plate, type, desc, shop, cost, km)
+            },
+            onDismiss = { showMaintenanceDialog = false }
+        )
+    }
+
+    if (showExpensesDialog) {
+        OperationalExpensesDialog(
+            expenses = platformState.expenses,
+            defaultPlate = platformState.primaryVehicleDocs?.plate ?: "ABC-123",
+            onAdd = { plate, cat, desc, amount ->
+                platformViewModel.addExpense(plate, cat, desc, amount)
+            },
+            onDismiss = { showExpensesDialog = false }
         )
     }
 

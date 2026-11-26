@@ -42,24 +42,38 @@ import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.FormField
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
+import pe.edu.upc.routeguard.core.designsystem.components.MaintenanceHistoryDialog
+import pe.edu.upc.routeguard.core.designsystem.components.OperationalExpensesDialog
+import pe.edu.upc.routeguard.core.designsystem.components.PickupAndOptimizationDialog
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
+import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.SectionTitle
 import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandBorder
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
+import pe.edu.upc.routeguard.core.presentation.PlatformFeaturesViewModel
 import pe.edu.upc.routeguard.fleetroutemanagement.domain.RouteStatus
 
 @Composable
 fun RoutesScreen(
     modifier: Modifier = Modifier,
     viewModel: RoutesViewModel = hiltViewModel(),
+    platformViewModel: PlatformFeaturesViewModel = hiltViewModel(),
     onRouteClick: (String) -> Unit = {}
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    val platformState = platformViewModel.uiState.collectAsStateWithLifecycle().value
     var searchQuery by remember { mutableStateOf("") }
+    var showMaintDialog by remember { mutableStateOf(false) }
+    var showExpenseDialog by remember { mutableStateOf(false) }
+    var showOptDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { viewModel.refresh() }
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+        platformViewModel.refreshProfileAndDocs()
+        platformViewModel.refreshOperations()
+    }
 
     LaunchedEffect(state.createdRouteId) {
         state.createdRouteId?.let {
@@ -200,7 +214,71 @@ fun RoutesScreen(
                     }
                 }
             }
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.maintenances_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations()
+                        showMaintDialog = true
+                    }
+                )
+            }
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.expenses_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations()
+                        showExpenseDialog = true
+                    }
+                )
+            }
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.pickup_opt_btn),
+                    onClick = {
+                        val routeId = state.routes.firstOrNull()?.id?.value ?: "f0000000-0000-0000-0000-000000000001"
+                        platformViewModel.refreshOperations(routeId)
+                        showOptDialog = true
+                    }
+                )
+            }
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
+    }
+
+    if (showMaintDialog) {
+        MaintenanceHistoryDialog(
+            maintenances = platformState.maintenances,
+            canAdd = true,
+            defaultPlate = platformState.primaryVehicleDocs?.plate ?: "ABC-123",
+            onAdd = { plate, type, desc, shop, cost, km ->
+                platformViewModel.addMaintenance(plate, type, desc, shop, cost, km)
+            },
+            onDismiss = { showMaintDialog = false }
+        )
+    }
+
+    if (showExpenseDialog) {
+        OperationalExpensesDialog(
+            expenses = platformState.expenses,
+            defaultPlate = platformState.primaryVehicleDocs?.plate ?: "ABC-123",
+            onAdd = { plate, cat, desc, amount ->
+                platformViewModel.addExpense(plate, cat, desc, amount)
+            },
+            onDismiss = { showExpenseDialog = false }
+        )
+    }
+
+    if (showOptDialog) {
+        PickupAndOptimizationDialog(
+            canRequestChange = false,
+            canApproveChanges = true,
+            defaultChildName = "",
+            pickupChanges = platformState.pickupChanges,
+            optimizedRoute = platformState.optimizedRoute,
+            onRequestChange = { _, _, _, _ -> },
+            onReviewChange = { id, status -> platformViewModel.reviewPickupChange(id, status) },
+            onDismiss = { showOptDialog = false }
+        )
     }
 }

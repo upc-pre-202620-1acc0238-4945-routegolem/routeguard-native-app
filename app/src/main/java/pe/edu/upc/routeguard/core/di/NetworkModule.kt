@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import pe.edu.upc.routeguard.BuildConfig
 import pe.edu.upc.routeguard.core.network.AuthInterceptor
+import pe.edu.upc.routeguard.core.network.PlatformFeaturesApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -51,4 +52,9 @@ object NetworkModule {
             .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create(gson))
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun providePlatformFeaturesApi(retrofit: Retrofit): PlatformFeaturesApi =
+        retrofit.create(PlatformFeaturesApi::class.java)
 }

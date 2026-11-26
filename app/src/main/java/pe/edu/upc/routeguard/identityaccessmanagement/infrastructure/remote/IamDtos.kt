@@ -30,7 +30,9 @@ data class UserDto(
     val lastName: String,
     val email: String,
     val roleTier: String,
-    val organizationId: String?
+    val organizationId: String?,
+    val photoData: String? = null,
+    val preferredLanguage: String? = null
 )
 
 data class AuthenticatedUserDto(
@@ -41,5 +43,7 @@ data class AuthenticatedUserDto(
     val email: String,
     val roleTier: String,
     val organizationId: String?,
-    val token: String
+    val token: String,
+    val photoData: String? = null,
+    val preferredLanguage: String? = null
 )

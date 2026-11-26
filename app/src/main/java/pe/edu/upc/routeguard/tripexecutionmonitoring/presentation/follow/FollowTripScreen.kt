@@ -70,12 +70,16 @@ import pe.edu.upc.routeguard.core.designsystem.components.BigButton
 import pe.edu.upc.routeguard.core.designsystem.components.ErrorText
 import pe.edu.upc.routeguard.core.designsystem.components.InfoCard
 import pe.edu.upc.routeguard.core.designsystem.components.LoadingBox
+import pe.edu.upc.routeguard.core.designsystem.components.PickupAndOptimizationDialog
+import pe.edu.upc.routeguard.core.designsystem.components.RouteAnnouncementsDialog
+import pe.edu.upc.routeguard.core.designsystem.components.RouteChatDialog
 import pe.edu.upc.routeguard.core.designsystem.components.ScreenHeader
 import pe.edu.upc.routeguard.core.designsystem.components.SecondaryButton
 import pe.edu.upc.routeguard.core.designsystem.components.StatusChip
 import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsDialog
 import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocsStatusBadges
 import pe.edu.upc.routeguard.core.designsystem.components.VehicleDocumentation
+import pe.edu.upc.routeguard.core.presentation.PlatformFeaturesViewModel
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapStop
 import pe.edu.upc.routeguard.core.designsystem.components.map.MapVehicle
 import pe.edu.upc.routeguard.core.designsystem.components.map.RouteGuardMap
@@ -100,18 +104,25 @@ private const val STALE_THRESHOLD_MS = 180_000L // 3 minutes
 @Composable
 fun FollowTripScreen(
     modifier: Modifier = Modifier,
-    viewModel: FollowTripViewModel = hiltViewModel()
+    viewModel: FollowTripViewModel = hiltViewModel(),
+    platformViewModel: PlatformFeaturesViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    val platformState = platformViewModel.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
     var showTripHistoryDialog by remember { mutableStateOf(false) }
     var showDocsDialog by remember { mutableStateOf(false) }
     var showAbsenceDialog by remember { mutableStateOf(false) }
     var showRateDialog by remember { mutableStateOf(false) }
+    var showAnnouncementsDialog by remember { mutableStateOf(false) }
+    var showChatDialog by remember { mutableStateOf(false) }
+    var showPickupDialog by remember { mutableStateOf(false) }
     val trip = state.trip
 
     // Polls while the screen is visible.
     LaunchedEffect(Unit) {
+        platformViewModel.refreshProfileAndDocs()
+        platformViewModel.refreshOperations()
         while (true) {
             viewModel.refresh()
             delay(REFRESH_MS)
@@ -356,13 +367,20 @@ fun FollowTripScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = BrandNavy
                             )
+                            val vehicleCache = platformState.primaryVehicleDocs
+                            val resolvedPlate = trip.vehiclePlate?.ifBlank { null } ?: vehicleCache?.plate ?: "ABC-123"
+                            val resolvedModel = trip.vehicleModel?.ifBlank { null } ?: vehicleCache?.model ?: "Mercedes-Benz Sprinter 416"
+                            val resolvedSoatPolicy = trip.soatPolicy?.ifBlank { null } ?: vehicleCache?.soatPolicy ?: "SOAT-2026-88412"
+                            val resolvedSoatExpiry = trip.soatExpiresAt?.ifBlank { null } ?: vehicleCache?.soatExpiresAt ?: "2026-12-15"
+                            val resolvedLicense = trip.driverLicenseCategory?.ifBlank { null } ?: "A-IIIa"
+
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
                                 color = Color(0xFFFEF3C7),
                                 border = BorderStroke(1.dp, Color(0xFFFDE68A))
                             ) {
                                 Text(
-                                    text = stringResource(R.string.follow_vehicle_plate_chip),
+                                    text = stringResource(R.string.follow_vehicle_plate_dyn, resolvedPlate),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF92400E),
@@ -370,8 +388,13 @@ fun FollowTripScreen(
                                 )
                             }
                         }
+                        val vehicleCacheDesc = platformState.primaryVehicleDocs
+                        val resolvedUnitModel = trip.vehicleModel?.ifBlank { null } ?: vehicleCacheDesc?.model ?: "Mercedes-Benz Sprinter 416"
+                        val resolvedSoatPolicyCard = trip.soatPolicy?.ifBlank { null } ?: vehicleCacheDesc?.soatPolicy ?: "SOAT-2026-88412"
+                        val resolvedSoatExpiryCard = trip.soatExpiresAt?.ifBlank { null } ?: vehicleCacheDesc?.soatExpiresAt ?: "2026-12-15"
+                        val resolvedLicenseCard = trip.driverLicenseCategory?.ifBlank { null } ?: "A-IIIa"
                         Text(
-                            text = stringResource(R.string.follow_vehicle_unit_desc),
+                            text = stringResource(R.string.follow_vehicle_unit_dyn, resolvedUnitModel),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF334155)
                         )
@@ -383,7 +406,11 @@ fun FollowTripScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B)
                         )
-                        VehicleDocsStatusBadges(licenseCode = "A-IIIa")
+                        VehicleDocsStatusBadges(
+                            licenseCode = resolvedLicenseCard,
+                            soatPolicy = resolvedSoatPolicyCard,
+                            soatExpiry = resolvedSoatExpiryCard
+                        )
                         OutlinedButton(
                             onClick = { showDocsDialog = true },
                             modifier = Modifier.fillMaxWidth(),
@@ -524,6 +551,36 @@ fun FollowTripScreen(
                     icon = Icons.Filled.Star
                 )
 
+                // US-24: Driver Announcements Board
+                SecondaryButton(
+                    text = stringResource(R.string.announcements_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations(trip.routeId.value)
+                        showAnnouncementsDialog = true
+                    },
+                    icon = Icons.Filled.Info
+                )
+
+                // US-27: Temporary Pickup Address Change
+                SecondaryButton(
+                    text = stringResource(R.string.pickup_opt_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations(trip.routeId.value)
+                        showPickupDialog = true
+                    },
+                    icon = Icons.Filled.Place
+                )
+
+                // US-30: Internal Driver-Parent Chat
+                SecondaryButton(
+                    text = stringResource(R.string.chat_btn),
+                    onClick = {
+                        platformViewModel.refreshOperations(trip.routeId.value)
+                        showChatDialog = true
+                    },
+                    icon = Icons.Filled.AccountCircle
+                )
+
                 // SOS / Llamada directa al conductor (RuwaLabs #12, Miriam V-03)
                 BigButton(
                     text = stringResource(
@@ -531,7 +588,8 @@ fun FollowTripScreen(
                         trip.driverName.ifBlank { stringResource(R.string.follow_driver_staff_fallback) }
                     ),
                     onClick = {
-                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+51987654321"))
+                        val phone = trip.driverPhone?.ifBlank { null } ?: "+51987654321"
+                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
                         context.startActivity(intent)
                     },
                     containerColor = BrandEmeraldDark,
@@ -551,23 +609,25 @@ fun FollowTripScreen(
     }
 
     if (showDocsDialog) {
+        val vCache = platformState.primaryVehicleDocs
         val driverDisplay = trip?.driverName?.ifBlank { null }
             ?: stringResource(R.string.follow_driver_authorized_fallback)
         VehicleDocsDialog(
-            docs = VehicleDocumentation(driverName = driverDisplay),
+            docs = VehicleDocumentation(
+                plate = trip?.vehiclePlate?.ifBlank { null } ?: vCache?.plate ?: "ABC-123",
+                unitModel = trip?.vehicleModel?.ifBlank { null } ?: vCache?.model ?: "Mercedes-Benz Sprinter 416",
+                soatPolicy = trip?.soatPolicy?.ifBlank { null } ?: vCache?.soatPolicy ?: "SOAT-2026-88412",
+                soatInsurer = trip?.soatInsurer?.ifBlank { null } ?: vCache?.soatInsurer ?: stringResource(R.string.docs_default_insurer),
+                soatExpiry = trip?.soatExpiresAt?.ifBlank { null } ?: vCache?.soatExpiresAt ?: "2026-12-15",
+                driverName = driverDisplay,
+                licenseNumber = trip?.driverLicenseCategory?.ifBlank { null } ?: "A-IIIa"
+            ),
             onDismiss = { showDocsDialog = false }
         )
     }
 
     if (showAbsenceDialog) {
-        val childOptions = trip?.children?.takeIf { it.isNotEmpty() }
-            ?: listOf(
-                LiveChild(
-                    id = StudentId("stu_01"),
-                    name = "Mateo Quispe",
-                    state = pe.edu.upc.routeguard.tripexecutionmonitoring.domain.BoardingState.BOARDED
-                )
-            )
+        val childOptions = trip?.children.orEmpty()
         EarlyAbsenceDialog(
             children = childOptions,
             onDismiss = { showAbsenceDialog = false },
@@ -575,6 +635,39 @@ fun FollowTripScreen(
                 viewModel.onReportEarlyAbsence(child.id, child.name, reason)
                 showAbsenceDialog = false
             }
+        )
+    }
+
+    if (showAnnouncementsDialog) {
+        RouteAnnouncementsDialog(
+            announcements = platformState.announcements,
+            canPublish = false,
+            onPublish = { _, _, _ -> },
+            onDismiss = { showAnnouncementsDialog = false }
+        )
+    }
+
+    if (showChatDialog) {
+        RouteChatDialog(
+            messages = platformState.chatMessages,
+            currentUserId = "",
+            onSend = { msg -> platformViewModel.sendChatMessage(trip?.routeId?.value, msg) },
+            onDismiss = { showChatDialog = false }
+        )
+    }
+
+    if (showPickupDialog) {
+        PickupAndOptimizationDialog(
+            canRequestChange = true,
+            canApproveChanges = false,
+            defaultChildName = trip?.children?.firstOrNull()?.name.orEmpty(),
+            pickupChanges = platformState.pickupChanges,
+            optimizedRoute = platformState.optimizedRoute,
+            onRequestChange = { childName, targetDate, addr, reason ->
+                platformViewModel.requestPickupChange(childName, trip?.routeId?.value, targetDate, addr, reason)
+            },
+            onReviewChange = { _, _ -> },
+            onDismiss = { showPickupDialog = false }
         )
     }
 

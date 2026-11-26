@@ -1,6 +1,10 @@
 package pe.edu.upc.routeguard.tripexecutionmonitoring.infrastructure.repositories
 
+import pe.edu.upc.routeguard.core.database.AbsenceReportEntity
+import pe.edu.upc.routeguard.core.database.PlatformCacheDao
 import pe.edu.upc.routeguard.core.network.ApiDates
+import pe.edu.upc.routeguard.core.network.CreateAbsenceRequestDto
+import pe.edu.upc.routeguard.core.network.PlatformFeaturesApi
 import pe.edu.upc.routeguard.core.network.safeApiCall
 import pe.edu.upc.routeguard.core.session.SessionManager
 import pe.edu.upc.routeguard.tripexecutionmonitoring.domain.AssignedRoute
@@ -42,7 +46,9 @@ import javax.inject.Singleton
 @Singleton
 class TripRepositoryImpl @Inject constructor(
     private val service: TripApiService,
+    private val platformApi: PlatformFeaturesApi,
     private val dao: TripDao,
+    private val cacheDao: PlatformCacheDao,
     private val sessionManager: SessionManager
 ) : TripRepository {
 
@@ -342,31 +348,26 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTripHistory(): Result<List<TripHistoryItem>> {
-        val remoteTrips = safeApiCall { service.getTrips(sessionManager.organizationId()) }
+        val remoteHistory = safeApiCall { platformApi.getTripsHistory() }
             .getOrNull()
             .orEmpty()
-            .filter {
-                val st = TripStatus.from(it.tripState)
-                st == TripStatus.COMPLETED || st == TripStatus.CANCELLED
-            }
             .map { dto ->
                 val startMs = ApiDates.parse(dto.startTime)
                 val endMs = ApiDates.parse(dto.endTime)
                 val durationMin = if (startMs != null && endMs != null && endMs >= startMs) {
                     ((endMs - startMs) / 60_000L).toInt().coerceAtLeast(1)
                 } else 32
-                val dateLabel = startMs?.let {
+                val dateLabel = (endMs ?: startMs)?.let {
                     SimpleDateFormat("dd/MM/yyyy · HH:mm", Locale.getDefault()).format(Date(it))
-                } ?: "07:05 AM"
-                val attendances = dto.attendances.orEmpty()
+                } ?: "--:--"
                 TripHistoryItem(
-                    id = TripId(dto.id),
-                    routeName = dto.routeId,
-                    driverName = "Carlos Ramirez",
+                    id = TripId(dto.tripId),
+                    routeName = dto.routeName,
+                    driverName = dto.driverName,
                     dateLabel = dateLabel,
-                    status = TripStatus.from(dto.tripState),
-                    boardedCount = attendances.count { it.boardingState.equals("BOARDED", ignoreCase = true) },
-                    totalStudents = attendances.size.coerceAtLeast(1),
+                    status = TripStatus.from(dto.status),
+                    boardedCount = dto.boardedCount,
+                    totalStudents = dto.totalStudents.coerceAtLeast(1),
                     durationMinutes = durationMin
                 )
             }
@@ -378,11 +379,11 @@ class TripRepositoryImpl @Inject constructor(
             } else 30
             val dateLabel = (entity.completedAt ?: entity.startedAt)?.let {
                 SimpleDateFormat("dd/MM/yyyy · HH:mm", Locale.getDefault()).format(Date(it))
-            } ?: "07:10 AM"
+            } ?: "--:--"
             TripHistoryItem(
                 id = TripId(entity.id),
                 routeName = entity.routeName,
-                driverName = "Carlos Ramirez",
+                driverName = sessionManager.current()?.fullName ?: "Conductor",
                 dateLabel = dateLabel,
                 status = TripStatus.from(entity.status),
                 boardedCount = waypoints.count { it.status == BoardingState.BOARDED.name },
@@ -391,42 +392,9 @@ class TripRepositoryImpl @Inject constructor(
             )
         }
 
-        val combined = (demoHistoryExtras + localTrips + remoteTrips).distinctBy { it.id.value }
-        return Result.success(if (combined.isNotEmpty()) combined else fallbackTripHistory())
+        val combined = (demoHistoryExtras + remoteHistory + localTrips).distinctBy { it.id.value }
+        return Result.success(combined)
     }
-
-    private fun fallbackTripHistory(): List<TripHistoryItem> = listOf(
-        TripHistoryItem(
-            id = TripId("hist_01"),
-            routeName = "Ruta 01 - Primaria San Borja",
-            driverName = "Carlos Ramirez",
-            dateLabel = "Ayer · 07:35 AM",
-            status = TripStatus.COMPLETED,
-            boardedCount = 4,
-            totalStudents = 4,
-            durationMinutes = 34
-        ),
-        TripHistoryItem(
-            id = TripId("hist_02"),
-            routeName = "Ruta 01 - Retorno Tarde",
-            driverName = "Carlos Ramirez",
-            dateLabel = "Ayer · 03:40 PM",
-            status = TripStatus.COMPLETED,
-            boardedCount = 4,
-            totalStudents = 4,
-            durationMinutes = 38
-        ),
-        TripHistoryItem(
-            id = TripId("hist_03"),
-            routeName = "Ruta 02 - Surco / Monterrico",
-            driverName = "Luis Mendoza",
-            dateLabel = "Hace 2 días · 07:20 AM",
-            status = TripStatus.COMPLETED,
-            boardedCount = 11,
-            totalStudents = 12,
-            durationMinutes = 41
-        )
-    )
 
     override suspend fun reportEarlyAbsence(
         tripId: TripId?,
@@ -440,6 +408,49 @@ class TripRepositoryImpl @Inject constructor(
                 waypoints = demoDriverTrip.waypoints.map { wp ->
                     if (wp.studentId == studentId) wp.copy(status = BoardingState.OMITTED) else wp
                 }
+            )
+        }
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        val nowIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date())
+        val localId = "local_${UUID.randomUUID()}"
+        cacheDao.upsertAbsence(
+            AbsenceReportEntity(
+                id = localId,
+                childId = studentId.value,
+                childName = studentName,
+                routeId = tripId?.value.orEmpty(),
+                absenceDate = today,
+                reason = reason,
+                notes = null,
+                createdAt = nowIso,
+                pendingSync = true
+            )
+        )
+        safeApiCall {
+            platformApi.createAbsence(
+                CreateAbsenceRequestDto(
+                    childId = studentId.value.takeIf { it.length == 36 },
+                    childName = studentName,
+                    routeId = null,
+                    absenceDate = today,
+                    reason = reason,
+                    notes = null
+                )
+            )
+        }.onSuccess { remote ->
+            cacheDao.deleteAbsence(localId)
+            cacheDao.upsertAbsence(
+                AbsenceReportEntity(
+                    id = remote.id,
+                    childId = remote.childId,
+                    childName = remote.childName,
+                    routeId = remote.routeId,
+                    absenceDate = remote.absenceDate,
+                    reason = remote.reason,
+                    notes = remote.notes,
+                    createdAt = remote.createdAt,
+                    pendingSync = false
+                )
             )
         }
         if (tripId != null) {

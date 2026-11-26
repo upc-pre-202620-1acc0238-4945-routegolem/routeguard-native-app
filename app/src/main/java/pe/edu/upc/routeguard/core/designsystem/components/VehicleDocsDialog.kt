@@ -40,15 +40,15 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
 
 /** Official SOAT and Driver License documentation metadata (US-12). */
 data class VehicleDocumentation(
-    val plate: String = "ABC-789",
-    val unitModel: String = "Mercedes-Benz Sprinter 516 (Blanco)",
+    val plate: String = "ABC-123",
+    val unitModel: String = "Mercedes-Benz Sprinter 416",
     val soatPolicy: String = "SOAT-2026-88412",
     val soatInsurer: String = "Rímac Seguros",
-    val soatExpiry: String = "15/12/2026",
+    val soatExpiry: String = "2026-12-15",
     val driverName: String = "Carlos Ramirez",
     val driverDni: String = "08492019",
     val licenseNumber: String = "A-IIIa",
-    val licenseExpiry: String = "22/09/2028"
+    val licenseExpiry: String = "2027-08-30"
 )
 
 @OptIn(ExperimentalLayoutApi::class)

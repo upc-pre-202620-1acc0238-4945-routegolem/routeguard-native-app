@@ -73,6 +73,7 @@ import pe.edu.upc.routeguard.core.designsystem.theme.BrandBorder
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandCardWhite
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandEmerald
 import pe.edu.upc.routeguard.core.designsystem.theme.BrandNavy
+import pe.edu.upc.routeguard.core.presentation.PlatformFeaturesViewModel
 import pe.edu.upc.routeguard.identityaccessmanagement.domain.Account
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -80,10 +81,12 @@ import pe.edu.upc.routeguard.identityaccessmanagement.domain.Account
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
+    platformViewModel: PlatformFeaturesViewModel = hiltViewModel(),
     onAuthenticated: (Account) -> Unit = {},
     onRegisterAdministrator: () -> Unit = {}
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
+    val platformState = platformViewModel.uiState.collectAsStateWithLifecycle().value
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
     var showRegisterModal by remember { mutableStateOf(false) }
@@ -94,6 +97,8 @@ fun LoginScreen(
 
     if (showForgotPasswordDialog) {
         var recoveryEmail by remember { mutableStateOf(state.email.trim()) }
+        var recoveryCode by remember { mutableStateOf("") }
+        var newPassword by remember { mutableStateOf("") }
         var recoveryError by remember { mutableStateOf<String?>(null) }
         var recoverySentTo by remember { mutableStateOf<String?>(null) }
         val invalidEmailMsg = stringResource(R.string.forgot_password_invalid_email)
@@ -115,7 +120,22 @@ fun LoginScreen(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (recoverySentTo != null) {
+                    if (platformState.passwordResetSuccess) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFD1FAE5),
+                            border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = stringResource(R.string.forgot_reset_done),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF064E3B),
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    } else if (recoverySentTo != null) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = Color(0xFFD1FAE5),
@@ -130,6 +150,31 @@ fun LoginScreen(
                                 modifier = Modifier.padding(12.dp)
                             )
                         }
+                        if (!platformState.passwordResetHintCode.isNullOrBlank()) {
+                            Text(
+                                text = stringResource(R.string.forgot_hint_code, platformState.passwordResetHintCode!!),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandNavy
+                            )
+                        }
+                        OutlinedTextField(
+                            value = recoveryCode,
+                            onValueChange = { recoveryCode = it },
+                            label = { Text(stringResource(R.string.forgot_code_label)) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = newPassword,
+                            onValueChange = { newPassword = it },
+                            label = { Text(stringResource(R.string.forgot_new_password_label)) },
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     } else {
                         Text(
                             text = stringResource(R.string.forgot_password_desc),
@@ -163,9 +208,19 @@ fun LoginScreen(
                 }
             },
             confirmButton = {
-                if (recoverySentTo != null) {
+                if (platformState.passwordResetSuccess) {
                     TextButton(onClick = { showForgotPasswordDialog = false }) {
                         Text(stringResource(R.string.btn_accept), fontWeight = FontWeight.Bold, color = BrandNavy)
+                    }
+                } else if (recoverySentTo != null) {
+                    TextButton(
+                        onClick = {
+                            if (recoveryCode.isNotBlank() && newPassword.length >= 6) {
+                                platformViewModel.confirmPasswordReset(recoverySentTo!!, recoveryCode, newPassword)
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.forgot_confirm_reset_btn), fontWeight = FontWeight.Bold, color = BrandNavy)
                     }
                 } else {
                     TextButton(
@@ -177,6 +232,7 @@ fun LoginScreen(
                             } else {
                                 recoveryError = null
                                 recoverySentTo = trimmed
+                                platformViewModel.requestPasswordReset(trimmed)
                             }
                         }
                     ) {
@@ -184,13 +240,11 @@ fun LoginScreen(
                     }
                 }
             },
-            dismissButton = if (recoverySentTo == null) {
-                {
-                    TextButton(onClick = { showForgotPasswordDialog = false }) {
-                        Text(stringResource(R.string.btn_cancel))
-                    }
+            dismissButton = {
+                TextButton(onClick = { showForgotPasswordDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
                 }
-            } else null
+            }
         )
     }
 
