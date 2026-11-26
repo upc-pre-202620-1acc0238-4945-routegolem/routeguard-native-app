@@ -1,6 +1,8 @@
 package pe.edu.upc.routeguard
 
+import android.content.ContextWrapper
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -49,12 +51,18 @@ class MainActivity : ComponentActivity() {
             val localizedContext = remember(activeLanguage) {
                 LocaleHelper.localizedContext(this, activeLanguage)
             }
+            // Wrap Activity so HiltViewModelFactory still unwraps ComponentActivity while getString() uses active locale
+            val activityLocalizedContext = remember(localizedContext) {
+                object : ContextWrapper(this@MainActivity) {
+                    override fun getResources(): Resources = localizedContext.resources
+                }
+            }
             SideEffect {
                 Locale.setDefault(LocaleHelper.localeFor(activeLanguage))
             }
 
             CompositionLocalProvider(
-                LocalContext provides localizedContext,
+                LocalContext provides activityLocalizedContext,
                 LocalConfiguration provides localizedContext.resources.configuration,
                 LocalResources provides localizedContext.resources
             ) {
