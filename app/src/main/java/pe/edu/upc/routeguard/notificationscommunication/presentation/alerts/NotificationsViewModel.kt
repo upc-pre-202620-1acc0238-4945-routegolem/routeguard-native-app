@@ -37,7 +37,7 @@ class NotificationsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val list = getNotifications()
+                val list = getNotifications().sortedByDescending { it.createdAt }
                 _uiState.update { it.copy(isLoading = false, notifications = list) }
                 if (confirmDelivery) {
                     markDelivered(list)
@@ -51,29 +51,53 @@ class NotificationsViewModel @Inject constructor(
         }
     }
 
+    fun onFilterSelected(filter: AlertFilter) =
+        _uiState.update { it.copy(selectedFilter = filter) }
+
     fun onBroadcastChange(value: String) = _uiState.update { it.copy(broadcastMessage = value) }
 
     fun onPanic() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
             triggerPanicAlert(getActiveTrip()?.id?.value)
                 .onSuccess { count ->
                     _uiState.update {
-                        it.copy(message = strings.getString(R.string.notif_sent_panic_count, count), errorMessage = null)
+                        it.copy(
+                            isSubmitting = false,
+                            message = strings.getString(R.string.notif_sent_panic_count, count),
+                            errorMessage = null
+                        )
+                    }
+                    refresh(confirmDelivery = false)
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(isSubmitting = false, errorMessage = strings.resolveError(e, R.string.notif_error_panic))
                     }
                 }
-                .onFailure { e -> _uiState.update { it.copy(errorMessage = strings.resolveError(e, R.string.notif_error_panic)) } }
         }
     }
 
     fun onSendBroadcast() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
             postBroadcastMessage(getActiveTrip()?.id?.value, _uiState.value.broadcastMessage)
                 .onSuccess { count ->
                     _uiState.update {
-                        it.copy(broadcastMessage = "", message = strings.getString(R.string.notif_sent_broadcast_count, count), errorMessage = null)
+                        it.copy(
+                            isSubmitting = false,
+                            broadcastMessage = "",
+                            message = strings.getString(R.string.notif_sent_broadcast_count, count),
+                            errorMessage = null
+                        )
+                    }
+                    refresh(confirmDelivery = false)
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(isSubmitting = false, errorMessage = strings.resolveError(e, R.string.notif_error_panic))
                     }
                 }
-                .onFailure { e -> _uiState.update { it.copy(errorMessage = strings.resolveError(e, R.string.notif_error_panic)) } }
         }
     }
 }

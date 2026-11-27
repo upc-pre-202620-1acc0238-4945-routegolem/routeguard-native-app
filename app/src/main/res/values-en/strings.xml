@@ -182,11 +182,29 @@
 
     <!-- Alerts & Notifications -->
     <string name="alerts_title">Alerts</string>
+    <string name="alerts_refresh_cd">Refresh alerts</string>
     <string name="alerts_broadcast_section">Notify parents</string>
     <string name="alerts_broadcast_label">Message (e.g., traffic delay)</string>
+    <string name="alerts_broadcast_hint">E.g., 5-min delay due to traffic on Javier Prado Ave.</string>
     <string name="alerts_broadcast_send">Post announcement</string>
     <string name="alerts_history_title">History</string>
+    <string name="alerts_history_driver">Dispatched Alerts History</string>
+    <string name="alerts_history_parent">Recent Notifications</string>
+    <string name="alerts_count_badge">%1$d alerts</string>
+    <string name="alerts_filter_all">All</string>
+    <string name="alerts_filter_priority">Priority</string>
+    <string name="alerts_filter_trip">Trip</string>
+    <string name="alerts_filter_notices">Notices</string>
     <string name="alerts_empty">You have no notifications yet.</string>
+    <string name="alerts_empty_title">No alerts recorded</string>
+    <string name="alerts_empty_filtered">No alerts match the selected filter.</string>
+    <string name="alerts_cat_panic">Emergency</string>
+    <string name="alerts_cat_incident">Incident</string>
+    <string name="alerts_cat_boarding">Boarding</string>
+    <string name="alerts_cat_arrival">Arrival</string>
+    <string name="alerts_cat_geofence">Nearby</string>
+    <string name="alerts_cat_trip">Trip</string>
+    <string name="alerts_cat_notice">Notice</string>
     <string name="alerts_panic_fab">Panic alert</string>
     <string name="alerts_panic_dialog_title">Send panic alert?</string>
     <string name="alerts_panic_dialog_body">All parents on the route will be notified with high priority.</string>
