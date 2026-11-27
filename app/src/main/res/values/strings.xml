@@ -182,11 +182,29 @@
 
     <!-- Alerts & Notifications -->
     <string name="alerts_title">Alertas</string>
+    <string name="alerts_refresh_cd">Actualizar alertas</string>
     <string name="alerts_broadcast_section">Aviso a los padres</string>
     <string name="alerts_broadcast_label">Mensaje (ej. retraso por tráfico)</string>
+    <string name="alerts_broadcast_hint">Ej. Retraso de 5 min por tráfico en Av. Javier Prado</string>
     <string name="alerts_broadcast_send">Publicar aviso</string>
     <string name="alerts_history_title">Historial</string>
+    <string name="alerts_history_driver">Historial de alertas emitidas</string>
+    <string name="alerts_history_parent">Notificaciones recientes</string>
+    <string name="alerts_count_badge">%1$d avisos</string>
+    <string name="alerts_filter_all">Todas</string>
+    <string name="alerts_filter_priority">Prioritarias</string>
+    <string name="alerts_filter_trip">Viaje</string>
+    <string name="alerts_filter_notices">Avisos</string>
     <string name="alerts_empty">Aún no tienes notificaciones.</string>
+    <string name="alerts_empty_title">Sin alertas registradas</string>
+    <string name="alerts_empty_filtered">No hay alertas que coincidan con el filtro seleccionado.</string>
+    <string name="alerts_cat_panic">Emergencia</string>
+    <string name="alerts_cat_incident">Incidencia</string>
+    <string name="alerts_cat_boarding">Abordaje</string>
+    <string name="alerts_cat_arrival">Llegada</string>
+    <string name="alerts_cat_geofence">Cercanía</string>
+    <string name="alerts_cat_trip">Viaje</string>
+    <string name="alerts_cat_notice">Aviso</string>
     <string name="alerts_panic_fab">Alerta de pánico</string>
     <string name="alerts_panic_dialog_title">¿Enviar alerta de pánico?</string>
     <string name="alerts_panic_dialog_body">Se notificará con alta prioridad a todos los padres de la ruta.</string>
