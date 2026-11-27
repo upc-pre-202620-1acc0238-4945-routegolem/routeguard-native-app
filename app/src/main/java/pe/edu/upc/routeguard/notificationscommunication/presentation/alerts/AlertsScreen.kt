@@ -38,6 +38,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -49,6 +50,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -83,6 +85,7 @@ import pe.edu.upc.routeguard.notificationscommunication.domain.Notification
 import pe.edu.upc.routeguard.notificationscommunication.domain.NotificationStatus
 import pe.edu.upc.routeguard.notificationscommunication.domain.NotificationType
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -91,7 +94,8 @@ private val PanicCardBg = Color(0xFFFFECEB)
 private val PanicCardBorder = Color(0xFFFCA5A5)
 private val PanicTitleInk = Color(0xFF7F1D1D)
 
-/** Notifications for parents; the driver also gets the panic button and announcements card. */
+/** Notifications for parents; the driver also gets the panic console and announcements card. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertsScreen(
     modifier: Modifier = Modifier,
@@ -101,7 +105,7 @@ fun AlertsScreen(
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
 
-    LaunchedEffect(Unit) { viewModel.refresh(confirmDelivery = !isDriver) }
+    LaunchedEffect(isDriver) { viewModel.refresh(confirmDelivery = !isDriver) }
 
     Column(
         modifier = modifier
@@ -110,7 +114,10 @@ fun AlertsScreen(
     ) {
         AlertsTopHeader(
             title = stringResource(R.string.alerts_title),
-            isRefreshing = state.isLoading && state.notifications.isNotEmpty(),
+            subtitle = stringResource(R.string.alerts_header_subtitle),
+            isRefreshing = state.isRefreshing,
+            showMarkAllRead = !isDriver && state.unreadCount > 0,
+            onMarkAllRead = viewModel::onMarkAllRead,
             onRefresh = { viewModel.refresh(confirmDelivery = !isDriver) },
             onBack = onBack
         )
@@ -122,91 +129,100 @@ fun AlertsScreen(
 
         val visibleNotifications = state.filteredNotifications
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.refresh(confirmDelivery = !isDriver) },
+            modifier = Modifier.fillMaxSize()
         ) {
-            if (!state.message.isNullOrBlank()) {
-                item { SuccessFeedbackBanner(state.message) }
-            }
-
-            if (!state.errorMessage.isNullOrBlank()) {
-                item {
-                    ErrorText(
-                        message = state.errorMessage,
-                        onRetry = { viewModel.refresh(confirmDelivery = !isDriver) }
-                    )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (!state.message.isNullOrBlank()) {
+                    item { SuccessFeedbackBanner(state.message) }
                 }
-            }
 
-            if (isDriver) {
-                item {
-                    PanicButton(
-                        enabled = !state.isSubmitting,
-                        onConfirm = viewModel::onPanic
-                    )
-                }
-                item {
-                    DriverBroadcastCard(
-                        message = state.broadcastMessage,
-                        isSubmitting = state.isSubmitting,
-                        onMessageChange = viewModel::onBroadcastChange,
-                        onSend = viewModel::onSendBroadcast
-                    )
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = if (isDriver) 4.dp else 0.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(
-                            if (isDriver) R.string.alerts_history_driver
-                            else R.string.alerts_history_parent
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = BrandNavy
-                    )
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = BrandNavy.copy(alpha = 0.08f)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.alerts_count_badge, visibleNotifications.size),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = BrandNavy,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                if (!state.errorMessage.isNullOrBlank()) {
+                    item {
+                        ErrorText(
+                            message = state.errorMessage,
+                            onRetry = { viewModel.refresh(confirmDelivery = !isDriver) }
                         )
                     }
                 }
-            }
 
-            item {
-                AlertFilterBar(
-                    selected = state.selectedFilter,
-                    onSelect = viewModel::onFilterSelected
-                )
-            }
+                if (isDriver) {
+                    item {
+                        PanicConsoleCard(
+                            enabled = !state.isSubmitting,
+                            onConfirm = viewModel::onPanic
+                        )
+                    }
+                    item {
+                        DriverBroadcastCard(
+                            message = state.broadcastMessage,
+                            isSubmitting = state.isSubmitting,
+                            onMessageChange = viewModel::onBroadcastChange,
+                            onSend = viewModel::onSendBroadcast
+                        )
+                    }
+                }
 
-            if (visibleNotifications.isEmpty()) {
                 item {
-                    EmptyAlertsCard(isFiltered = state.notifications.isNotEmpty())
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = if (isDriver) 4.dp else 0.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(
+                                if (isDriver) R.string.alerts_history_driver
+                                else R.string.alerts_history_parent
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandNavy
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = BrandNavy.copy(alpha = 0.08f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.alerts_count_badge, visibleNotifications.size),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = BrandNavy,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
                 }
-            } else {
-                items(visibleNotifications, key = { it.id.value }) { notification ->
-                    NotificationCard(notification)
-                }
-            }
 
-            item { Spacer(modifier = Modifier.height(12.dp)) }
+                item {
+                    AlertFilterBar(
+                        state = state,
+                        onSelect = viewModel::onFilterSelected
+                    )
+                }
+
+                if (visibleNotifications.isEmpty()) {
+                    item {
+                        EmptyAlertsCard(
+                            isFiltered = state.notifications.isNotEmpty(),
+                            onClearFilter = { viewModel.onFilterSelected(AlertFilter.ALL) }
+                        )
+                    }
+                } else {
+                    items(visibleNotifications, key = { it.id.value }) { notification ->
+                        NotificationCard(notification)
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+            }
         }
     }
 }
@@ -214,7 +230,10 @@ fun AlertsScreen(
 @Composable
 private fun AlertsTopHeader(
     title: String,
+    subtitle: String,
     isRefreshing: Boolean,
+    showMarkAllRead: Boolean,
+    onMarkAllRead: () -> Unit,
     onRefresh: () -> Unit,
     onBack: (() -> Unit)?
 ) {
@@ -227,7 +246,7 @@ private fun AlertsTopHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (onBack != null) {
@@ -241,13 +260,28 @@ private fun AlertsTopHeader(
             } else {
                 Spacer(modifier = Modifier.width(12.dp))
             }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = BrandNavy,
-                modifier = Modifier.weight(1f)
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = BrandNavy
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF64748B)
+                )
+            }
+            if (showMarkAllRead) {
+                IconButton(onClick = onMarkAllRead) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = stringResource(R.string.alerts_mark_all_read_cd),
+                        tint = BrandEmeraldDark
+                    )
+                }
+            }
             IconButton(onClick = onRefresh, enabled = !isRefreshing) {
                 if (isRefreshing) {
                     CircularProgressIndicator(
@@ -264,6 +298,115 @@ private fun AlertsTopHeader(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PanicConsoleCard(enabled: Boolean, onConfirm: () -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = PanicCardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, PanicCardBorder)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(PanicRed.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = PanicRed,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.alerts_panic_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = PanicTitleInk,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            BigButton(
+                text = stringResource(R.string.alerts_panic_fab),
+                onClick = { showDialog = true },
+                enabled = enabled,
+                containerColor = PanicRed,
+                icon = Icons.Filled.Warning
+            )
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = PanicRed,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.alerts_panic_dialog_title),
+                        fontWeight = FontWeight.Bold,
+                        color = BrandNavy
+                    )
+                }
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.alerts_panic_dialog_body),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                        onConfirm()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PanicRed,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.alerts_panic_confirm),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }
 
@@ -293,7 +436,7 @@ private fun DriverBroadcastCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
                         .background(BrandNavy.copy(alpha = 0.10f)),
                     contentAlignment = Alignment.Center
@@ -305,12 +448,19 @@ private fun DriverBroadcastCard(
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                Text(
-                    text = stringResource(R.string.alerts_broadcast_section),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandNavy
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.alerts_broadcast_section),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandNavy
+                    )
+                    Text(
+                        text = stringResource(R.string.alerts_broadcast_subtitle),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF64748B)
+                    )
+                }
             }
 
             OutlinedTextField(
@@ -369,7 +519,7 @@ private fun DriverBroadcastCard(
 
 @Composable
 private fun AlertFilterBar(
-    selected: AlertFilter,
+    state: NotificationsUiState,
     onSelect: (AlertFilter) -> Unit
 ) {
     Row(
@@ -385,27 +535,40 @@ private fun AlertFilterBar(
             AlertFilter.NOTICES to R.string.alerts_filter_notices
         )
         options.forEach { (filter, labelRes) ->
-            val isSelected = selected == filter
+            val isSelected = state.selectedFilter == filter
+            val count = state.countFor(filter)
+            val isPriorityHighlight = filter == AlertFilter.PRIORITY && count > 0 && !isSelected
+
             FilterChip(
                 selected = isSelected,
                 onClick = { onSelect(filter) },
+                leadingIcon = if (isPriorityHighlight) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Warning,
+                            contentDescription = null,
+                            tint = PanicRed,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                } else null,
                 label = {
                     Text(
-                        text = stringResource(labelRes),
+                        text = "${stringResource(labelRes)} ($count)",
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                     )
                 },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = BrandNavy,
+                    selectedContainerColor = if (filter == AlertFilter.PRIORITY && count > 0) PanicRed else BrandNavy,
                     selectedLabelColor = Color.White,
-                    containerColor = BrandCardWhite,
-                    labelColor = Color(0xFF475569)
+                    containerColor = if (isPriorityHighlight) PanicCardBg else BrandCardWhite,
+                    labelColor = if (isPriorityHighlight) PanicTitleInk else Color(0xFF475569)
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = isSelected,
-                    borderColor = BrandBorder,
-                    selectedBorderColor = BrandNavy
+                    borderColor = if (isPriorityHighlight) PanicCardBorder else BrandBorder,
+                    selectedBorderColor = if (filter == AlertFilter.PRIORITY && count > 0) PanicRed else BrandNavy
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -443,7 +606,10 @@ private fun SuccessFeedbackBanner(message: String) {
 }
 
 @Composable
-private fun EmptyAlertsCard(isFiltered: Boolean) {
+private fun EmptyAlertsCard(
+    isFiltered: Boolean,
+    onClearFilter: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -488,6 +654,20 @@ private fun EmptyAlertsCard(isFiltered: Boolean) {
                 color = Color(0xFF64748B),
                 textAlign = TextAlign.Center
             )
+            if (isFiltered) {
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(
+                    onClick = onClearFilter,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, BrandNavy),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BrandNavy)
+                ) {
+                    Text(
+                        text = stringResource(R.string.alerts_show_all_btn),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
     }
 }
@@ -547,7 +727,7 @@ private fun NotificationCard(notification: Notification) {
         )
     }
 
-    val isPanic = notification.isHighPriority
+    val isPanic = notification.type == NotificationType.PANIC_ALERT || notification.hasPanicAlert
     val containerColor = if (isPanic) PanicCardBg else BrandCardWhite
     val borderColor = if (isPanic) PanicCardBorder else BrandBorder
     val titleColor = if (isPanic) PanicTitleInk else Color(0xFF0F172A)
@@ -591,17 +771,30 @@ private fun NotificationCard(notification: Notification) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = localizedNotificationTitle(notification, isSchoolArrival),
-                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
-                        fontWeight = FontWeight.Bold,
-                        color = titleColor,
+                    Row(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 8.dp)
-                    )
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (!notification.isDelivered) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(visual.accent)
+                            )
+                        }
+                        Text(
+                            text = localizedNotificationTitle(notification, isSchoolArrival),
+                            style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = titleColor
+                        )
+                    }
                     Text(
-                        text = formatDate(notification.createdAt),
+                        text = formatRelativeDate(notification.createdAt),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF64748B)
                     )
@@ -647,73 +840,6 @@ private fun NotificationCard(notification: Notification) {
 }
 
 @Composable
-private fun PanicButton(enabled: Boolean, onConfirm: () -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
-
-    BigButton(
-        text = stringResource(R.string.alerts_panic_fab),
-        onClick = { showDialog = true },
-        enabled = enabled,
-        containerColor = PanicRed,
-        icon = Icons.Filled.Warning
-    )
-
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            shape = RoundedCornerShape(20.dp),
-            title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = null,
-                        tint = PanicRed,
-                        modifier = Modifier.size(26.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.alerts_panic_dialog_title),
-                        fontWeight = FontWeight.Bold,
-                        color = BrandNavy
-                    )
-                }
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.alerts_panic_dialog_body),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDialog = false
-                        onConfirm()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PanicRed,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.alerts_panic_confirm),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
-}
-
-@Composable
 private fun localizedNotificationTitle(
     notification: Notification,
     isSchoolArrival: Boolean
@@ -737,5 +863,20 @@ private fun statusLabel(status: NotificationStatus) = when (status) {
     NotificationStatus.DELIVERED -> stringResource(R.string.notif_status_delivered)
 }
 
-private fun formatDate(millis: Long): String =
-    SimpleDateFormat("dd/MM · HH:mm", Locale.getDefault()).format(Date(millis))
+@Composable
+private fun formatRelativeDate(millis: Long): String {
+    val timeText = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(millis))
+    val target = Calendar.getInstance().apply { timeInMillis = millis }
+    val today = Calendar.getInstance()
+    val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+
+    val isToday = target.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+        target.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    if (isToday) return stringResource(R.string.alerts_date_today, timeText)
+
+    val isYesterday = target.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
+        target.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR)
+    if (isYesterday) return stringResource(R.string.alerts_date_yesterday, timeText)
+
+    return SimpleDateFormat("dd/MM · HH:mm", Locale.getDefault()).format(Date(millis))
+}
