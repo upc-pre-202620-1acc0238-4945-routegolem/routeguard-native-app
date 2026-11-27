@@ -22,10 +22,17 @@ data class NotificationsUiState(
     val selectedFilter: AlertFilter = AlertFilter.ALL,
     val broadcastMessage: String = "",
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isSubmitting: Boolean = false,
     val message: String? = null,
     val errorMessage: String? = null
 ) {
     val filteredNotifications: List<Notification>
         get() = notifications.filter { selectedFilter.matches(it) }
+
+    val unreadCount: Int
+        get() = notifications.count { !it.isDelivered }
+
+    fun countFor(filter: AlertFilter): Int =
+        notifications.count { filter.matches(it) }
 }

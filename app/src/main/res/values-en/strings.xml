@@ -182,8 +182,12 @@
 
     <!-- Alerts & Notifications -->
     <string name="alerts_title">Alerts</string>
+    <string name="alerts_header_subtitle">Monitoring &amp; notices center</string>
     <string name="alerts_refresh_cd">Refresh alerts</string>
+    <string name="alerts_mark_all_read_cd">Mark all as read</string>
+    <string name="alerts_marked_read_msg">All notifications marked as read</string>
     <string name="alerts_broadcast_section">Notify parents</string>
+    <string name="alerts_broadcast_subtitle">Share delays, detours, or live route updates</string>
     <string name="alerts_broadcast_label">Message (e.g., traffic delay)</string>
     <string name="alerts_broadcast_hint">E.g., 5-min delay due to traffic on Javier Prado Ave.</string>
     <string name="alerts_broadcast_send">Post announcement</string>
@@ -195,9 +199,12 @@
     <string name="alerts_filter_priority">Priority</string>
     <string name="alerts_filter_trip">Trip</string>
     <string name="alerts_filter_notices">Notices</string>
+    <string name="alerts_show_all_btn">Show all alerts</string>
     <string name="alerts_empty">You have no notifications yet.</string>
     <string name="alerts_empty_title">No alerts recorded</string>
     <string name="alerts_empty_filtered">No alerts match the selected filter.</string>
+    <string name="alerts_date_today">Today · %1$s</string>
+    <string name="alerts_date_yesterday">Yesterday · %1$s</string>
     <string name="alerts_cat_panic">Emergency</string>
     <string name="alerts_cat_incident">Incident</string>
     <string name="alerts_cat_boarding">Boarding</string>
@@ -206,6 +213,7 @@
     <string name="alerts_cat_trip">Trip</string>
     <string name="alerts_cat_notice">Notice</string>
     <string name="alerts_panic_fab">Panic alert</string>
+    <string name="alerts_panic_subtitle">Sends a critical emergency alert to parents and control</string>
     <string name="alerts_panic_dialog_title">Send panic alert?</string>
     <string name="alerts_panic_dialog_body">All parents on the route will be notified with high priority.</string>
     <string name="alerts_panic_confirm">Send</string>
@@ -216,6 +224,7 @@
     <string name="notif_sent_panic_count">Panic alert sent to %1$d parents</string>
     <string name="notif_sent_broadcast_count">Announcement sent to %1$d parents</string>
     <string name="notif_error_panic">Could not send alert</string>
+    <string name="notif_error_broadcast">Could not post announcement</string>
     <string name="notif_error_start_trip_alert">Start a trip to send an alert</string>
     <string name="notif_error_start_trip_notice">Start a trip to send an announcement</string>
     <string name="notif_error_empty_msg">Write a message</string>

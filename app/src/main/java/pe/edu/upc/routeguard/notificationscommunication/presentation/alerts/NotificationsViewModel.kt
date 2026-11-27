@@ -35,18 +35,58 @@ class NotificationsViewModel @Inject constructor(
     /** Parents confirm reception of what they see ([confirmDelivery]). */
     fun refresh(confirmDelivery: Boolean) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val hasItems = _uiState.value.notifications.isNotEmpty()
+            _uiState.update {
+                it.copy(
+                    isLoading = !hasItems,
+                    isRefreshing = hasItems,
+                    errorMessage = null
+                )
+            }
             try {
                 val list = getNotifications().sortedByDescending { it.createdAt }
-                _uiState.update { it.copy(isLoading = false, notifications = list) }
-                if (confirmDelivery) {
-                    markDelivered(list)
-                    _uiState.update { state ->
-                        state.copy(notifications = state.notifications.map { it.copy(status = NotificationStatus.DELIVERED) })
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, notifications = list) }
+                if (confirmDelivery && list.any { !it.isDelivered }) {
+                    val confirmedIds = markDelivered(list)
+                    if (confirmedIds.isNotEmpty()) {
+                        _uiState.update { state ->
+                            state.copy(
+                                notifications = state.notifications.map { item ->
+                                    if (item.id.value in confirmedIds) item.copy(status = NotificationStatus.DELIVERED)
+                                    else item
+                                }
+                            )
+                        }
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = strings.resolveError(e, R.string.error_unexpected)) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        errorMessage = strings.resolveError(e, R.string.error_unexpected)
+                    )
+                }
+            }
+        }
+    }
+
+    fun onMarkAllRead() {
+        viewModelScope.launch {
+            val pending = _uiState.value.notifications.filter { !it.isDelivered }
+            if (pending.isEmpty()) {
+                _uiState.update { it.copy(message = strings.getString(R.string.alerts_marked_read_msg)) }
+                return@launch
+            }
+            val confirmedIds = markDelivered(pending)
+            _uiState.update { state ->
+                state.copy(
+                    notifications = state.notifications.map { item ->
+                        if (item.id.value in confirmedIds) item.copy(status = NotificationStatus.DELIVERED)
+                        else item
+                    },
+                    message = strings.getString(R.string.alerts_marked_read_msg)
+                )
             }
         }
     }
@@ -95,7 +135,7 @@ class NotificationsViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _uiState.update {
-                        it.copy(isSubmitting = false, errorMessage = strings.resolveError(e, R.string.notif_error_panic))
+                        it.copy(isSubmitting = false, errorMessage = strings.resolveError(e, R.string.notif_error_broadcast))
                     }
                 }
         }

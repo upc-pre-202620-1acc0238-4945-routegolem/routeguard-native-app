@@ -12,10 +12,14 @@ class GetNotificationsUseCase @Inject constructor(private val repository: Notifi
             .sortedWith(compareByDescending<Notification> { it.isHighPriority }.thenByDescending { it.createdAt })
 }
 
-/** Notification Delivered: the parent has the notification on the device. */
+/** Notification Delivered: the parent has the notification on the device. Returns confirmed IDs. */
 class MarkNotificationsDeliveredUseCase @Inject constructor(private val repository: NotificationRepository) {
 
-    suspend operator fun invoke(notifications: List<Notification>) {
-        notifications.filter { !it.isDelivered }.forEach { repository.markDelivered(it.id.value) }
-    }
+    suspend operator fun invoke(notifications: List<Notification>): Set<String> =
+        notifications
+            .filter { !it.isDelivered }
+            .mapNotNull { item ->
+                if (repository.markDelivered(item.id.value).isSuccess) item.id.value else null
+            }
+            .toSet()
 }
