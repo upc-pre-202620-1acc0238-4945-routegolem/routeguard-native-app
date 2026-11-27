@@ -33,6 +33,18 @@ class AlertFilterTest {
 
         val all = listOf(panic, incident, boarded, geofence, tripStarted, announcement, general)
 
+        val uiState = NotificationsUiState(notifications = all)
+        assertEquals(7, uiState.countFor(AlertFilter.ALL))
+        assertEquals(2, uiState.countFor(AlertFilter.PRIORITY))
+        assertEquals(3, uiState.countFor(AlertFilter.TRIP))
+        assertEquals(2, uiState.countFor(AlertFilter.NOTICES))
+        assertEquals(0, uiState.unreadCount)
+
+        val withUnread = uiState.copy(
+            notifications = all + sample("8", NotificationType.ANNOUNCEMENT).copy(status = NotificationStatus.DISPATCHED)
+        )
+        assertEquals(1, withUnread.unreadCount)
+
         assertEquals(7, NotificationsUiState(notifications = all, selectedFilter = AlertFilter.ALL).filteredNotifications.size)
         assertEquals(listOf(panic, incident), NotificationsUiState(notifications = all, selectedFilter = AlertFilter.PRIORITY).filteredNotifications)
         assertEquals(listOf(boarded, geofence, tripStarted), NotificationsUiState(notifications = all, selectedFilter = AlertFilter.TRIP).filteredNotifications)

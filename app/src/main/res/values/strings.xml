@@ -182,8 +182,12 @@
 
     <!-- Alerts & Notifications -->
     <string name="alerts_title">Alertas</string>
+    <string name="alerts_header_subtitle">Centro de monitoreo y avisos</string>
     <string name="alerts_refresh_cd">Actualizar alertas</string>
+    <string name="alerts_mark_all_read_cd">Marcar todas como leídas</string>
+    <string name="alerts_marked_read_msg">Todas las notificaciones fueron marcadas como leídas</string>
     <string name="alerts_broadcast_section">Aviso a los padres</string>
+    <string name="alerts_broadcast_subtitle">Comunica retrasos, desvíos o novedades de ruta</string>
     <string name="alerts_broadcast_label">Mensaje (ej. retraso por tráfico)</string>
     <string name="alerts_broadcast_hint">Ej. Retraso de 5 min por tráfico en Av. Javier Prado</string>
     <string name="alerts_broadcast_send">Publicar aviso</string>
@@ -195,9 +199,12 @@
     <string name="alerts_filter_priority">Prioritarias</string>
     <string name="alerts_filter_trip">Viaje</string>
     <string name="alerts_filter_notices">Avisos</string>
+    <string name="alerts_show_all_btn">Ver todas las alertas</string>
     <string name="alerts_empty">Aún no tienes notificaciones.</string>
     <string name="alerts_empty_title">Sin alertas registradas</string>
     <string name="alerts_empty_filtered">No hay alertas que coincidan con el filtro seleccionado.</string>
+    <string name="alerts_date_today">Hoy · %1$s</string>
+    <string name="alerts_date_yesterday">Ayer · %1$s</string>
     <string name="alerts_cat_panic">Emergencia</string>
     <string name="alerts_cat_incident">Incidencia</string>
     <string name="alerts_cat_boarding">Abordaje</string>
@@ -206,6 +213,7 @@
     <string name="alerts_cat_trip">Viaje</string>
     <string name="alerts_cat_notice">Aviso</string>
     <string name="alerts_panic_fab">Alerta de pánico</string>
+    <string name="alerts_panic_subtitle">Envía una emergencia crítica a padres y central</string>
     <string name="alerts_panic_dialog_title">¿Enviar alerta de pánico?</string>
     <string name="alerts_panic_dialog_body">Se notificará con alta prioridad a todos los padres de la ruta.</string>
     <string name="alerts_panic_confirm">Enviar</string>
@@ -216,6 +224,7 @@
     <string name="notif_sent_panic_count">Alerta de pánico enviada a %1$d padres</string>
     <string name="notif_sent_broadcast_count">Aviso enviado a %1$d padres</string>
     <string name="notif_error_panic">No se pudo enviar la alerta</string>
+    <string name="notif_error_broadcast">No se pudo publicar el aviso</string>
     <string name="notif_error_start_trip_alert">Inicia un viaje para enviar una alerta</string>
     <string name="notif_error_start_trip_notice">Inicia un viaje para enviar un aviso</string>
     <string name="notif_error_empty_msg">Escribe un mensaje</string>
